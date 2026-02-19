@@ -16,6 +16,10 @@ clean:
 	rm -f $(OBJ)
 
 
+
+fclean: clean
+	rm -f $(EXEC)
+
 re: fclean all
 
 .PHONY: all clean fclean re
