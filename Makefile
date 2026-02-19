@@ -16,8 +16,6 @@ clean:
 	rm -f $(OBJ)
 
 
-removeme:
-	echo "remove"
 
 fclean: clean
 	rm -f $(EXEC)
