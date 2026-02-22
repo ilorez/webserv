@@ -12,7 +12,7 @@ BUILD_DR = ./build/
 
 HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp ToString.hpp
 
-F_SRCS = request.cpp utils.cpp
+F_SRCS = request.cpp utils.cpp response.cpp server.cpp
 
 SRCS = main.cpp $(F_SRCS) 
 
