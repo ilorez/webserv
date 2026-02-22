@@ -6,12 +6,13 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/22 14:42:04 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/02/22 15:15:08 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/02/22 16:10:23 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#ifndef CONTAINER_HPP
+#define CONTAINER_HPP
+
 
 #include <cstring>
 #include <fstream>
@@ -28,9 +29,12 @@
 #include "./colors.hpp"
 #include "./debug.hpp"
 #include "./settings.hpp"
+#include "./ToString.hpp"
+#include "./utils.hpp"
 
 //
-#include "./utils.hpp"
 #include "./Request.hpp"
+
+
 
 #endif

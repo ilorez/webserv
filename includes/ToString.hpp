@@ -1,33 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Request.hpp                                        :+:      :+:    :+:   */
+/*   ToString.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/22 14:37:43 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/02/22 15:43:22 by znajdaou         ###   ########.fr       */
+/*   Created: 2026/02/22 15:37:43 by znajdaou          #+#    #+#             */
+/*   Updated: 2026/02/22 16:09:37 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#ifndef TOSTRING_HPP
+#define TOSTRING_HPP
 
-#ifndef REQUEST_HPP
-#define REQUEST_HPP
+#include <sstream>
+#include <string>
 
-#include "iostream"
-
-class Request {
-  private:
-    std::string method;
-    std::string route;
-  public:
-    // todo: orthodox
-    // getters and setters
-    std::string getMethod() const;
-    std::string getRoute() const;
-  
-    // parse request
-    void request_pars(std::string request);
-};
+template <typename T>
+std::string to_string98(T value)
+{
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
+}
 
 #endif

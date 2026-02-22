@@ -6,15 +6,28 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/22 14:48:00 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/02/22 15:07:53 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/02/22 15:43:14 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "../includes/Request.hpp"
 #include "../includes/utils.hpp"
-#include "../includes/Debug.hpp"
+#include "../includes/debug.hpp"
 
+
+// getters
+std::string Request::getMethod() const
+{
+  return (this->method);
+}
+
+std::string Request::getRoute() const
+{
+  return (this->route);
+}
+
+// member functions
 void Request::request_pars(std::string request)
 {
   std::string delimiter = "\r\n";

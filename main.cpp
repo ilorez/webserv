@@ -6,12 +6,13 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/19 14:48:30 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/02/22 15:24:18 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/02/22 16:07:02 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "./includes/container.hpp"
+
 
 int main()
 {
@@ -61,20 +62,15 @@ int main()
     std::cout << "------ Request end -------" << std::endl;
     Request req;
     req.request_pars(buf);
-    std::ifstream readfile("./www/index.html");
-    if (!readfile.is_open())
-    {
-      std::cout << "Error with ifstream read file" << std::endl;
-      return (5);
-    }
-    std::string line;
-    std::string body;
-    while (std::getline(readfile, line))
-      body += line;
-    readfile.close();
+    std::string page_src;
+    if (req.getRoute() != "/")
+      page_src = "./www/404.html";
+    else
+      page_src = "./www/index.html";
+    std::string body = ft_readFile(page_src);
     std::string response = "HTTP/1.1 200 OK\r\n"
                        "Content-Type: text/html\r\n"
-                       "Content-Length: " + std::to_string(body.length()) + "\r\n"
+                       "Content-Length: " + to_string98(body.length()) + "\r\n"
                        "\r\n"// this how reader know the end of header
                        + body;
     // write back to user fd

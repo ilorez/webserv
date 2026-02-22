@@ -1,7 +1,7 @@
 # vpaths
 vpath %.hpp includes
 vpath %.h includes
-vpath %.cpp srcs
+vpath %.cpp src
 
 NAME = webserv 
 
@@ -10,7 +10,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -I./includes  -DDEBUG
 RM = rm -rf
 BUILD_DR = ./build/
 
-HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp 
+HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp ToString.hpp
 
 F_SRCS = request.cpp utils.cpp
 
