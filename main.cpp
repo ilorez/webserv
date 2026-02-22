@@ -6,17 +6,63 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/19 14:48:30 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/02/22 13:27:30 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/02/22 14:34:27 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <cstring>
+#include <fstream>
 #include <iostream>
+#include <iterator>
+#include <string>
 #include <sys/socket.h>   // socket(), bind(), listen(), accept() #include <netinet/in.h>   // struct sockaddr_in, htons(), INADDR_ANY
 #include <unistd.h>       // read(), write(), close()
 #include <arpa/inet.h>    // inet_addr() — optional for now
+#include <vector>
 //
 #define MAX_CONX_QUEUE 10
 #define BUF_SIZE 1024
+
+size_t split(const std::string &txt, std::vector<std::string> &strs, char ch)
+{
+    size_t pos = txt.find( ch );
+    size_t initialPos = 0;
+    strs.clear();
+
+    // Decompose statement
+    while( pos != std::string::npos ) {
+        strs.push_back( txt.substr( initialPos, pos - initialPos ) );
+        initialPos = pos + 1;
+
+        pos = txt.find( ch, initialPos );
+    }
+
+    // Add the last one
+    strs.push_back( txt.substr( initialPos, std::min( pos, txt.size() ) - initialPos + 1 ) );
+
+    return strs.size();
+}
+
+void request_pars(std::string request)
+{
+  std::string delimiter = "\r\n";
+  std::vector<std::string> raws;
+
+  size_t pos = 0; 
+  while ((pos = request.find(delimiter)) != std::string::npos)
+  {
+      raws.push_back(request.substr(0, pos));
+      request.erase(0, pos+delimiter.length());
+  }
+  // Debug
+  std::cout << "line : " << raws[0] << std::endl;
+  // get method and route and http version
+  std::vector<std::string> fields;
+  split(raws[0], fields, ' ');
+  // Debug
+  std::cout << "method: " << fields[0] << "" << std::endl;
+  std::cout << "route: " << fields[1] << "" << std::endl;
+  std::cout << "http ver: " << fields[2] << "" << std::endl;
+}
 
 int main()
 {
@@ -56,7 +102,7 @@ int main()
       std::cout << "Error with accept" << std::endl;
       return (4);
     }
-    char buf[1024]; 
+    char buf[BUF_SIZE]; 
     memset(&buf, 0, BUF_SIZE);
     // read from user fd
     size_t readed = read(accpetFd, buf, BUF_SIZE);
@@ -64,7 +110,18 @@ int main()
     std::cout << "size: " << readed << std::endl;
     std::cout << buf << std::endl;
     std::cout << "------ Request end -------" << std::endl;
-    std::string body = "<h1>Hello World</h1>";
+    request_pars(buf);
+    std::ifstream readfile("./www/index.html");
+    if (!readfile.is_open())
+    {
+      std::cout << "Error with ifstream read file" << std::endl;
+      return (5);
+    }
+    std::string line;
+    std::string body;
+    while (std::getline(readfile, line))
+      body += line;
+    readfile.close();
     std::string response = "HTTP/1.1 200 OK\r\n"
                        "Content-Type: text/html\r\n"
                        "Content-Length: " + std::to_string(body.length()) + "\r\n"
