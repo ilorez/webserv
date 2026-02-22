@@ -6,13 +6,12 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/19 14:48:30 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/02/19 21:14:05 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/02/22 13:27:30 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <cstring>
 #include <iostream>
-#include <sys/socket.h>   // socket(), bind(), listen(), accept()
-#include <netinet/in.h>   // struct sockaddr_in, htons(), INADDR_ANY
+#include <sys/socket.h>   // socket(), bind(), listen(), accept() #include <netinet/in.h>   // struct sockaddr_in, htons(), INADDR_ANY
 #include <unistd.h>       // read(), write(), close()
 #include <arpa/inet.h>    // inet_addr() — optional for now
 //
@@ -34,7 +33,7 @@ int main()
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
   addr.sin_port = htons(8080);
-  addr.sin_addr.s_addr = INADDR_ANY;
+  addr.sin_addr.s_addr = inet_addr("127.0.0.1");
   if (bind(fd, (struct sockaddr*)(&addr), sizeof(addr)))
   {
     std::cout << "Error with bind" << std::endl;
@@ -46,6 +45,7 @@ int main()
     std::cout << "Error with listen" << std::endl;
     return (3);
   }
+  std::cout << "Listning on: http:://" << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
 
   socklen_t size_socket = sizeof(addr);
   while (1)
@@ -60,12 +60,15 @@ int main()
     memset(&buf, 0, BUF_SIZE);
     // read from user fd
     size_t readed = read(accpetFd, buf, BUF_SIZE);
-    (void)readed;
+    std::cout << "Request content" << std::endl;
+    std::cout << "size: " << readed << std::endl;
+    std::cout << buf << std::endl;
+    std::cout << "------ Request end -------" << std::endl;
     std::string body = "<h1>Hello World</h1>";
     std::string response = "HTTP/1.1 200 OK\r\n"
                        "Content-Type: text/html\r\n"
                        "Content-Length: " + std::to_string(body.length()) + "\r\n"
-                       "\r\n"
+                       "\r\n"// this how reader know the end of header
                        + body;
     // write back to user fd
     write(accpetFd, response.c_str(), response.length());
