@@ -6,7 +6,7 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/19 14:48:30 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/02/22 16:07:02 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/02/22 22:31:02 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,33 +16,6 @@
 
 int main()
 {
-  int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (fd < 0)
-  {
-    std::cout << "Error with socket" << std::endl;
-    return (1);
-  }
-
-  int opt = 1;
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-  struct sockaddr_in addr;
-  memset(&addr, 0, sizeof(addr));
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(8080);
-  addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-  if (bind(fd, (struct sockaddr*)(&addr), sizeof(addr)))
-  {
-    std::cout << "Error with bind" << std::endl;
-    return 2;
-  }
-
-  if (listen(fd, MAX_CONX_QUEUE))
-  {
-    std::cout << "Error with listen" << std::endl;
-    return (3);
-  }
-  std::cout << "Listning on: http:://" << inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port) << std::endl;
-
   socklen_t size_socket = sizeof(addr);
   while (1)
   {
@@ -78,5 +51,5 @@ int main()
     // close 
     close(accpetFd);
   }
-  close(fd);
+  
 }
