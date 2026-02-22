@@ -10,6 +10,7 @@ private:
     std::string _msg;
 public:
     ServerException(const std::string& msg) : _msg(msg) {}
+    ~ServerException() throw() {}
     const char* what() const throw() { return _msg.c_str(); }
 };
 
@@ -19,6 +20,7 @@ private:
     std::string _msg;
 public:
     RequestException(const std::string& msg) : _msg(msg) {}
+    ~RequestException() throw() {}
     const char* what() const throw() { return _msg.c_str(); }
 };
 
@@ -28,6 +30,7 @@ private:
     std::string _msg;
 public:
     ResponseException(const std::string& msg) : _msg(msg) {}
+    ~ResponseException() throw() {}
     const char* what() const throw() { return _msg.c_str(); }
 };
 
