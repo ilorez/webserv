@@ -1,31 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Request.hpp                                        :+:      :+:    :+:   */
+/*   utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/22 14:37:43 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/02/22 14:51:37 by znajdaou         ###   ########.fr       */
+/*   Created: 2026/02/22 14:40:49 by znajdaou          #+#    #+#             */
+/*   Updated: 2026/02/22 14:47:06 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-
-#ifndef REQUEST_HPP
-#define REQUEST_HPP
+#ifndef UTILS_HPP
+#define UTILS_HPP
 
 #include "iostream"
+#include <vector>
 
-class Request {
-  private:
-    std::string method;
-    std::string route;
-  public:
-    // todo: orthodox
-    // getters and setters
-    // member functions
-    // parse request
-    void request_pars(std::string request);
-};
+size_t split(const std::string &txt, std::vector<std::string> &strs, char ch);
 
 #endif
