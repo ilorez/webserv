@@ -3,6 +3,7 @@
 #include "../includes/container.hpp"
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 
 
 Server::Server()
@@ -50,31 +51,23 @@ void Server::_initSocket()
 void Server::_handelClient(socklen_t size_socket)
 {
   int client_fd = accept(_socket_fd, (struct sockaddr*)(&_addr), (socklen_t *)&size_socket);
+  DEBUG_INFO("------------New Request-----------");
   if (client_fd  < 0)
     throw ServerException("accept() failed.");
   char buf[BUF_SIZE]; 
   memset(&buf, 0, BUF_SIZE);
-  // read from user fd
-  size_t readed = read(client_fd, buf, BUF_SIZE);
-  std::cout << "Request content" << std::endl;
-  std::cout << "size: " << readed << std::endl;
-  std::cout << buf << std::endl;
-  std::cout << "------ Request end -------" << std::endl;
-  Request req;
-  req.request_pars(buf);
-  std::string page_src;
-  if (req.getRoute() != "/")
-    page_src = "./www/404.html";
-  else
-    page_src = "./www/index.html";
-  std::string body = ft_readFile(page_src);
-  std::string response = "HTTP/1.1 200 OK\r\n"
-                     "Content-Type: text/html\r\n"
-                     "Content-Length: " + to_string98(body.length()) + "\r\n"
-                     "\r\n"// this how reader know the end of header
-                     + body;
+  // read from user client socket
+  ssize_t bytes  = read(client_fd, buf, BUF_SIZE);
+
+  DEBUG_INFO("Request");
+  Request req(std::string(buf, bytes));
+  std::string body = ft_readFile(req.getPath());
+
+  DEBUG_INFO("Response");
+  Response res(200, body, "text/html");
+  std::string result = res.build();
   // write back to user fd
-  write(client_fd, response.c_str(), response.length());
+  write(client_fd, result.c_str(), result.length());
   // close 
   close(client_fd);
 }

@@ -6,19 +6,14 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/22 14:41:45 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/02/22 16:03:18 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/02/23 00:14:54 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-
-
-
 
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-
 
 std::string ft_readFile(std::string src)
 {
