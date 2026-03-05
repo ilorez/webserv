@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   container.hpp                                      :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/22 14:42:04 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/02/22 23:23:03 by znajdaou         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef CONTAINER_HPP
 #define CONTAINER_HPP
 
@@ -21,6 +9,7 @@
 #include <string>
 #include <unistd.h>       // read(), write(), close()
 #include <vector>
+#include <map>
 
 //
 #include "./settings.hpp"
