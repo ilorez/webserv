@@ -13,18 +13,30 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
-#include <string>
+#include "../includes/container.hpp"
+
 class Response
 {
 private:
-    int         _status;
-    std::string _body;
-    std::string _contentType;
+    std::map<std::string, std::string>  _mapMediaTypes;
+    std::map<int, std::string>          _mapStatusCodes;
+    std::map<std::string, std::string>  _headers;
+    std::string     _body;
+    Request         _req;
+    int             _status;
 
 public:
-    Response(int status, const std::string& body, const std::string& contentType);
+    Response(Request req);
+    Response(const Response &other);
+    Response &operator=(const Response &other);
+    ~Response();
 
-    std::string build() const;
+    void initStatusCodes(std::map<int, std::string> &m);
+    void initMediaTypes(std::map<std::string, std::string> &m);
+    void initHeaders(std::map<std::string, std::string> &h);
+    std::string returnMediaType(std::string path);
+    std::string mergeResponseToString();
+    std::string build();
 };
 
 #endif

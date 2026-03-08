@@ -61,10 +61,11 @@ void Server::_handelClient(socklen_t size_socket)
 
   DEBUG_INFO("Request");
   Request req(std::string(buf, bytes));
-  std::string body = ft_readFile(req.getPath());
+  /* ALAOUI: removed file-reading from server */
 
-  DEBUG_INFO("Response");
-  Response res(200, body, "text/html");
+  DEBUG_INFO("Response");                                                                                                                            
+  Response res(req);
+  /* ALAOUI: change parameter for new response class */ 
   std::string result = res.build();
   // write back to user fd
   write(client_fd, result.c_str(), result.length());

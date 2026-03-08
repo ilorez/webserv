@@ -21,6 +21,10 @@
 #include <string>
 #include <unistd.h>       // read(), write(), close()
 #include <vector>
+#include <map>
+#include <ctime>
+#include <iomanip>
+#include <sys/stat.h>
 
 //
 #include "./settings.hpp"

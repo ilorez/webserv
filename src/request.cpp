@@ -1,27 +1,32 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   request.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/22 14:48:00 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/02/23 00:08:35 by znajdaou         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-
 #include "../includes/Request.hpp"
 #include "../includes/utils.hpp"
 #include "../includes/debug.hpp"
+#include "../includes/container.hpp"
 
+using namespace std;
+
+// ? Canonical Form
 Request::Request(const std::string &raw)
 {
   this->_request_pars(raw);
 }
 
+Request::Request(const Request &other) : _path(other._path), _version(other._version), _method(other._method), _headers(other._headers), _body(other._body) {}
 
-// getters
+Request &Request::operator=(const Request &other)
+{
+  if (this != &other)
+  {
+    this->_method = other._method;
+    this->_path = other._path;
+    this->_body = other._body;
+  }
+  return *this;
+}
+
+Request::~Request() {};
+
+// ?getters
 std::string Request::getMethod() const
 {
   return (this->_method);
@@ -37,37 +42,60 @@ std::string Request::getBody() const
   return (this->_body);
 }
 
+std::string Request::getVersion() const
+{
+  return (this->_version);
+}
+
 void Request::setPath(const std::string &p)
 {
   if (p == "/" || p == "/index.html")
     _path = "./www/index.html";
   else
-    _path = "./www/404.html";
+    _path = p;
+  /* ALAOUI: If the path is invalid, keep the link unchanged */
 }
 
-// member functions
-void Request::_request_pars(const std::string& raw)
+void Request::_parse_first_line(const std::vector<std::string> &lines)
 {
-  std::string delimiter = "\r\n";
-  std::string request = raw;
-  std::vector<std::string> raws;
+  vector<string> fields;
+  std::string method, path, version, first_line;
 
-  size_t pos = 0; 
-  while ((pos = request.find(delimiter)) != std::string::npos)
+  first_line = lines.front();
+  split(first_line, fields, " ");
+
+  method = fields[0];
+  path = fields[1];
+  version = fields[2];
+  if (!path.empty() && (method == "GET") && (version == "HTTP/1.0" || version == "HTTP/1.1")) // todo : i will add the rest of the methods later
   {
-      raws.push_back(request.substr(0, pos));
-      request.erase(0, pos+delimiter.length());
+    _path = path;
+    _method = method;
+    _version = version;
   }
-  // get method and route and http version
-  std::vector<std::string> fields;
-  split(raws[0], fields, ' ');
-
-  // Debug
-  std::cout << INFO_MSG << "method: " << fields[0] << "" << std::endl;
-  std::cout << INFO_MSG << "route: " << fields[1] << "" << std::endl;
-  std::cout << INFO_MSG << "http ver: " << fields[2] << "" << std::endl;
-
-  this->_method = fields[0];
-  this->setPath(fields[1]);
-  this->_body = "body sould be here";
+  else
+    throw RequestException("400 Bad Request");
 }
+
+// ? member functions
+void Request::_request_pars(const std::string &raw)
+{
+  std::vector<string> lines;
+  std::string del = "\r\n";
+
+  split(raw, lines, del);
+
+  _parse_first_line(lines);
+
+  setPath(_path); // ? for testing
+}
+
+/*
+ ?
+  GET /index.html HTTP/1.1\r\n
+  Host: example.com\r\n
+  User-Agent: Mozilla/5.0\r\n
+  Accept: /*/ /*\r\n
+  Connection: close\r\n
+  \r\n
+*/

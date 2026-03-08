@@ -20,8 +20,9 @@ std::string ft_readFile(std::string src)
   std::ifstream readfile(src.c_str());
   if (!readfile.is_open())
   {
-    std::cout << "Error with ifstream read file" << std::endl;
-    return (NULL);
+    // std::cout << "Error with ifstream read file" << std::endl;
+    return "";
+    /* ALAOUI: Returning NULL causes an error when checking the file */
   }
   std::string line;
   std::string all_lines;
@@ -31,23 +32,22 @@ std::string ft_readFile(std::string src)
   return all_lines;
 }
 
-
-size_t split(const std::string &txt, std::vector<std::string> &strs, char ch)
+size_t split(const std::string &txt, std::vector<std::string> &strs, const std::string del)
 {
-    size_t pos = txt.find( ch );
+    size_t pos = txt.find( del );
     size_t initialPos = 0;
     strs.clear();
 
     // Decompose statement
     while( pos != std::string::npos ) {
         strs.push_back( txt.substr( initialPos, pos - initialPos ) );
-        initialPos = pos + 1;
+        initialPos = pos + del.length();
 
-        pos = txt.find( ch, initialPos );
+        pos = txt.find( del, initialPos );
     }
 
     // Add the last one
-    strs.push_back( txt.substr( initialPos, std::min( pos, txt.size() ) - initialPos + 1 ) );
+    strs.push_back( txt.substr( initialPos ));
     return strs.size();
 }
 
