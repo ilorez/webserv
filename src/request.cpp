@@ -50,6 +50,21 @@ void Request::setPath(const std::string &p)
     _path = "./www/404.html";
 }
 
+void Request::_parse_headers(const std::vector<std::string> &lines)
+{
+  for (size_t i = 1; i < lines.size() - 2; i++) //! - 2 : not including the last 2 empty lines
+  {
+    if (lines[i].empty())
+      throw RequestException("400 Bad Request");
+
+    string key = trim(lines[i].substr(0, lines[i].find_first_of(":")));
+    string value = trim(lines[i].substr(lines[i].find_first_of(":") + 1));
+    if (key.empty() || key.empty())
+      throw RequestException("400 Bad Request");
+    _headers.insert(pair<string, string>(key, value));
+  }
+}
+
 void Request::_parse_first_line(const std::vector<std::string> &lines)
 {
   vector<string> fields;
@@ -80,16 +95,7 @@ void Request::_request_pars(const std::string &raw)
   split(raw, lines, del);
 
   _parse_first_line(lines);
+  _parse_headers(lines);
 
-  setPath(_path); // ? for testing
+  setPath(_path);
 }
-
-/*
- ?
-  GET /index.html HTTP/1.1\r\n
-  Host: example.com\r\n
-  User-Agent: Mozilla/5.0\r\n
-  Accept: /*/ /*\r\n
-  Connection: close\r\n
-  \r\n
-*/
