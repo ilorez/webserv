@@ -31,7 +31,6 @@ private:
   // parse request
   void _request_pars(const std::string &request);
   void _parse_first_line(const std::vector<std::string> &lines);
-  void _parse_headers(const std::vector<std::string> &lines);
 };
 
 #endif
