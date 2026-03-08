@@ -19,6 +19,20 @@ std::string ft_readFile(std::string src)
   return all_lines;
 }
 
+std::string trim(const std::string &src)
+{
+  size_t s_begin, s_end, s_range;
+
+  s_begin = src.find_first_not_of(" ");
+
+  if (s_begin == std::string::npos)
+    return "";
+
+  s_end = src.find_last_not_of(" ");
+  s_range = s_end - s_begin + 1;
+
+  return src.substr(s_begin, s_range);
+}
 
 size_t split(const std::string &txt, std::vector<std::string> &strs, const std::string del)
 {
