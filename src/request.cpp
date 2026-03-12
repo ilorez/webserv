@@ -42,12 +42,9 @@ std::string Request::getBody() const
   return (this->_body);
 }
 
-void Request::setPath(const std::string &p)
+std::string Request::getVersion() const
 {
-  if (p == "/" || p == "/index.html")
-    _path = "./www/index.html";
-  else
-    _path = "./www/404.html";
+  return (this->_version);
 }
 
 void Request::_parse_headers(const std::vector<std::string> &lines)
@@ -96,6 +93,4 @@ void Request::_request_pars(const std::string &raw)
 
   _parse_first_line(lines);
   _parse_headers(lines);
-
-  setPath(_path);
 }
