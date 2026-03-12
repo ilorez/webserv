@@ -20,12 +20,10 @@ public:
   ~Request();
 
   // getters and setters
+  std::string getVersion() const;
   std::string getMethod() const;
   std::string getPath() const;
   std::string getBody() const;
-
-  // set path
-  void setPath(const std::string &);
 
 private:
   // parse request
