@@ -5,7 +5,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-
 Server::Server()
 {
   _port = 8080;
@@ -21,7 +20,7 @@ void Server::run()
 {
   this->_initSocket();
   socklen_t size_socket = sizeof(_addr);
-  while(1)
+  while (1)
     this->_handelClient(size_socket);
 }
 
@@ -38,37 +37,37 @@ void Server::_initSocket()
   _addr.sin_family = AF_INET;
   _addr.sin_port = htons(_port);
   _addr.sin_addr.s_addr = inet_addr(_ip.c_str());
-  if (bind(_socket_fd, (struct sockaddr*)(&_addr), sizeof(_addr)))
+  if (bind(_socket_fd, (struct sockaddr *)(&_addr), sizeof(_addr)))
   {
     throw ServerException("bind() failed with port" + to_string98(_port));
   }
 
   if (listen(_socket_fd, MAX_CONX_QUEUE))
     throw ServerException("listen() failed.");
-  std::cout << INFO_MSG << "listen on http:://" << inet_ntoa(_addr.sin_addr) <<  ":" <<  to_string98(ntohs(_addr.sin_port)) << std::endl;
+  std::cout << INFO_MSG << "listen on http://" << inet_ntoa(_addr.sin_addr) << ":" << to_string98(ntohs(_addr.sin_port)) << std::endl;
 }
 
 void Server::_handelClient(socklen_t size_socket)
 {
-  int client_fd = accept(_socket_fd, (struct sockaddr*)(&_addr), (socklen_t *)&size_socket);
+  int client_fd = accept(_socket_fd, (struct sockaddr *)(&_addr), (socklen_t *)&size_socket);
   DEBUG_INFO("------------New Request-----------");
-  if (client_fd  < 0)
+  if (client_fd < 0)
     throw ServerException("accept() failed.");
-  char buf[BUF_SIZE]; 
+  char buf[BUF_SIZE];
   memset(&buf, 0, BUF_SIZE);
   // read from user client socket
-  ssize_t bytes  = read(client_fd, buf, BUF_SIZE);
+  ssize_t bytes = read(client_fd, buf, BUF_SIZE);
 
   DEBUG_INFO("Request");
   Request req(std::string(buf, bytes));
   /* ALAOUI: removed file-reading from server */
 
-  DEBUG_INFO("Response");                                                                                                                            
+  DEBUG_INFO("Response");
   Response res(req);
-  /* ALAOUI: change parameter for new response class */ 
+  /* ALAOUI: change parameter for new response class */
   std::string result = res.build();
   // write back to user fd
   write(client_fd, result.c_str(), result.length());
-  // close 
+  // close
   close(client_fd);
 }

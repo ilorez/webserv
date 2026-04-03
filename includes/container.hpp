@@ -1,15 +1,21 @@
 #ifndef CONTAINER_HPP
 #define CONTAINER_HPP
 
-
+#include <iomanip>
+#include <time.h>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
-#include <unistd.h>       // read(), write(), close()
-#include <vector>
+#include <unistd.h>
 #include <map>
+#include <algorithm>
+#include <set>
+#include <vector>
+#include <cctype>   
+#include <sys/stat.h>
+
 
 //
 #include "./settings.hpp"

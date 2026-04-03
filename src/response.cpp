@@ -1,8 +1,4 @@
-#include "../includes/Response.hpp"
-#include "../includes/ToString.hpp"
-#include <sys/stat.h>
-#include <time.h>
-#include <iomanip>
+#include "../includes/container.hpp"
 
 Response::Response(Request req)
   : _req(req)
@@ -24,10 +20,10 @@ Response::~Response() {};
 
 std::string timespecToString(time_t tv_sec, long tv_nsec)
 {
-    std::tm *tm_info = std::localtime(&tv_sec);
+    tm *tm_info = localtime(&tv_sec);
 
     char buffer[20];
-    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
 
     std::ostringstream oss;
     oss << buffer
