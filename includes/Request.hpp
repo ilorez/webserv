@@ -1,10 +1,6 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
-#include "iostream"
-#include "map"
-#include "vector"
-
 class Request
 {
 private:
@@ -12,7 +8,8 @@ private:
   std::string _version;                        // HTTP/1.1
   std::string _method;                         // get, post, delete
   std::map<std::string, std::string> _headers; // http headers
-  std::string _body;                           // for post
+  std::vector<std::pair<std::string, std::string>> _setCookieHeaders;
+
 public:
   Request(const std::string &raw);
   Request(const Request &other);
@@ -23,13 +20,17 @@ public:
   std::string getVersion() const;
   std::string getMethod() const;
   std::string getPath() const;
-  std::string getBody() const;
+  std::string getHeaderValue(const std::string &key) const;
+
+  void setPath(const std::string &path);
 
 private:
   // parse request
-  void _request_pars(const std::string &request);
-  void _parse_first_line(const std::vector<std::string> &lines);
-  void _parse_headers(const std::vector<std::string> &lines);
+  void _requestParser(const std::string &request);
+  void _parseFirstLine(const std::vector<std::string> &lines);
+  void _parseAllHeaders(const std::vector<std::string> &lines);
+  void _parseHeader(const std::string &key, const std::string &value);
+  void _insertHeader(std::string &key, const std::string &value, const std::set<std::string> commaHeaders);
 };
 
 #endif

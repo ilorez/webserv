@@ -1,8 +1,6 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
-#include "../includes/container.hpp"
-
 class Response
 {
 private:

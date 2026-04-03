@@ -3,6 +3,11 @@
 #include <string>
 #include <vector>
 
+char toLowerCase(unsigned char c)
+{
+  return std::tolower(c);
+}
+
 std::string ft_readFile(std::string src)
 {
   std::ifstream readfile(src.c_str());

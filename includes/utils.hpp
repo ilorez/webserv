@@ -7,5 +7,6 @@
 std::string ft_readFile(std::string src);
 size_t split(const std::string &txt, std::vector<std::string> &strs, std::string del);
 std::string trim(const std::string &src);
+char toLowerCase(unsigned char c);
 
 #endif

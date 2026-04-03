@@ -1,17 +1,12 @@
-#include "../includes/Request.hpp"
-#include "../includes/utils.hpp"
-#include "../includes/debug.hpp"
 #include "../includes/container.hpp"
-
-using namespace std;
 
 // ? Canonical Form
 Request::Request(const std::string &raw)
 {
-  this->_request_pars(raw);
+  this->_requestParser(raw);
 }
 
-Request::Request(const Request &other) : _path(other._path), _version(other._version), _method(other._method), _headers(other._headers), _body(other._body) {}
+Request::Request(const Request &other) : _path(other._path), _version(other._version), _method(other._method), _headers(other._headers) {};
 
 Request &Request::operator=(const Request &other)
 {
@@ -19,7 +14,6 @@ Request &Request::operator=(const Request &other)
   {
     this->_method = other._method;
     this->_path = other._path;
-    this->_body = other._body;
   }
   return *this;
 }
@@ -37,43 +31,112 @@ std::string Request::getPath() const
   return (this->_path);
 }
 
-std::string Request::getBody() const
-{
-  return (this->_body);
-}
-
 std::string Request::getVersion() const
 {
   return (this->_version);
 }
 
-void Request::_parse_headers(const std::vector<std::string> &lines)
+std::string Request::getHeaderValue(const std::string &key) const
 {
-  for (size_t i = 1; i < lines.size() - 2; i++) //! - 2 : not including the last 2 empty lines
+  return (this->_headers.find(key)->second);
+}
+
+// ? setters
+
+void Request::setPath(const std::string &path)
+{
+  this->_path = path;
+}
+
+// ? member functions
+
+static void initCommaHeaders(std::set<std::string> &commaHeaders)
+{
+  commaHeaders.insert("accept");
+  commaHeaders.insert("accept-charset");
+  commaHeaders.insert("accept-encoding");
+  commaHeaders.insert("accept-language");
+  commaHeaders.insert("accept-ranges");
+  commaHeaders.insert("allow");
+  commaHeaders.insert("cache-control");
+  commaHeaders.insert("connection");
+  commaHeaders.insert("content-encoding");
+  commaHeaders.insert("content-language");
+  commaHeaders.insert("if-match");
+  commaHeaders.insert("if-none-match");
+  commaHeaders.insert("pragma");
+  commaHeaders.insert("te");
+  commaHeaders.insert("trailer");
+  commaHeaders.insert("transfer-encoding");
+  commaHeaders.insert("upgrade");
+  commaHeaders.insert("vary");
+  commaHeaders.insert("via");
+  commaHeaders.insert("warning");
+}
+
+void Request::_parseHeader(const std::string &key, const std::string &value)
+{
+  std::string forbiddenChars = " \"(),/:;<=>?@[]{}\\";
+
+  if (key.empty() || value.empty())
+    throw RequestException("400 Bad Request");
+
+  // ? key grammar check
+  if (key.find_first_of(forbiddenChars) != std::string::npos)
+    throw RequestException("400 Bad Request");
+}
+
+void Request::_insertHeader(std::string &key, const std::string &value, const std::set<std::string> commaHeaders)
+{
+  std::transform(key.begin(), key.end(), key.begin(),
+                 ::toLowerCase); // convert the entire string to lowercase. as the key is case-insensitive
+
+  if (key == "set-cookie") // store it in a seperated vector, as its an exception
+    _setCookieHeaders.push_back(std::pair<std::string, std::string>(key, value));
+  else if (_headers.find(key) != _headers.end()) // concat with comma, otherwise ignore new ones
+  {
+    if (commaHeaders.find(key) != commaHeaders.end())
+      _headers.find(key)->second += ", " + value;
+    else
+      return;
+  }
+  else // store normal headers
+    _headers.insert(std::pair<std::string, std::string>(key, value));
+}
+
+void Request::_parseAllHeaders(const std::vector<std::string> &lines)
+{
+  std::set<std::string> commaHeaders;
+  std::string key, value;
+
+  initCommaHeaders(commaHeaders);
+  for (size_t i = 1; i < lines.size(); i++)
   {
     if (lines[i].empty())
       throw RequestException("400 Bad Request");
 
-    string key = trim(lines[i].substr(0, lines[i].find_first_of(":")));
-    string value = trim(lines[i].substr(lines[i].find_first_of(":") + 1));
-    if (key.empty() || key.empty())
-      throw RequestException("400 Bad Request");
-    _headers.insert(pair<string, string>(key, value));
+    key = lines[i].substr(0, lines[i].find_first_of(":"));
+    value = trim(lines[i].substr(lines[i].find_first_of(":") + 1));
+
+    _parseHeader(key, value);
+    _insertHeader(key, value, commaHeaders);
   }
 }
 
-void Request::_parse_first_line(const std::vector<std::string> &lines)
+void Request::_parseFirstLine(const std::vector<std::string> &lines)
 {
-  vector<string> fields;
+  std::vector<std::string> fields;
   std::string method, path, version, first_line;
 
   first_line = lines.front();
   split(first_line, fields, " ");
+  if (fields.size() != 3)
+    throw RequestException("400 Bad Request");
 
   method = fields[0];
-  path = fields[1];
+  path = fields[1]; // ? i could check for the length of the uri, if its too long, throw 414 URI Too Long
   version = fields[2];
-  if (!path.empty() && (method == "GET") && (version == "HTTP/1.0" || version == "HTTP/1.1")) // todo : i will add the rest of the methods later
+  if (!path.empty() && (method == "GET" || method == "POST") && version == "HTTP/1.1") // todo : i will add the rest of the methods later
   {
     _path = path;
     _method = method;
@@ -83,14 +146,14 @@ void Request::_parse_first_line(const std::vector<std::string> &lines)
     throw RequestException("400 Bad Request");
 }
 
-// ? member functions
-void Request::_request_pars(const std::string &raw)
+void Request::_requestParser(const std::string &raw)
 {
-  std::vector<string> lines;
+  std::vector<std::string> lines;
   std::string del = "\r\n";
 
   split(raw, lines, del);
 
-  _parse_first_line(lines);
-  _parse_headers(lines);
+  _parseFirstLine(lines);
+  _parseAllHeaders(lines);
+
 }
