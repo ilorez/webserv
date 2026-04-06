@@ -136,7 +136,7 @@ void Request::_parseFirstLine(const std::vector<std::string> &lines)
   method = fields[0];
   path = fields[1]; // ? i could check for the length of the uri, if its too long, throw 414 URI Too Long
   version = fields[2];
-  if (!path.empty() && (method == "GET" || method == "POST") && version == "HTTP/1.1") // todo : i will add the rest of the methods later
+  if (!path.empty() && (method == "GET" || method == "POST" || method == "DELETE") && version == "HTTP/1.1") // todo : i will add the rest of the methods later
   {
     _path = path;
     _method = method;
