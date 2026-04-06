@@ -8,7 +8,7 @@ private:
   std::string _version;                        // HTTP/1.1
   std::string _method;                         // get, post, delete
   std::map<std::string, std::string> _headers; // http headers
-  std::vector<std::pair<std::string, std::string>> _setCookieHeaders;
+  std::vector<std::pair<std::string, std::string> > _setCookieHeaders;
 
 public:
   Request(const std::string &raw);
