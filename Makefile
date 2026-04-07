@@ -1,7 +1,7 @@
 # vpaths
 vpath %.hpp includes
 vpath %.h includes
-vpath %.cpp src
+vpath %.cpp src src/server src/request src/response src/config
 
 NAME = webserv 
 
