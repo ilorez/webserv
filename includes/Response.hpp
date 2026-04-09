@@ -17,12 +17,19 @@ public:
     Response &operator=(const Response &other);
     ~Response();
 
-    void initStatusCodes(std::map<int, std::string> &m);
-    void initMediaTypes(std::map<std::string, std::string> &m);
-    void initHeaders(std::map<std::string, std::string> &h);
-    std::string returnMediaType(std::string path);
+    void        initStatusCodes(std::map<int, std::string> &m);
+    void        initMediaTypes(std::map<std::string, std::string> &m);
+    void        initHeaders(std::map<std::string, std::string> &h);
+    
+    std::string returnMediaType(const std::string& path);
     std::string mergeResponseToString();
     std::string build();
+
+    void        serveErrorPage(int status);
+    void        Delete();
+    void        Post();
+    void        Get();
+
 };
 
 #endif

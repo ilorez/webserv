@@ -1,4 +1,4 @@
-#include "../../includes/container.hpp"
+#include "../includes/container.hpp"
 
 Response::Response(Request req)
   : _req(req)
@@ -18,49 +18,80 @@ Response &Response::operator=(const Response &other)
 
 Response::~Response() {};
 
-std::string timespecToString(time_t tv_sec, long tv_nsec)
+std::string getHttpDate(time_t t)
 {
-    tm *tm_info = localtime(&tv_sec);
+    tm *gmt = gmtime(&t);
 
-    char buffer[20];
-    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
+    char buffer[100];
+    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", gmt);
 
-    std::ostringstream oss;
-    oss << buffer
-        << "." << std::setw(9) << std::setfill('0') << tv_nsec;
-
-    return oss.str();
+    return std::string(buffer);
 }
 
-std::string returnFileExtension(std::string path)
+std::string returnFileExtension(const std::string& path)
 {
-  std::string result;
-  size_t pos = path.rfind('.');
-  if (pos != std::string::npos)
-  {
-      result = path.substr(pos);
-  }
-  return (result);
+    size_t pos = path.rfind('.');
+    if (pos == std::string::npos)
+        return "";
+    
+    size_t slash = path.rfind('/');
+    if (slash != std::string::npos && slash > pos)
+        return "";
+    
+    return path.substr(pos);
 }
 
-std::string Response::returnMediaType(std::string path)
+std::string Response::returnMediaType(const std::string& path)
 {
-  std::map<std::string, std::string>::iterator it = _mapMediaTypes.find(returnFileExtension(path));
-  return (it->second);
+    std::string ext = returnFileExtension(path);
+    if (!ext.empty())
+    {
+        std::map<std::string, std::string>::iterator it = _mapMediaTypes.find(ext);
+        if (it != _mapMediaTypes.end())
+            return it->second;
+    }
+
+    return "text/html";
 }
 
 void Response::initHeaders(std::map<std::string, std::string> &h)
 {
-  struct stat _stat;
+    timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
 
-  int rv = stat(_req.getPath().c_str(), &_stat);
-  if (rv == -1)
-    throw ResponseException("stat failure\n");
+    // General headers
+    h.insert(std::make_pair("Date", getHttpDate(ts.tv_sec)));
+    h.insert(std::make_pair("Server", "MyServer"));
+    h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
+    h.insert(std::make_pair("Connection", "close"));
 
-  h.insert(std::make_pair("Server : ", "MyServer"));
-  h.insert(std::make_pair("Date : ", timespecToString(_stat.st_ctim.tv_sec, _stat.st_ctim.tv_nsec)));
-  h.insert(std::make_pair("Content-Length : ", to_string98(_stat.st_size)));
-  h.insert(std::make_pair("Content-Type : ", returnMediaType(_req.getPath())));
+    // Content-Type
+    if (_req.getMethod() == "GET")
+        h.insert(std::make_pair("Content-Type", returnMediaType(_req.getPath())));
+    else
+        h.insert(std::make_pair("Content-Type", "text/plain"));
+
+    if (_req.getMethod() == "GET")
+    {
+        struct stat _stat;
+        std::string filepath;
+        if (_status / 100 == 4)
+            filepath = "./www/" + to_string98(_status) + ".html";
+        else
+            filepath = "./www" + _req.getPath();
+        if (stat(filepath.c_str(), &_stat) == -1)
+            throw ResponseException("stat failure\n");
+        h.insert(std::make_pair("Last-Modified", getHttpDate(_stat.st_mtim.tv_sec)));
+    }
+    else if (_req.getMethod() == "POST")
+    {
+        if (_status == 201)
+            h.insert(std::make_pair("Location", _req.getPath()));
+    }
+    else if (_req.getMethod() == "DELETE")
+    {
+        
+    }
 }
 
 std::string  Response::mergeResponseToString()
@@ -74,7 +105,7 @@ std::string  Response::mergeResponseToString()
   // make headers
   for (std::map<std::string, std::string>::const_iterator it = _headers.begin();
        it != _headers.end(); ++it) {
-      ret += it->first + it->second + "\n";
+      ret += it->first + ": " + it->second + "\r\n";
   }
 
   // empty line 
@@ -86,6 +117,168 @@ std::string  Response::mergeResponseToString()
   return (ret);
 }
 
+void Response::serveErrorPage(int status)
+{
+    _status = status;
+
+    std::string errorPage = "./www/" + to_string98(status) + ".html";
+    _body = ft_readFile(errorPage);
+    if (_body.empty())
+        _body = to_string98(status) + " Error";
+}
+
+void Response::Get()
+{
+    /*
+    // Check if POST is allowed on this route
+    if ()
+    {
+        _status = 405;
+        _body = "Method Not Allowed";
+        return;
+    }
+    */
+
+    std::string path = _req.getPath();
+
+    std::string filepath;
+    if (path == "/" || path == "/index.html")
+        filepath = "./www/index.html";
+    else
+        filepath = "./www" + path;
+
+    if (access(filepath.c_str(), F_OK) != 0)
+    {
+        serveErrorPage(404);
+        return;
+    }
+
+    if (access(filepath.c_str(), R_OK) != 0)
+    {
+        serveErrorPage(403);
+        return;
+    }
+
+    struct stat info;
+    stat(filepath.c_str(), &info);
+    if (S_ISDIR(info.st_mode))
+    {
+        filepath += "/index.html";
+        if (access(filepath.c_str(), F_OK) != 0)
+        {
+            serveErrorPage(403);
+            return;
+        }
+    }
+
+    _body = ft_readFile(filepath);
+    if (_body.empty())
+    {
+        serveErrorPage(404);
+        return;
+    }
+
+    _status = 200;
+}
+
+void Response::Post()
+{
+    /*
+    // Check if POST is allowed on this route
+    if ()
+    {
+        _status = 405;
+        _body = "Method Not Allowed";
+        return;
+    }
+    */
+
+
+    std::string contentType = _req.getHeaderValue("content-type");
+    std::string contentLengthStr = _req.getHeaderValue("content-length");
+    if (contentType.empty() || contentLengthStr.empty())
+    {
+        _status = 400;
+        _body = "Missing Content-Type or Content-Length headers.\n";
+        return;
+    }
+
+    if (contentType != "application/x-www-form-urlencoded")
+    {
+        _status = 415;
+        _body = "Unsupported Content-Type\n";
+        return;
+    }
+
+    int contentLength = 0;
+    contentLength = std::atoi(contentLengthStr.c_str()); // if atoi not allowed, i will create one
+
+    if (contentLength <= 0)
+    {
+        _status = 411;
+        _body = "Content-Length missing or zero\n";
+        return;
+    }
+
+    std::string filepath = "./www" + _req.getPath();
+    std::ofstream file(filepath.c_str());
+    if (file)
+    {
+        /* Replace line two with one if the request stores the body.*/
+        file << "Some text , should be body\n";
+        // file << _req.getbody();
+        _status = 201;
+        _body = "File created successfully\n";
+    }
+    else
+    {
+        _status = 500;
+        _body = "Internal Server Error: could not create file\n";
+    }
+}
+
+
+void Response::Delete()
+{
+    /*
+    // Check if DELETE is allowed on this route
+    if ()
+    {
+        _status = 405;
+        _body = "Method Not Allowed";
+        return;
+    }
+    */
+
+    std::string filepath = "./www" + _req.getPath();
+
+    if (access(filepath.c_str(), F_OK) != 0)
+    {
+        _status = 404;
+        _body = "File not found\n";
+        return;
+    }
+
+    if (access(filepath.c_str(), W_OK) != 0)
+    {
+        _status = 403;
+        _body = "Permission denied\n";
+        return;
+    }
+
+    int fd = open(filepath.c_str(), O_WRONLY | O_TRUNC);
+    if (fd == -1)
+    {
+        _status = 500;
+        _body = "Failed to open file\n";
+        return;
+    }
+    close(fd);
+
+    _status = 200;
+    _body = "File deleted successfully\n";
+}
+
 std::string Response::build()
 {
   std::string response;
@@ -93,20 +286,18 @@ std::string Response::build()
   initStatusCodes(_mapStatusCodes);
   initMediaTypes(_mapMediaTypes);
 
-
-  _body = ft_readFile(_req.getPath());
-  if (_body.empty())
-  {
-      _status = 404;
-      _req.setPath("./www/404.html");
-      _body = ft_readFile(_req.getPath());
-      if (_body.empty())
-      {
-        throw ResponseException("Page 404.html does not exist");
-      }
-  }
+  if (_req.getMethod() == "GET")
+      Get();
+  else if (_req.getMethod() == "POST")
+      Post();
+  else if (_req.getMethod() == "DELETE")
+      Delete();
   else
-    _status = 200;
+  {
+    _status = 405;
+    throw ResponseException("405 Method Not Allowed");
+  }
+
 
   initHeaders(_headers);
   response = mergeResponseToString();
@@ -125,6 +316,7 @@ void Response::initStatusCodes(std::map<int, std::string> &m)
   m.insert(std::make_pair(401, " Unauthorized"));
   m.insert(std::make_pair(403, " Forbidden"));
   m.insert(std::make_pair(404, " Not Found"));
+  m.insert(std::make_pair(415, " Unsupported Media Type"));
 
   m.insert(std::make_pair(500, " Internal Server Error"));
   m.insert(std::make_pair(502, " Bad Gateway"));
