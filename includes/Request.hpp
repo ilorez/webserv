@@ -20,7 +20,7 @@ public:
   std::string getVersion() const;
   std::string getMethod() const;
   std::string getPath() const;
-  std::string getHeaderValue(const std::string &key) const;
+  std::string getHeaderValue(std::string key);
 
   void setPath(const std::string &path);
 
