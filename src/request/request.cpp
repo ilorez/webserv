@@ -36,9 +36,16 @@ std::string Request::getVersion() const
   return (this->_version);
 }
 
-std::string Request::getHeaderValue(const std::string &key) const
+std::string Request::getHeaderValue(std::string key)
 {
-  return (this->_headers.find(key)->second);
+  std::transform(key.begin(), key.end(), key.begin(),
+                 ::toLowerCase);
+  std::map<std::string, std::string>::const_iterator it = this->_headers.find(key);
+
+  if (it == this->_headers.end())
+    return "";
+
+  return (it->second);
 }
 
 // ? setters
@@ -155,5 +162,4 @@ void Request::_requestParser(const std::string &raw)
 
   _parseFirstLine(lines);
   _parseAllHeaders(lines);
-
 }
