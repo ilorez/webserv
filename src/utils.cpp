@@ -13,8 +13,7 @@ std::string ft_readFile(std::string src)
   std::ifstream readfile(src.c_str());
   if (!readfile.is_open())
   {
-    std::cout << "Error with ifstream read file" << std::endl;
-    return (NULL);
+    return "";
   }
   std::string line;
   std::string all_lines;
