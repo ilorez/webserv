@@ -1,7 +1,8 @@
 
-#include "../includes/Server.hpp"
+#include "../../includes/Server.hpp"
 #include "../../includes/container.hpp"
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
@@ -31,9 +32,9 @@ void Server::_initSocket()
   // IPPROTO_TCP protocol: TCP 
   _socket_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (_socket_fd < 0)
-  {
     throw ServerException("socket() failed.");
-  }
+  // apply non-bloacking mode to listening socket fd
+  fcntl(_socket_fd, F_SETFL, O_NONBLOCK);
   int opt = 1;
   // SOL_SOCKET: the "level" you're setting an option at the socket layer
   // SO_REUSEADDR: for reusing a local address that still in TIME_WAIT
@@ -71,6 +72,8 @@ void Server::_handelClient(socklen_t size_socket)
   if (client_fd < 0)
     throw ServerException("accept() failed.");
 
+  // applying non-blocking mode to everyclient fd
+  fcntl(client_fd, F_SETFL, O_NONBLOCK);
 
   // read from user client socket
   // read to the line before \r\n\r\n 
@@ -97,9 +100,14 @@ void Server::_handelClient(socklen_t size_socket)
     return;
   }
 
+  DEBUG_INFO("buffer");
   std::cout << buffer << std::endl;
+  DEBUG_INFO("headers");
   std::string headers = buffer.substr(0, pos);
+  std::cout << headers << std::endl;
+  DEBUG_INFO("body");
   std::string body    = buffer.substr(pos + 4);
+  std::cout << body << std::endl;
 
   DEBUG_INFO("Request");
   Request req(headers);
