@@ -15,18 +15,7 @@ ManageClients::~ManageClients()
     }
     _clients.clear();
 }
- 
 
-// its private you can't use this 
-ManageClients::ManageClients(const ManageClients &other)
-{
-	(void)other;
-}
-ManageClients &ManageClients::operator=(const ManageClients &other)
-{
-	(void)other;
-	return (*this);
-}
 
 void    ManageClients::addClient(int fd){
   if (_clients.find(fd) != _clients.end()) {
