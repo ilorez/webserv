@@ -91,7 +91,13 @@ void Server::_handelClient(socklen_t size_socket)
       break;
     }
   }
+  if (pos < 1)
+  {
+    DEBUG_WARN("Empty request");
+    return;
+  }
 
+  std::cout << buffer << std::endl;
   std::string headers = buffer.substr(0, pos);
   std::string body    = buffer.substr(pos + 4);
 
