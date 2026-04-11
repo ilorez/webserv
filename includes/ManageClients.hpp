@@ -8,6 +8,7 @@ class ManageClients
 {
     private:
         std::map<int, Client*> _clients;
+        int _epfd;
     public:
         ManageClients();
         ~ManageClients();
@@ -16,6 +17,8 @@ class ManageClients
         void    removeClient(int fd);
         Client* getClient(int fd);
         bool    clientExists(int fd) const;
+        void    setEpfd(int fd);
+        void    checkTimeout();
     private:
         ManageClients(const ManageClients& other);
         ManageClients& operator=(const ManageClients& other);

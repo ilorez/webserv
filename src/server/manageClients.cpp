@@ -1,9 +1,13 @@
 #include "../../includes/ManageClients.hpp"
 #include "../../includes/container.hpp"
+#include <sys/epoll.h>
 #include <utility>
 
 
 ManageClients::ManageClients() {}
+ManageClients::ManageClients(int epfd) {
+
+}
 
 ManageClients::~ManageClients()
 {
@@ -59,4 +63,25 @@ Client* ManageClients::getClient(int fd)
 bool    ManageClients::clientExists(int fd) const
 {
   return _clients.find(fd) != _clients.end();
+}
+
+void ManageClients::setEpfd(int fd)
+{
+  _epfd = fd;
+}
+
+void ManageClients::checkTimeout()
+{
+  std::map<int, Client*>::iterator it = _clients.begin();
+  while (it != _clients.end())
+  {
+    if (it->second->isTimedOut(TIMEOUT_MS))
+    {
+      // delete from eppll
+      epoll_ctl(_epfd, EPOLL_CTL_DEL, it->first, NULL);
+      delete it->second;
+      _clients.erase(it);
+    }
+    it++;
+  }
 }

@@ -21,12 +21,12 @@ Server::~Server()
 
 void Server::run()
 {
-  this->_initSocket();
-  socklen_t size_socket = sizeof(_addr);
+  this->_initSocket(); socklen_t size_socket = sizeof(_addr);
   _epoll_fd = epoll_create(1);
   if (_epoll_fd == -1)
     throw ServerException("server run: epoll_create fail");
-  this->_add_client(_socket_fd);
+  _clients.setEpfd(_epoll_fd);
+  this->_addClient(_socket_fd);
   while (1)
     this->_handelClient(size_socket);
 }
@@ -72,18 +72,24 @@ void Server::_initSocket()
 
 void Server::_handelClient(socklen_t size_socket)
 {
-  int n = epoll_wait(_epoll_fd, _events, MAX_EVENTS, 5000);
+  int n = epoll_wait(_epoll_fd, _events, MAX_EVENTS, EPOLL_WAIT_TIMEOUT);
   if (n == -1)
   {
-    // TODO: ERROR
+    DEBUG_ERROR("handelClient: epoll wait fail");
     return ;
   }
   for (int i = 0; i < n; i++)
   {
     if (_events[i].data.fd == _socket_fd)
     {
+      int client_fd = accept(_socket_fd, (struct sockaddr *)(&_addr), (socklen_t *)&size_socket);
       // TODO: new client
-
+      DEBUG_INFO("------------New Request-----------");
+      if (client_fd < 0)
+        throw ServerException("accept() failed.");
+      // adding to clinet list
+      _clients.addClient(client_fd);
+      this->_addClient(client_fd);
     }
     else if (_events[i].events & EPOLLIN)
     {
@@ -95,14 +101,11 @@ void Server::_handelClient(socklen_t size_socket)
       // TODO: client disconnected or error
     }
   }
+  // INFO: checking timeout everytime can reduce performance
   // TODO: check timeout n=0
-  /*int client_fd = accept(_socket_fd, (struct sockaddr *)(&_addr), (socklen_t *)&size_socket);
-  DEBUG_INFO("------------New Request-----------");
-  if (client_fd < 0)
-    throw ServerException("accept() failed.");
-  // adding to clinet list
-  _clients.addClient(client_fd);
-  this->_add_client(client_fd);
+  this->_checkTimeout();
+
+  /*
   // read from user client socket
   // read to the line before \r\n\r\n 
   std::string buffer;
@@ -157,7 +160,7 @@ void Server::_handelClient(socklen_t size_socket)
 }
 
 // add client
-void Server::_add_client(int client_fd) {
+void Server::_addClient(int client_fd) {
   // applying non-blocking mode to everyclient fd
   fcntl(client_fd, F_SETFL, O_NONBLOCK);
   
@@ -166,3 +169,4 @@ void Server::_add_client(int client_fd) {
   epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &_epoll_event); 
   // NOTE:epoll ctl copy the ev into kernel
 }
+

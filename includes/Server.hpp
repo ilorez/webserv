@@ -38,12 +38,11 @@ class Server {
     void run(); // create socket and start listning
     private:
       void _initSocket();
-      // TODO:update to handel new client
       void _handelClient(socklen_t);
-      void _add_client(int client_fd);
+      void _addClient(int client_fd);
       // TODO:handelReadyClient
-      // TODO:check timeout in case of epoll wait timedout or loop have done 100+ iteration
       // TODO:_client_disconnected
+      void _handelClientDisconnect();
 };
 
 #endif
