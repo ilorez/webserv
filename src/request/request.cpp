@@ -1,9 +1,10 @@
 #include "../../includes/container.hpp"
 
+Request::Request(){}
 // ? Canonical Form
 Request::Request(const std::string &raw)
 {
-  this->_requestParser(raw);
+  this->requestParser(raw);
 }
 
 Request::Request(const Request &other) : _path(other._path), _version(other._version), _method(other._method), _headers(other._headers) {};
@@ -153,7 +154,7 @@ void Request::_parseFirstLine(const std::vector<std::string> &lines)
     throw RequestException("400 Bad Request");
 }
 
-void Request::_requestParser(const std::string &raw)
+void Request::requestParser(const std::string &raw)
 {
   std::vector<std::string> lines;
   std::string del = "\r\n";

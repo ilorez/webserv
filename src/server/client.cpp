@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 Client::Client(int fd) : _fd(fd), _writeOffset(0), _lastActivity(time(NULL)),
-	_state(READING)
+	_state(READING_HEADERS)
 {
 }
 
@@ -57,6 +57,11 @@ void Client::setState(ClientState state)
 void Client::setWriteBuffer(const std::string &data)
 {
 	_writeBuffer = data;
+}
+
+void Client::setReadBuffer(const std::string &data)
+{
+	_readBuffer = data;
 }
 
 void Client::updateLastActivity()

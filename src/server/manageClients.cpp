@@ -77,11 +77,17 @@ void ManageClients::checkTimeout()
   {
     if (it->second->isTimedOut(TIMEOUT_MS))
     {
-      // delete from eppll
+      // delete from epoll
       epoll_ctl(_epfd, EPOLL_CTL_DEL, it->first, NULL);
       delete it->second;
       _clients.erase(it);
     }
     it++;
   }
+}
+
+void ManageClients::disconnect(int fd)
+{
+    epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
+    this->removeClient(fd);
 }

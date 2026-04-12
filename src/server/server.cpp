@@ -74,10 +74,10 @@ void Server::_handelClient(socklen_t size_socket)
   }
   for (int i = 0; i < n; i++)
   {
+    // new client
     if (_events[i].data.fd == _socket_fd)
     {
       int client_fd = accept(_socket_fd, (struct sockaddr *)(&_addr), (socklen_t *)&size_socket);
-      // TODO: new client
       DEBUG_INFO("------------New Request-----------");
       if (client_fd < 0)
         throw ServerException("accept() failed.");
@@ -85,71 +85,104 @@ void Server::_handelClient(socklen_t size_socket)
       _clients.addClient(client_fd);
       this->_addClient(client_fd);
     }
+    // EPOLLIN fires on client_fd:
     else if (_events[i].events & EPOLLIN)
     {
+      Client *cl = _clients.getClient(_events[i].data.fd);
+      if (!cl){/*TODO:erroo*/ return;}
+      
+      // read client headers
+      //n = read(fd, buf, sizeof(buf))
+
+      // user close connection n == 0  → EOF       → disconnect()
+      // error with socket or internet conneciton n == -1 → error     → disconnect()
+      // n > 0   → got data  → check client state:
+/*
+    READING_HEADERS:
+      append buf to client.header_buffer
+      scan for "\r\n\r\n"
+      if not found → stay in READING_HEADERS (wait for more data)
+      if found →
+        send headers to your parsing teammate
+        check method:
+          DELETE → transition to PROCESSING
+          GET    → transition to PROCESSING
+          POST   → transition to READING_BODY
+
+          */
+
+
+
+
       // TODO: handle client I/O
+      if (cl->getState() == READING_HEADERS)
+        this->readheaders(cl);
+      else if (cl->getState() == READING_BODY) {
+        if (req.getHeaderValue("Content-Type") == "multipart/form-data")
+          {}// TODO: store on tmp file
+        else {}
+          // TODO: store on string
+     /* READING_BODY:
+      write chunk to client.tmp_file (random.tmp)
+      client.bytes_read += n
+      if bytes_read < Content-Length → stay in READING_BODY
+      if bytes_read == Content-Length →
+        close tmp_file
+        transition to PROCESSING
+        */
+      }
+      else if (cl->getState() == PROCESSING) {
+          DEBUG_INFO("Response");
+          Response res(req);
+          std::string result = res.build();
+         // write back to user fd
+          // close
+/*PROCESSING:
+      build response headers
+      DELETE → execute delete, transition to RESPONDING
+      GET    → find file, transition to RESPONDING
+      POST   → move tmp_file to final location, transition to RESPONDING
+      re-register fd for EPOLLOUT*/
+      }
+      // TODO: after done from processing register client as EPOLLOUT using epoll_ctl(MOD)
       // update clinet last activity to now
+      cl->updateLastActivity();
+    }
+    else if (_events[i].events & EPOLLOUT)
+    {
+      Client *cl = _clients.getClient(_events[i].data.fd);
+      if (!cl){/*TODO:erroo*/ return;}
+
+      /*EPOLLOUT fires on client_fd:
+        RESPONDING:
+          DELETE/POST → response is small, write once → transition to DONE
+          GET →
+            read next chunk from file
+            write chunk to socket
+            if more chunks → stay in RESPONDING
+            if file done   → transition to DONE
+
+        DONE:
+          disconnect()
+      */
+      // even if this should not happen i will just check for edge cases 
+      if (cl->getState() != SENDING)
+        return ;
+
+      // TODO: send that to client and close connection after done
+      // send();
+      cl->setState(DONE);
+      _clients.disconnect(cl->getFd());
+
     }
     else if (_events[i].events & EPOLLHUP || _events[i].events & EPOLLERR)
     {
-      // TODO: client disconnected or error
+      // client disconnected or error
+      _clients.disconnect(_events[i].data.fd);
     }
   }
   // INFO: checking timeout everytime can reduce performance
   // check timeout n=0
   _clients.checkTimeout();
-
-  /*
-  // read from user client socket
-  // read to the line before \r\n\r\n 
-  std::string buffer;
-  char tmp[BUF_SIZE];
-  size_t pos = 0;
-  size_t tmppos;
-  while (1)
-  {
-    int bytes = recv(client_fd, tmp, BUF_SIZE, 0);
-    if (bytes <= 0)
-      break;
-    buffer.append(tmp, bytes);
-    tmppos = buffer.find("\r\n\r\n");
-    if ( tmppos != std::string::npos)
-    {
-      pos = tmppos; 
-      break;
-    }
-  }
-  if (pos < 1)
-  {
-    DEBUG_WARN("Empty request");
-    return;
-  }
-
-  DEBUG_INFO("buffer");
-  std::cout << buffer << std::endl;
-  DEBUG_INFO("headers");
-  std::string headers = buffer.substr(0, pos);
-  std::cout << headers << std::endl;
-  DEBUG_INFO("body");
-  std::string body    = buffer.substr(pos + 4);
-  std::cout << body << std::endl;
-
-  DEBUG_INFO("Request");
-  Request req(headers);
-
-  // TODO: if method is post, we should first read body
-  //
-  DEBUG_INFO("Response");
-  Response res(req);
-
-  // TODO:in case of get we should count file size and it CHUNK_SIZE
-  if (req.getMethod() == "get"){}
-
-  std::string result = res.build();
-  // write back to user fd
-  write(client_fd, result.c_str(), result.length());
-  // close
-  close(client_fd);
-  */
 }
 

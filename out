@@ -1,0 +1,416 @@
+diff --git a/includes/Client.hpp b/includes/Client.hpp
+index b72f0ab..c26ac93 100644
+--- a/includes/Client.hpp
++++ b/includes/Client.hpp
+@@ -6,7 +6,8 @@
+ 
+ enum ClientState
+ {
+-    READING,
++    READING_HEADERS,
++    READING_BODY,
+     PROCESSING,
+     SENDING,
+     DONE
+@@ -37,6 +38,7 @@ class Client
+         // setters
+         void  setState(ClientState state);
+         void  setWriteBuffer(const std::string& data);
++        void  setReadBuffer(const std::string& data);
+         void  updateLastActivity();
+ 
+         // methods
+diff --git a/includes/ManageClients.hpp b/includes/ManageClients.hpp
+index e494048..6b984c4 100644
+--- a/includes/ManageClients.hpp
++++ b/includes/ManageClients.hpp
+@@ -19,6 +19,7 @@ class ManageClients
+         bool    clientExists(int fd) const;
+         void    setEpfd(int fd);
+         void    checkTimeout();
++        void    disconnect(int fd);
+     private:
+         ManageClients(const ManageClients& other);
+         ManageClients& operator=(const ManageClients& other);
+diff --git a/includes/Request.hpp b/includes/Request.hpp
+index 755b0bd..843f01c 100644
+--- a/includes/Request.hpp
++++ b/includes/Request.hpp
+@@ -1,16 +1,22 @@
+ #ifndef REQUEST_HPP
+ #define REQUEST_HPP
+ 
++#include <map>
++#include <string>
++#include <vector>
++
+ class Request
+ {
+ private:
+   std::string _path;                           // /, /index.html
+   std::string _version;                        // HTTP/1.1
+   std::string _method;                         // get, post, delete
+-  std::map<std::string, std::string> _headers; // http headers
+-  std::vector<std::pair<std::string, std::string> > _setCookieHeaders;
++  std::string _body;
++  std::map<typename Key, typename Tp><std::string, std::string> _headers; // http headers
++  std::vector<typename Tp><std::pair<std::string, std::string> > _setCookieHeaders;
+ 
+ public:
++  Request();
+   Request(const std::string &raw);
+   Request(const Request &other);
+   Request &operator=(const Request &other);
+@@ -23,10 +29,9 @@ public:
+   std::string getHeaderValue(std::string key);
+ 
+   void setPath(const std::string &path);
+-
++  void requestParser(const std::string &request);
+ private:
+   // parse request
+-  void _requestParser(const std::string &request);
+   void _parseFirstLine(const std::vector<std::string> &lines);
+   void _parseAllHeaders(const std::vector<std::string> &lines);
+   void _parseHeader(const std::string &key, const std::string &value);
+diff --git a/includes/Server.hpp b/includes/Server.hpp
+index ced6a98..85065a3 100644
+--- a/includes/Server.hpp
++++ b/includes/Server.hpp
+@@ -3,6 +3,7 @@
+ 
+ 
+ #include "ManageClients.hpp"
++#include "Request.hpp"
+ #include "settings.hpp"
+ #include <arpa/inet.h>    // inet_addr() — optional for now
+ #include <sys/epoll.h>
+@@ -19,6 +20,7 @@ class Server {
+     ManageClients _clients;
+     struct epoll_event _events[MAX_EVENTS];
+     struct epoll_event _epoll_event;
++    Request req;
+     // ...
+   public:
+     // orthodox
+@@ -33,6 +35,9 @@ class Server {
+   
+     // parse config file
+     void parseConfig(); // parse info from config file
++
++    // read headers
++    void readheaders(Client *cl);
+     
+     //create socket 
+     void run(); // create socket and start listning
+diff --git a/includes/settings.hpp b/includes/settings.hpp
+index ae182bb..89c4436 100644
+--- a/includes/settings.hpp
++++ b/includes/settings.hpp
+@@ -10,6 +10,7 @@
+ #define MAX_EVENTS 1000
+ #define TIMEOUT_MS 10000 // 10s
+ #define EPOLL_WAIT_TIMEOUT 5000 // 5s
++#define MAX_HEADER_SIZE 8192  // 8KB
+ 
+ #endif
+ 
+diff --git a/src/request/request.cpp b/src/request/request.cpp
+index e97aedb..939e72c 100644
+--- a/src/request/request.cpp
++++ b/src/request/request.cpp
+@@ -1,9 +1,10 @@
+ #include "../../includes/container.hpp"
+ 
++Request::Request(){}
+ // ? Canonical Form
+ Request::Request(const std::string &raw)
+ {
+-  this->_requestParser(raw);
++  this->requestParser(raw);
+ }
+ 
+ Request::Request(const Request &other) : _path(other._path), _version(other._version), _method(other._method), _headers(other._headers) {};
+@@ -153,7 +154,7 @@ void Request::_parseFirstLine(const std::vector<std::string> &lines)
+     throw RequestException("400 Bad Request");
+ }
+ 
+-void Request::_requestParser(const std::string &raw)
++void Request::requestParser(const std::string &raw)
+ {
+   std::vector<std::string> lines;
+   std::string del = "\r\n";
+diff --git a/src/server/client.cpp b/src/server/client.cpp
+index cd13faa..694914f 100644
+--- a/src/server/client.cpp
++++ b/src/server/client.cpp
+@@ -2,7 +2,7 @@
+ #include <unistd.h>
+ 
+ Client::Client(int fd) : _fd(fd), _writeOffset(0), _lastActivity(time(NULL)),
+-	_state(READING)
++	_state(READING_HEADERS)
+ {
+ }
+ 
+@@ -59,6 +59,11 @@ void Client::setWriteBuffer(const std::string &data)
+ 	_writeBuffer = data;
+ }
+ 
++void Client::setReadBuffer(const std::string &data)
++{
++	_readBuffer = data;
++}
++
+ void Client::updateLastActivity()
+ {
+ 	_lastActivity = time(NULL);
+diff --git a/src/server/manageClients.cpp b/src/server/manageClients.cpp
+index d6245d0..e66f651 100644
+--- a/src/server/manageClients.cpp
++++ b/src/server/manageClients.cpp
+@@ -77,7 +77,7 @@ void ManageClients::checkTimeout()
+   {
+     if (it->second->isTimedOut(TIMEOUT_MS))
+     {
+-      // delete from eppll
++      // delete from epoll
+       epoll_ctl(_epfd, EPOLL_CTL_DEL, it->first, NULL);
+       delete it->second;
+       _clients.erase(it);
+@@ -85,3 +85,9 @@ void ManageClients::checkTimeout()
+     it++;
+   }
+ }
++
++void ManageClients::disconnect(int fd)
++{
++    epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
++    this->removeClient(fd);
++}
+diff --git a/src/server/server.cpp b/src/server/server.cpp
+index bc9f3cd..f630b33 100644
+--- a/src/server/server.cpp
++++ b/src/server/server.cpp
+@@ -74,10 +74,10 @@ void Server::_handelClient(socklen_t size_socket)
+   }
+   for (int i = 0; i < n; i++)
+   {
++    // new client
+     if (_events[i].data.fd == _socket_fd)
+     {
+       int client_fd = accept(_socket_fd, (struct sockaddr *)(&_addr), (socklen_t *)&size_socket);
+-      // TODO: new client
+       DEBUG_INFO("------------New Request-----------");
+       if (client_fd < 0)
+         throw ServerException("accept() failed.");
+@@ -85,71 +85,104 @@ void Server::_handelClient(socklen_t size_socket)
+       _clients.addClient(client_fd);
+       this->_addClient(client_fd);
+     }
++    // EPOLLIN fires on client_fd:
+     else if (_events[i].events & EPOLLIN)
+     {
++      Client *cl = _clients.getClient(_events[i].data.fd);
++      if (!cl){/*TODO:erroo*/ return;}
++      
++      // read client headers
++      //n = read(fd, buf, sizeof(buf))
++
++      // user close connection n == 0  → EOF       → disconnect()
++      // error with socket or internet conneciton n == -1 → error     → disconnect()
++      // n > 0   → got data  → check client state:
++/*
++    READING_HEADERS:
++      append buf to client.header_buffer
++      scan for "\r\n\r\n"
++      if not found → stay in READING_HEADERS (wait for more data)
++      if found →
++        send headers to your parsing teammate
++        check method:
++          DELETE → transition to PROCESSING
++          GET    → transition to PROCESSING
++          POST   → transition to READING_BODY
++
++          */
++
++
++
++
+       // TODO: handle client I/O
++      if (cl->getState() == READING_HEADERS)
++        this->readheaders(cl);
++      else if (cl->getState() == READING_BODY) {
++        if (req.getHeaderValue("Content-Type") == "multipart/form-data")
++          {}// TODO: store on tmp file
++        else {}
++          // TODO: store on string
++     /* READING_BODY:
++      write chunk to client.tmp_file (random.tmp)
++      client.bytes_read += n
++      if bytes_read < Content-Length → stay in READING_BODY
++      if bytes_read == Content-Length →
++        close tmp_file
++        transition to PROCESSING
++        */
++      }
++      else if (cl->getState() == PROCESSING) {
++          DEBUG_INFO("Response");
++          Response res(req);
++          std::string result = res.build();
++         // write back to user fd
++          // close
++/*PROCESSING:
++      build response headers
++      DELETE → execute delete, transition to RESPONDING
++      GET    → find file, transition to RESPONDING
++      POST   → move tmp_file to final location, transition to RESPONDING
++      re-register fd for EPOLLOUT*/
++      }
++      // TODO: after done from processing register client as EPOLLOUT using epoll_ctl(MOD)
+       // update clinet last activity to now
++      cl->updateLastActivity();
++    }
++    else if (_events[i].events & EPOLLOUT)
++    {
++      Client *cl = _clients.getClient(_events[i].data.fd);
++      if (!cl){/*TODO:erroo*/ return;}
++
++      /*EPOLLOUT fires on client_fd:
++        RESPONDING:
++          DELETE/POST → response is small, write once → transition to DONE
++          GET →
++            read next chunk from file
++            write chunk to socket
++            if more chunks → stay in RESPONDING
++            if file done   → transition to DONE
++
++        DONE:
++          disconnect()
++      */
++      // even if this should not happen i will just check for edge cases 
++      if (cl->getState() != SENDING)
++        return ;
++
++      // TODO: send that to client and close connection after done
++      // send();
++      cl->setState(DONE);
++      _clients.disconnect(cl->getFd());
++
+     }
+     else if (_events[i].events & EPOLLHUP || _events[i].events & EPOLLERR)
+     {
+-      // TODO: client disconnected or error
++      // client disconnected or error
++      _clients.disconnect(_events[i].data.fd);
+     }
+   }
+   // INFO: checking timeout everytime can reduce performance
+   // check timeout n=0
+   _clients.checkTimeout();
+-
+-  /*
+-  // read from user client socket
+-  // read to the line before \r\n\r\n 
+-  std::string buffer;
+-  char tmp[BUF_SIZE];
+-  size_t pos = 0;
+-  size_t tmppos;
+-  while (1)
+-  {
+-    int bytes = recv(client_fd, tmp, BUF_SIZE, 0);
+-    if (bytes <= 0)
+-      break;
+-    buffer.append(tmp, bytes);
+-    tmppos = buffer.find("\r\n\r\n");
+-    if ( tmppos != std::string::npos)
+-    {
+-      pos = tmppos; 
+-      break;
+-    }
+-  }
+-  if (pos < 1)
+-  {
+-    DEBUG_WARN("Empty request");
+-    return;
+-  }
+-
+-  DEBUG_INFO("buffer");
+-  std::cout << buffer << std::endl;
+-  DEBUG_INFO("headers");
+-  std::string headers = buffer.substr(0, pos);
+-  std::cout << headers << std::endl;
+-  DEBUG_INFO("body");
+-  std::string body    = buffer.substr(pos + 4);
+-  std::cout << body << std::endl;
+-
+-  DEBUG_INFO("Request");
+-  Request req(headers);
+-
+-  // TODO: if method is post, we should first read body
+-  //
+-  DEBUG_INFO("Response");
+-  Response res(req);
+-
+-  // TODO:in case of get we should count file size and it CHUNK_SIZE
+-  if (req.getMethod() == "get"){}
+-
+-  std::string result = res.build();
+-  // write back to user fd
+-  write(client_fd, result.c_str(), result.length());
+-  // close
+-  close(client_fd);
+-  */
+ }
+ 
+diff --git a/src/server/server_utils.cpp b/src/server/server_utils.cpp
+index 99ec030..d463258 100644
+--- a/src/server/server_utils.cpp
++++ b/src/server/server_utils.cpp
+@@ -19,3 +19,46 @@ void Server::_switchEpollRegisration(int client_fd, uint32_t ev)
+   _epoll_event.events = ev;
+ }
+ 
++void Server::readheaders(Client *cl)
++{
++  // read from user client socket
++  // read to the line before \r\n\r\n 
++  char tmp[BUF_SIZE];
++  size_t pos = 0;
++  size_t tmppos;
++  while (1)
++  {
++    int bytes = recv(cl->getFd(), tmp, BUF_SIZE, 0);
++    if (bytes <= 0)
++      break;
++    cl->appendToReadBuffer(tmp, bytes);
++    tmppos = cl->getReadBuffer().find("\r\n\r\n");
++    if ( tmppos != std::string::npos)
++    {
++      pos = tmppos; 
++      break;
++    }
++    if (cl->getReadBuffer().size() > MAX_HEADER_SIZE)
++    {
++      //TODO: send error 431 to client 
++      // 431 Request Header Fields Too Large
++      _clients.disconnect(cl->getFd());
++    }
++  }
++  if (pos < 1)
++  {
++    DEBUG_WARN("Empty request");
++    // TODO: send bad request
++    _clients.disconnect(cl->getFd());
++    return;
++  }
++  std::string headers = cl->getReadBuffer().substr(0, pos);
++  //std::cout << headers << std::endl;
++  cl->setReadBuffer(cl->getReadBuffer().substr(pos+4));
++  DEBUG_INFO("Request");
++  req.requestParser(headers);
++  if (req.getMethod() == "POST")
++    cl->setState(READING_BODY);
++  else
++    cl->setState(PROCESSING);
++}
