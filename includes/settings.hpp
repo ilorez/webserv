@@ -10,6 +10,7 @@
 #define MAX_EVENTS 1000
 #define TIMEOUT_MS 10000 // 10s
 #define EPOLL_WAIT_TIMEOUT 5000 // 5s
+#define MAX_HEADER_SIZE 8192  // 8KB
 
 #endif
 

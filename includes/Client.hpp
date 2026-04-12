@@ -6,7 +6,8 @@
 
 enum ClientState
 {
-    READING,
+    READING_HEADERS,
+    READING_BODY,
     PROCESSING,
     SENDING,
     DONE
@@ -37,6 +38,7 @@ class Client
         // setters
         void  setState(ClientState state);
         void  setWriteBuffer(const std::string& data);
+        void  setReadBuffer(const std::string& data);
         void  updateLastActivity();
 
         // methods

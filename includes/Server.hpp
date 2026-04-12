@@ -3,6 +3,7 @@
 
 
 #include "ManageClients.hpp"
+#include "Request.hpp"
 #include "settings.hpp"
 #include <arpa/inet.h>    // inet_addr() — optional for now
 #include <sys/epoll.h>
@@ -19,6 +20,7 @@ class Server {
     ManageClients _clients;
     struct epoll_event _events[MAX_EVENTS];
     struct epoll_event _epoll_event;
+    Request req;
     // ...
   public:
     // orthodox
@@ -33,6 +35,9 @@ class Server {
   
     // parse config file
     void parseConfig(); // parse info from config file
+
+    // read headers
+    void readheaders(Client *cl);
     
     //create socket 
     void run(); // create socket and start listning

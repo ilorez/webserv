@@ -19,6 +19,7 @@ class ManageClients
         bool    clientExists(int fd) const;
         void    setEpfd(int fd);
         void    checkTimeout();
+        void    disconnect(int fd);
     private:
         ManageClients(const ManageClients& other);
         ManageClients& operator=(const ManageClients& other);
