@@ -5,9 +5,6 @@
 
 
 ManageClients::ManageClients() {}
-ManageClients::ManageClients(int epfd) {
-
-}
 
 ManageClients::~ManageClients()
 {
@@ -75,7 +72,7 @@ void ManageClients::checkTimeout()
   std::map<int, Client*>::iterator it = _clients.begin();
   while (it != _clients.end())
   {
-    if (it->second->isTimedOut(TIMEOUT_MS))
+    if (it->second->isTimedOut(TIMEOUT_SECONDS))
     {
       // delete from epoll
       epoll_ctl(_epfd, EPOLL_CTL_DEL, it->first, NULL);

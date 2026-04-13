@@ -23,31 +23,34 @@ void Server::readheaders(Client *cl)
 {
   // read from user client socket
   // read to the line before \r\n\r\n 
-  char tmp[BUF_SIZE];
+  char tmp[BUF_SIZE]; // 8kb
   size_t pos = 0;
-  size_t tmppos;
-  while (1)
+  //TODO: how about if user sending one byte by one byte
+  int bytes = recv(cl->getFd(), tmp, BUF_SIZE, 0);
+  if (bytes <= 0)
   {
-    int bytes = recv(cl->getFd(), tmp, BUF_SIZE, 0);
-    if (bytes <= 0)
-      break;
-    cl->appendToReadBuffer(tmp, bytes);
-    tmppos = cl->getReadBuffer().find("\r\n\r\n");
-    if ( tmppos != std::string::npos)
-    {
-      pos = tmppos; 
-      break;
-    }
-    if (cl->getReadBuffer().size() > MAX_HEADER_SIZE)
-    {
-      //TODO: send error 431 to client 
-      // 431 Request Header Fields Too Large
-      _clients.disconnect(cl->getFd());
-    }
+    DEBUG_ERROR("error with recv in reading headers, or client discoonect");
+    _clients.disconnect(cl->getFd());
+    return ;
+  }
+  cl->appendToReadBuffer(tmp, bytes);
+  pos = cl->getReadBuffer().find("\r\n\r\n");
+  if ( pos == std::string::npos)
+  {
+      if (cl->getReadBuffer().size() > MAX_HEADER_SIZE)
+      {
+        DEBUG_ERROR("headers is to lage, more then 16kb");
+        //TODO: send error 431 to client 
+        // 431 Request Header Fields Too Large
+        _clients.disconnect(cl->getFd());
+        return ;
+      }
+    // stay in reading headers and move to next client
+    return;
   }
   if (pos < 1)
   {
-    DEBUG_WARN("Empty request");
+    DEBUG_ERROR("Empty request");
     // TODO: send bad request
     _clients.disconnect(cl->getFd());
     return;
