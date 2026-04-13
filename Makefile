@@ -10,11 +10,13 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -I./includes  -DDEBUG
 RM = rm -rf
 BUILD_DR = ./build/
 
-HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp ToString.hpp
+HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp ToString.hpp \
+					Client.hpp ManageClients.hpp Response.hpp Server.hpp utils.hpp WebServExceptions.hpp
 
-F_SRCS = request.cpp utils.cpp response.cpp server.cpp exceptions.cpp
+F_SRCS = request.cpp utils.cpp response.cpp exceptions.cpp
+F_SERVER = server.cpp client.cpp manageClients.cpp server_utils.cpp
 
-SRCS = main.cpp $(F_SRCS) 
+SRCS = main.cpp $(F_SERVER) $(F_SRCS) 
 
 OBJS = $(addprefix $(BUILD_DR),$(SRCS:%.cpp=%.o))
 

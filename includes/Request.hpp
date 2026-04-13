@@ -12,8 +12,8 @@ private:
   std::string _version;                        // HTTP/1.1
   std::string _method;                         // get, post, delete
   std::string _body;
-  std::map<typename Key, typename Tp><std::string, std::string> _headers; // http headers
-  std::vector<typename Tp><std::pair<std::string, std::string> > _setCookieHeaders;
+  std::map<std::string, std::string> _headers; // http headers
+  std::vector<std::pair<std::string, std::string> > _setCookieHeaders;
 
 public:
   Request();

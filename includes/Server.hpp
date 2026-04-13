@@ -38,6 +38,11 @@ class Server {
 
     // read headers
     void readheaders(Client *cl);
+    // new connection
+    void newconnection(socklen_t size_socket);
+    // i/o
+    void readrequest(Client *cl);
+    void sendresponse(Client *cl);
     
     //create socket 
     void run(); // create socket and start listning

@@ -1,5 +1,6 @@
 
 #include "../../includes/container.hpp"
+#include <sys/epoll.h>
 
 Server::Server()
 {
@@ -76,104 +77,21 @@ void Server::_handelClient(socklen_t size_socket)
   {
     // new client
     if (_events[i].data.fd == _socket_fd)
-    {
-      int client_fd = accept(_socket_fd, (struct sockaddr *)(&_addr), (socklen_t *)&size_socket);
-      DEBUG_INFO("------------New Request-----------");
-      if (client_fd < 0)
-        throw ServerException("accept() failed.");
-      // adding to clinet list
-      _clients.addClient(client_fd);
-      this->_addClient(client_fd);
-    }
+      this->newconnection(size_socket);
     // EPOLLIN fires on client_fd:
-    else if (_events[i].events & EPOLLIN)
+    else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
     {
       Client *cl = _clients.getClient(_events[i].data.fd);
-      if (!cl){/*TODO:erroo*/ return;}
-      
-      // read client headers
-      //n = read(fd, buf, sizeof(buf))
-
-      // user close connection n == 0  → EOF       → disconnect()
-      // error with socket or internet conneciton n == -1 → error     → disconnect()
-      // n > 0   → got data  → check client state:
-/*
-    READING_HEADERS:
-      append buf to client.header_buffer
-      scan for "\r\n\r\n"
-      if not found → stay in READING_HEADERS (wait for more data)
-      if found →
-        send headers to your parsing teammate
-        check method:
-          DELETE → transition to PROCESSING
-          GET    → transition to PROCESSING
-          POST   → transition to READING_BODY
-
-          */
-
-
-
-
-      // TODO: handle client I/O
-      if (cl->getState() == READING_HEADERS)
-        this->readheaders(cl);
-      else if (cl->getState() == READING_BODY) {
-        if (req.getHeaderValue("Content-Type") == "multipart/form-data")
-          {}// TODO: store on tmp file
-        else {}
-          // TODO: store on string
-     /* READING_BODY:
-      write chunk to client.tmp_file (random.tmp)
-      client.bytes_read += n
-      if bytes_read < Content-Length → stay in READING_BODY
-      if bytes_read == Content-Length →
-        close tmp_file
-        transition to PROCESSING
-        */
-      }
-      else if (cl->getState() == PROCESSING) {
-          DEBUG_INFO("Response");
-          Response res(req);
-          std::string result = res.build();
-         // write back to user fd
-          // close
-/*PROCESSING:
-      build response headers
-      DELETE → execute delete, transition to RESPONDING
-      GET    → find file, transition to RESPONDING
-      POST   → move tmp_file to final location, transition to RESPONDING
-      re-register fd for EPOLLOUT*/
-      }
-      // TODO: after done from processing register client as EPOLLOUT using epoll_ctl(MOD)
+      if (!cl){/*TODO:erroo*/ continue;}
+      else if (_events[i].events & EPOLLIN)
+        this->readrequest(cl);
+      else if (_events[i].events & EPOLLOUT)
+        this->sendresponse(cl);
       // update clinet last activity to now
-      cl->updateLastActivity();
-    }
-    else if (_events[i].events & EPOLLOUT)
-    {
-      Client *cl = _clients.getClient(_events[i].data.fd);
-      if (!cl){/*TODO:erroo*/ return;}
-
-      /*EPOLLOUT fires on client_fd:
-        RESPONDING:
-          DELETE/POST → response is small, write once → transition to DONE
-          GET →
-            read next chunk from file
-            write chunk to socket
-            if more chunks → stay in RESPONDING
-            if file done   → transition to DONE
-
-        DONE:
-          disconnect()
-      */
-      // even if this should not happen i will just check for edge cases 
-      if (cl->getState() != SENDING)
-        return ;
-
-      // TODO: send that to client and close connection after done
-      // send();
-      cl->setState(DONE);
-      _clients.disconnect(cl->getFd());
-
+      if (cl->getState() ==  DONE)
+        _clients.disconnect(cl->getFd());
+      else
+        cl->updateLastActivity();
     }
     else if (_events[i].events & EPOLLHUP || _events[i].events & EPOLLERR)
     {

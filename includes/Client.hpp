@@ -6,7 +6,7 @@
 
 enum ClientState
 {
-    READING_HEADERS,
+    READING_HEADERS = 0,
     READING_BODY,
     PROCESSING,
     SENDING,

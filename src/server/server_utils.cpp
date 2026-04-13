@@ -21,7 +21,25 @@ void Server::_switchEpollRegisration(int client_fd, uint32_t ev)
 
 void Server::readheaders(Client *cl)
 {
+  /*
+  read client headers
+  n = read(fd, buf, sizeof(buf))
+   user close connection n == 0  → EOF       → disconnect()
+   error with socket or internet conneciton n == -1 → error     → disconnect()
+   n > 0   → got data  → check client state:
+  READING_HEADERS:
+    append buf to client.header_buffer
+    scan for "\r\n\r\n"
+    if not found → stay in READING_HEADERS (wait for more data)
+    if found →
+      send headers to your parsing teammate
+      check method:
+        DELETE → transition to PROCESSING
+        GET    → transition to PROCESSING
+        POST   → transition to READING_BODY
+  */
   // read from user client socket
+  //
   // read to the line before \r\n\r\n 
   char tmp[BUF_SIZE]; // 8kb
   size_t pos = 0;
@@ -59,9 +77,87 @@ void Server::readheaders(Client *cl)
   //std::cout << headers << std::endl;
   cl->setReadBuffer(cl->getReadBuffer().substr(pos+4));
   DEBUG_INFO("Request");
+  std::cout << headers << std::endl;
   req.requestParser(headers);
   if (req.getMethod() == "POST")
     cl->setState(READING_BODY);
   else
     cl->setState(PROCESSING);
+}
+
+void Server::newconnection(socklen_t size_socket)
+{
+  int client_fd = accept(_socket_fd, (struct sockaddr *)(&_addr), (socklen_t *)&size_socket);
+  DEBUG_INFO("------------New Request-----------");
+  if (client_fd < 0)
+    throw ServerException("accept() failed.");
+  // adding to clinet list
+  _clients.addClient(client_fd);
+  this->_addClient(client_fd);
+}
+
+void Server::readrequest(Client *cl)
+{
+  if (cl->getState() == READING_HEADERS)
+    this->readheaders(cl);
+  if (cl->getState() == READING_BODY) 
+  {
+    if (req.getHeaderValue("Content-Type") == "multipart/form-data")
+    {
+      // TODO: store on tmp file
+    }
+    else 
+    {
+      // TODO: store on string
+    }
+    /* READING_BODY:
+    write chunk to client.tmp_file (random.tmp)
+    client.bytes_read += n
+    if bytes_read < Content-Length → stay in READING_BODY
+    if bytes_read == Content-Length →
+      close tmp_file
+      transition to PROCESSING
+    */
+    // register client as EPOLLOUT using epoll_ctl(MOD)
+  }
+  _switchEpollRegisration(cl->getFd(),EPOLLOUT);
+  epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, cl->getFd(), &_epoll_event);
+}
+
+void Server::sendresponse(Client *cl)
+{
+  if (cl->getState() == PROCESSING)
+  {
+    /*PROCESSING:
+    build response headers
+    DELETE → execute delete, transition to RESPONDING
+    GET    → find file, transition to RESPONDING
+    POST   → move tmp_file to final location, transition to RESPONDING
+    re-register fd for EPOLLOUT*/
+    /*EPOLLOUT fires on client_fd:
+        RESPONDING:
+          DELETE/POST → response is small, write once → transition to DONE
+          GET →
+            read next chunk from file
+            write chunk to socket
+            if more chunks → stay in RESPONDING
+            if file done   → transition to DONE
+
+        DONE:
+          disconnect()
+    */
+    DEBUG_INFO("Response");
+    Response res(req);
+    cl->setWriteBuffer(res.build());
+    cl->setState(SENDING);
+  }
+  // even if this should not happen i will just check for edge cases 
+  else if (cl->getState() == SENDING)
+  {
+    DEBUG_INFO("SENDING response");
+    std::cout << cl->getWriteBuffer() << std::endl;
+    // send data to client and close connection after done
+    send(cl->getFd(), cl->getWriteBuffer().c_str(), cl->getWriteBuffer().length(), 0);
+    cl->setState(DONE); 
+  }
 }

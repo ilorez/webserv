@@ -1,4 +1,5 @@
 #include "../../includes/Client.hpp"
+#include "../../includes/debug.hpp"
 #include <unistd.h>
 
 Client::Client(int fd) : _fd(fd), _writeOffset(0), _lastActivity(time(NULL)),
@@ -8,6 +9,7 @@ Client::Client(int fd) : _fd(fd), _writeOffset(0), _lastActivity(time(NULL)),
 
 Client::~Client()
 {
+  DEBUG_INFO("Client disructor called");
   close(_fd);
 }
 
@@ -45,12 +47,14 @@ time_t Client::getLastActivity() const
 }
 ClientState Client::getState() const
 {
-	return (_state);
+  	return (_state);
 }
 
 // setters
 void Client::setState(ClientState state)
 {
+  DEBUG_INFO("status change to");
+  std::cout << "num: " << state << std::endl;
 	_state = state;
 }
 
