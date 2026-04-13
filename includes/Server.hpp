@@ -2,16 +2,25 @@
 #define SERVER_HPP
 
 
+#include "ManageClients.hpp"
+#include "Request.hpp"
+#include "settings.hpp"
 #include <arpa/inet.h>    // inet_addr() — optional for now
+#include <sys/epoll.h>
 #include <sys/socket.h>   // socket(), bind(), listen(), accept() #include <netinet/in.h>   // struct sockaddr_in, htons(), INADDR_ANY
 #include <string>
 
 class Server {
   private:
     int _port;
-    std::string _ip;
     int _socket_fd;
+    int _epoll_fd;
+    std::string _ip;
     struct sockaddr_in _addr;
+    ManageClients _clients;
+    struct epoll_event _events[MAX_EVENTS];
+    struct epoll_event _epoll_event;
+    Request req;
     // ...
   public:
     // orthodox
@@ -26,12 +35,25 @@ class Server {
   
     // parse config file
     void parseConfig(); // parse info from config file
+
+    // read headers
+    void readheaders(Client *cl);
+    // new connection
+    void newconnection(socklen_t size_socket);
+    // i/o
+    void readrequest(Client *cl);
+    void sendresponse(Client *cl);
     
     //create socket 
     void run(); // create socket and start listning
     private:
       void _initSocket();
       void _handelClient(socklen_t);
+      void _addClient(int client_fd);
+      // TODO:handelReadyClient
+      // TODO:_client_disconnected
+      void _handelClientDisconnect();
+      void _switchEpollRegisration(int client_fd, uint32_t ev);
 };
 
 #endif

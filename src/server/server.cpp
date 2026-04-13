@@ -1,14 +1,12 @@
 
-#include "../includes/Server.hpp"
 #include "../../includes/container.hpp"
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <sys/types.h>
+#include <sys/epoll.h>
 
 Server::Server()
 {
   _port = 8080;
   _ip = "127.0.0.1";
+  _epoll_event.events = EPOLLIN;
 }
 
 Server::~Server()
@@ -18,8 +16,12 @@ Server::~Server()
 
 void Server::run()
 {
-  this->_initSocket();
-  socklen_t size_socket = sizeof(_addr);
+  this->_initSocket(); socklen_t size_socket = sizeof(_addr);
+  _epoll_fd = epoll_create(1);
+  if (_epoll_fd == -1)
+    throw ServerException("server run: epoll_create fail");
+  _clients.setEpfd(_epoll_fd);
+  this->_addClient(_socket_fd);
   while (1)
     this->_handelClient(size_socket);
 }
@@ -31,9 +33,8 @@ void Server::_initSocket()
   // IPPROTO_TCP protocol: TCP 
   _socket_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (_socket_fd < 0)
-  {
     throw ServerException("socket() failed.");
-  }
+  // apply non-bloacking mode to listening socket fd
   int opt = 1;
   // SOL_SOCKET: the "level" you're setting an option at the socket layer
   // SO_REUSEADDR: for reusing a local address that still in TIME_WAIT
@@ -66,55 +67,40 @@ void Server::_initSocket()
 
 void Server::_handelClient(socklen_t size_socket)
 {
-  int client_fd = accept(_socket_fd, (struct sockaddr *)(&_addr), (socklen_t *)&size_socket);
-  DEBUG_INFO("------------New Request-----------");
-  if (client_fd < 0)
-    throw ServerException("accept() failed.");
-
-
-  // read from user client socket
-  // read to the line before \r\n\r\n 
-  std::string buffer;
-  char tmp[BUF_SIZE];
-  size_t pos = 0;
-  size_t tmppos;
-  while (1)
+  int n = epoll_wait(_epoll_fd, _events, MAX_EVENTS, EPOLL_WAIT_TIMEOUT);
+  if (n == -1)
   {
-    int bytes = recv(client_fd, tmp, BUF_SIZE, 0);
-    if (bytes <= 0)
-      break;
-    buffer.append(tmp, bytes);
-    tmppos = buffer.find("\r\n\r\n");
-    if ( tmppos != std::string::npos)
+    DEBUG_ERROR("handelClient: epoll wait fail");
+    return ;
+  }
+  for (int i = 0; i < n; i++)
+  {
+    // new client
+    if (_events[i].data.fd == _socket_fd)
+      this->newconnection(size_socket);
+    // EPOLLIN fires on client_fd:
+    else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
     {
-      pos = tmppos; 
-      break;
+      Client *cl = _clients.getClient(_events[i].data.fd);
+      if (!cl){/*TODO:erroo*/ continue;}
+      else if (_events[i].events & EPOLLIN)
+        this->readrequest(cl);
+      else if (_events[i].events & EPOLLOUT)
+        this->sendresponse(cl);
+      // update clinet last activity to now
+      if (cl->getState() ==  DONE)
+        _clients.disconnect(cl->getFd());
+      else
+        cl->updateLastActivity();
+    }
+    else if (_events[i].events & EPOLLHUP || _events[i].events & EPOLLERR)
+    {
+      // client disconnected or error
+      _clients.disconnect(_events[i].data.fd);
     }
   }
-  if (pos < 1)
-  {
-    DEBUG_WARN("Empty request");
-    return;
-  }
-
-  std::cout << buffer << std::endl;
-  std::string headers = buffer.substr(0, pos);
-  std::string body    = buffer.substr(pos + 4);
-
-  DEBUG_INFO("Request");
-  Request req(headers);
-
-  // TODO: if method is post, we should first read body
-  //
-  DEBUG_INFO("Response");
-  Response res(req);
-
-  // TODO:in case of get we should count file size and it CHUNK_SIZE
-  if (req.getMethod() == "get"){}
-
-  std::string result = res.build();
-  // write back to user fd
-  write(client_fd, result.c_str(), result.length());
-  // close
-  close(client_fd);
+  // INFO: checking timeout everytime can reduce performance
+  // check timeout n=0
+  _clients.checkTimeout();
 }
+

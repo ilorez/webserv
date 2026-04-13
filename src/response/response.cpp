@@ -306,6 +306,7 @@ std::string Response::build()
 
 void Response::initStatusCodes(std::map<int, std::string> &m)
 {
+  m[200] = "OK";
   m.insert(std::make_pair(200, " OK"));
   m.insert(std::make_pair(201, " Created"));
   

@@ -17,6 +17,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/epoll.h>
 
 //
 #include "./settings.hpp"
@@ -33,6 +37,10 @@
 #include "./Request.hpp"
 #include "./Response.hpp"
 #include "./Server.hpp"
+
+//
+#include "./Client.hpp"
+#include "./ManageClients.hpp"
 
 
 
