@@ -11,6 +11,7 @@
 #define TIMEOUT_SECONDS 15 // 10s
 #define EPOLL_WAIT_TIMEOUT 5000 // 5s
 #define MAX_HEADER_SIZE 16384  // 16KB
+#define USE_TMP_SIZE 1000000 // 1mb, if the request body is more then USE_TMP_SIZE i will use tmp file to store it
 
 #endif
 

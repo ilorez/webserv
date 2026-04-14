@@ -1,4 +1,6 @@
 #include "../../includes/container.hpp"
+#include <cstddef>
+#include <string>
 
 Request::Request(){}
 // ? Canonical Form
@@ -25,6 +27,11 @@ Request::~Request() {};
 std::string Request::getMethod() const
 {
   return (this->_method);
+}
+
+size_t Request::getContentLen() const
+{
+  return (this->_content_size);
 }
 
 std::string Request::getPath() const
@@ -163,4 +170,10 @@ void Request::requestParser(const std::string &raw)
 
   _parseFirstLine(lines);
   _parseAllHeaders(lines);
+  if (!to_integer<std::string, size_t>(getHeaderValue("Content-Length"), _content_size))
+  {
+    DEBUG_ERROR("request parser: invalid Content-Length");
+    throw RequestException("400 Bad Request");
+  }
+  
 }

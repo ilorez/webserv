@@ -100,7 +100,7 @@ std::string  Response::mergeResponseToString()
   std::map<int, std::string>::iterator sc_it = _mapStatusCodes.find(_status);
 
   // make start line
-  ret += _req.getVersion() + " " + to_string98(sc_it->first) + sc_it->second + "\r\n";
+  ret += _req.getVersion() + " " + to_string98(sc_it->first) + " " + sc_it->second + "\r\n";
   
   // make headers
   for (std::map<std::string, std::string>::const_iterator it = _headers.begin();
@@ -306,7 +306,6 @@ std::string Response::build()
 
 void Response::initStatusCodes(std::map<int, std::string> &m)
 {
-  m[200] = "OK";
   m.insert(std::make_pair(200, " OK"));
   m.insert(std::make_pair(201, " Created"));
   

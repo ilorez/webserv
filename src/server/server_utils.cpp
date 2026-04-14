@@ -1,5 +1,6 @@
 
 #include "../../includes/container.hpp"
+#include <exception>
 
 // add client
 void Server::_addClient(int client_fd) {
@@ -78,7 +79,13 @@ void Server::readheaders(Client *cl)
   cl->setReadBuffer(cl->getReadBuffer().substr(pos+4));
   DEBUG_INFO("Request");
   std::cout << headers << std::endl;
-  req.requestParser(headers);
+  try {
+    req.requestParser(headers);
+  } catch (const std::exception &e)
+  {
+    std::cerr << ERROR_MSG << "request 1: "<< e.what() << std::endl;
+    // TODO: send bad request
+  }
   if (req.getMethod() == "POST")
     cl->setState(READING_BODY);
   else
@@ -102,7 +109,7 @@ void Server::readrequest(Client *cl)
     this->readheaders(cl);
   if (cl->getState() == READING_BODY) 
   {
-    if (req.getHeaderValue("Content-Type") == "multipart/form-data")
+    if (req.getContentLen() > USE_TMP_SIZE)
     {
       // TODO: store on tmp file
     }
@@ -128,30 +135,29 @@ void Server::sendresponse(Client *cl)
 {
   if (cl->getState() == PROCESSING)
   {
-    /*PROCESSING:
+    /*EPOLLOUT fires on client_fd:
+    TODO: PROCESSING:
     build response headers
     DELETE → execute delete, transition to RESPONDING
     GET    → find file, transition to RESPONDING
     POST   → move tmp_file to final location, transition to RESPONDING
-    re-register fd for EPOLLOUT*/
-    /*EPOLLOUT fires on client_fd:
-        RESPONDING:
-          DELETE/POST → response is small, write once → transition to DONE
-          GET →
-            read next chunk from file
-            write chunk to socket
-            if more chunks → stay in RESPONDING
-            if file done   → transition to DONE
+    
+    RESPONDING:
+      DELETE/POST → response is small, write once → transition to DONE
+      GET →
+        read next chunk from file
+        write chunk to socket
+        if more chunks → stay in RESPONDING
+        if file done   → transition to DONE
 
-        DONE:
-          disconnect()
+    DONE:
+       disconnect()
     */
     DEBUG_INFO("Response");
     Response res(req);
     cl->setWriteBuffer(res.build());
     cl->setState(SENDING);
   }
-  // even if this should not happen i will just check for edge cases 
   else if (cl->getState() == SENDING)
   {
     DEBUG_INFO("SENDING response");

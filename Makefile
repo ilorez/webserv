@@ -10,7 +10,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -I./includes  -DDEBUG
 RM = rm -rf
 BUILD_DR = ./build/
 
-HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp ToString.hpp \
+HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp Templates.hpp \
 					Client.hpp ManageClients.hpp Response.hpp Server.hpp utils.hpp WebServExceptions.hpp
 
 F_SRCS = request.cpp utils.cpp response.cpp exceptions.cpp
