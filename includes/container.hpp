@@ -30,7 +30,7 @@
 #include "./WebServExceptions.hpp"
 
 //
-#include "./ToString.hpp"
+#include "./Templates.hpp"
 #include "./utils.hpp"
 
 //

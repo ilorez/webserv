@@ -8,6 +8,7 @@
 class Request
 {
 private:
+  size_t _content_size;
   std::string _path;                           // /, /index.html
   std::string _version;                        // HTTP/1.1
   std::string _method;                         // get, post, delete
@@ -25,6 +26,7 @@ public:
   // getters and setters
   std::string getVersion() const;
   std::string getMethod() const;
+  size_t getContentLen() const;
   std::string getPath() const;
   std::string getHeaderValue(std::string key);
 
