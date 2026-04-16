@@ -1,5 +1,7 @@
+#include <ctime>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -57,3 +59,9 @@ size_t split(const std::string &txt, std::vector<std::string> &strs, const std::
     return strs.size();
 }
 
+std::string makeTmpPath(int cl_fd)
+{
+  std::ostringstream oss;
+  oss << "/tmp/webserv_" << cl_fd << "_" << std::time(NULL) << ".tmp";
+  return oss.str(); 
+}

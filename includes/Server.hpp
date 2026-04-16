@@ -43,6 +43,9 @@ class Server {
     // i/o
     void readrequest(Client *cl);
     void sendresponse(Client *cl);
+    bool createTmpFile(Client *cl);
+    void  readFromSocket(Client *cl);
+    void  readFromSocket(Client *cl, int);
     
     //create socket 
     void run(); // create socket and start listning

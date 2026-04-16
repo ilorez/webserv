@@ -9,4 +9,6 @@ size_t split(const std::string &txt, std::vector<std::string> &strs, std::string
 std::string trim(const std::string &src);
 char toLowerCase(unsigned char c);
 
+std::string makeTmpPath(int cl_fd);
+
 #endif

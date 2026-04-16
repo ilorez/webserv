@@ -13,6 +13,7 @@ enum ClientState
     DONE
 };
 
+
 class Client
 {
     private:
@@ -22,7 +23,6 @@ class Client
         size_t       _writeOffset;
         time_t       _lastActivity;
         ClientState  _state;
-
     public:
         Client(int fd);
         ~Client();
@@ -34,7 +34,7 @@ class Client
         size_t              getWriteOffset() const;
         time_t              getLastActivity() const;
         ClientState         getState()       const;
-
+        
         // setters
         void  setState(ClientState state);
         void  setWriteBuffer(const std::string& data);
