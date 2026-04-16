@@ -2,12 +2,8 @@
 #include <cstddef>
 #include <string>
 
-Request::Request(){}
-// ? Canonical Form
-Request::Request(const std::string &raw)
-{
-  this->requestParser(raw);
-}
+Request::Request():_tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0),_is_request_large(false)
+{}
 
 Request::Request(const Request &other) : _path(other._path), _version(other._version), _method(other._method), _headers(other._headers) {};
 
@@ -21,7 +17,10 @@ Request &Request::operator=(const Request &other)
   return *this;
 }
 
-Request::~Request() {};
+Request::~Request() {
+  if (_tmp_fd >= 0)
+    close(_tmp_fd);
+};
 
 // ?getters
 std::string Request::getMethod() const
@@ -56,11 +55,55 @@ std::string Request::getHeaderValue(std::string key)
   return (it->second);
 }
 
+const std::string & Request::getTmpFileName() const
+{
+  return (_tmp_file_name);
+
+}
+int Request::getTmpFd() const
+{
+  return (_tmp_fd);
+}
+
+bool Request::isRequsetLarge() const
+{
+  return (_is_request_large);
+}
+
+size_t Request::getBytesCounter() const
+{
+  return (_bytes_counter);
+}
+
 // ? setters
 
 void Request::setPath(const std::string &path)
 {
   this->_path = path;
+}
+
+void Request::setTmpFd(int fd)
+{
+  _tmp_fd = fd;
+}
+void Request::setTmpFileName(std::string name)
+{
+  _tmp_file_name = name;
+}
+
+void Request::setIsRequestLarge(bool value)
+{
+  _is_request_large = value;
+}
+
+void Request::setBytesCounter(size_t bytes)
+{
+  _bytes_counter = bytes;
+}
+
+void Request::incrementBytesCounter(size_t bytes)
+{
+  _bytes_counter += bytes;
 }
 
 // ? member functions
@@ -175,5 +218,4 @@ void Request::requestParser(const std::string &raw)
     DEBUG_ERROR("request parser: invalid Content-Length");
     throw RequestException("400 Bad Request");
   }
-  
 }

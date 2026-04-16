@@ -1,6 +1,7 @@
 
 #include "../../includes/container.hpp"
 #include <exception>
+#include <fcntl.h>
 
 // add client
 void Server::_addClient(int client_fd) {
@@ -35,8 +36,7 @@ void Server::readheaders(Client *cl)
     if found →
       send headers to your parsing teammate
       check method:
-        DELETE → transition to PROCESSING
-        GET    → transition to PROCESSING
+        DELETE → transition to PROCESSING GET    → transition to PROCESSING
         POST   → transition to READING_BODY
   */
   // read from user client socket
@@ -48,7 +48,7 @@ void Server::readheaders(Client *cl)
   int bytes = recv(cl->getFd(), tmp, BUF_SIZE, 0);
   if (bytes <= 0)
   {
-    DEBUG_ERROR("error with recv in reading headers, or client discoonect");
+    DEBUG_WARN("error with recv in reading headers, or client discoonect");
     _clients.disconnect(cl->getFd());
     return ;
   }
@@ -58,11 +58,10 @@ void Server::readheaders(Client *cl)
   {
       if (cl->getReadBuffer().size() > MAX_HEADER_SIZE)
       {
-        DEBUG_ERROR("headers is to lage, more then 16kb");
+        DEBUG_ERROR("headers is to large, more then 16kb");
         //TODO: send error 431 to client 
         // 431 Request Header Fields Too Large
         _clients.disconnect(cl->getFd());
-        return ;
       }
     // stay in reading headers and move to next client
     return;
@@ -87,7 +86,18 @@ void Server::readheaders(Client *cl)
     // TODO: send bad request
   }
   if (req.getMethod() == "POST")
+  {
+    if (cl->getReadBuffer().size() >= req.getContentLen())
+    {
+      cl->setState(PROCESSING);
+      return;
+    }
     cl->setState(READING_BODY);
+    req.setIsRequestLarge(req.getContentLen() > USE_TMP_SIZE);
+    if (req.isRequsetLarge())
+      if (!this->createTmpFile(cl))
+        _clients.disconnect(cl->getFd());
+  }
   else
     cl->setState(PROCESSING);
 }
@@ -109,26 +119,20 @@ void Server::readrequest(Client *cl)
     this->readheaders(cl);
   if (cl->getState() == READING_BODY) 
   {
-    if (req.getContentLen() > USE_TMP_SIZE)
-    {
-      // TODO: store on tmp file
-    }
-    else 
-    {
-      // TODO: store on string
-    }
-    /* READING_BODY:
-    write chunk to client.tmp_file (random.tmp)
-    client.bytes_read += n
-    if bytes_read < Content-Length → stay in READING_BODY
-    if bytes_read == Content-Length →
-      close tmp_file
-      transition to PROCESSING
-    */
-    // register client as EPOLLOUT using epoll_ctl(MOD)
+    if (req.isRequsetLarge())
+      readFromSocket(cl);
+    else
+      readFromSocket(cl, 0);
   }
+  if (
+      cl->getState() == PROCESSING 
+      || cl->getState() == SENDING 
+      || cl->getState() == DONE
+      )
+  {
   _switchEpollRegisration(cl->getFd(),EPOLLOUT);
   epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, cl->getFd(), &_epoll_event);
+  }
 }
 
 void Server::sendresponse(Client *cl)
@@ -152,7 +156,11 @@ void Server::sendresponse(Client *cl)
 
     DONE:
        disconnect()
-    */
+    DEBUG_INFO("Body");
+    if (!req.isRequsetLarge())
+      std::cout << cl->getReadBuffer() << std::endl;
+  */
+
     DEBUG_INFO("Response");
     Response res(req);
     cl->setWriteBuffer(res.build());
@@ -166,4 +174,63 @@ void Server::sendresponse(Client *cl)
     send(cl->getFd(), cl->getWriteBuffer().c_str(), cl->getWriteBuffer().length(), 0);
     cl->setState(DONE); 
   }
+}
+
+bool Server::createTmpFile(Client *cl)
+{
+  req.setTmpFileName(makeTmpPath(cl->getFd()));
+  int tfd = open(req.getTmpFileName().c_str(), O_RDWR | O_APPEND | O_CREAT);
+  if (tfd < 0)
+  {
+    DEBUG_ERROR("readFromSocket: could not create tmp file");
+    return false;
+  }
+  req.setTmpFd(tfd);
+  write(req.getTmpFd(), cl->getReadBuffer().c_str(), cl->getReadBuffer().size());
+  req.setBytesCounter(cl->getReadBuffer().size());
+  cl->clearReadBuffer();
+  return true;
+}
+
+void  Server::readFromSocket(Client *cl)
+{
+  /* READING_BODY:
+  write chunk to client.tmp_file (random.tmp)
+  client.bytes_read += n
+  if bytes_read < Content-Length → stay in READING_BODY
+  if bytes_read == Content-Length →
+    close tmp_file
+    transition to PROCESSING
+  */
+  // register client as EPOLLOUT using epoll_ctl(MOD)
+  std::cout << req.getBytesCounter() << std::endl;
+  char buf[CHUNK_SIZE];
+  // read from socket the chunk size
+  int bytes = recv(cl->getFd(), buf, CHUNK_SIZE, 0);
+  if (bytes <= 0)
+  {
+    DEBUG_WARN("readFromSocket: error with recv in reading headers, or client discoonect");
+    _clients.disconnect(cl->getFd());
+    return ;
+  }
+  req.incrementBytesCounter(bytes);
+  write(req.getTmpFd(), buf, bytes);
+  if (req.getBytesCounter() >= req.getContentLen())
+    cl->setState(PROCESSING);
+}
+
+void  Server::readFromSocket(Client *cl, int)
+{
+  char buf[CHUNK_SIZE];
+  int bytes = recv(cl->getFd(), buf, CHUNK_SIZE, 0);
+  if (bytes <= 0)
+  {
+    DEBUG_WARN("readFromSocket: error with recv in reading headers, or client discoonect");
+    _clients.disconnect(cl->getFd());
+    return ;
+  }
+  // put in the readbuffer
+  cl->appendToReadBuffer(buf, bytes);
+  if (cl->getReadBuffer().size() >= req.getContentLen())
+    cl->setState(PROCESSING);
 }

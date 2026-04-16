@@ -15,10 +15,13 @@ private:
   std::string _body;
   std::map<std::string, std::string> _headers; // http headers
   std::vector<std::pair<std::string, std::string> > _setCookieHeaders;
+  int          _tmp_fd;
+  std::string  _tmp_file_name;
+  size_t       _bytes_counter;
+  bool         _is_request_large;
 
 public:
   Request();
-  Request(const std::string &raw);
   Request(const Request &other);
   Request &operator=(const Request &other);
   ~Request();
@@ -29,6 +32,17 @@ public:
   size_t getContentLen() const;
   std::string getPath() const;
   std::string getHeaderValue(std::string key);
+  const std::string&  getTmpFileName()  const;
+  int  getTmpFd() const;
+  bool                isRequsetLarge() const;
+  size_t getBytesCounter() const;
+        
+
+  void  setTmpFileName(std::string name);
+  void  setTmpFd(int fd);
+  void  setIsRequestLarge(bool value);
+  void  setBytesCounter(size_t bytes);
+  void  incrementBytesCounter(size_t bytes);
 
   void setPath(const std::string &path);
   void requestParser(const std::string &request);

@@ -3,14 +3,14 @@
 #include <unistd.h>
 
 Client::Client(int fd) : _fd(fd), _writeOffset(0), _lastActivity(time(NULL)),
-	_state(READING_HEADERS)
-{
+	_state(READING_HEADERS){
 }
 
 Client::~Client()
 {
   DEBUG_INFO("Client disructor called");
   close(_fd);
+  
 }
 
 // its private you can't use this 
@@ -50,6 +50,7 @@ ClientState Client::getState() const
   	return (_state);
 }
 
+
 // setters
 void Client::setState(ClientState state)
 {
@@ -72,6 +73,7 @@ void Client::updateLastActivity()
 {
 	_lastActivity = time(NULL);
 }
+
 
 // methods
 void Client::appendToReadBuffer(const char *data, size_t len)
