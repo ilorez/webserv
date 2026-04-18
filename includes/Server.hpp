@@ -38,6 +38,7 @@ class Server {
 
     // read headers
     void readheaders(Client *cl);
+
     // new connection
     void newconnection(socklen_t size_socket);
     // i/o
@@ -46,6 +47,7 @@ class Server {
     bool createTmpFile(Client *cl);
     void  readFromSocket(Client *cl);
     void  readFromSocket(Client *cl, int);
+    void sendFromFile(Client *cl, int file_fd);
     
     //create socket 
     void run(); // create socket and start listning

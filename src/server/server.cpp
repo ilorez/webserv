@@ -9,9 +9,7 @@ Server::Server()
   _epoll_event.events = EPOLLIN;
 }
 
-Server::~Server()
-{
-  close(_socket_fd);
+Server::~Server() { close(_socket_fd);
 }
 
 void Server::run()
