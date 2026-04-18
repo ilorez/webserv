@@ -75,8 +75,8 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
     {
         struct stat _stat;
         std::string filepath;
-        if (_status / 100 == 4)
-            filepath = "./www/" + to_string98(_status) + ".html";
+        if (_status / 100 == 4 || _status / 100 == 5)
+            filepath = "./www/errorPage.html";
         else
             filepath = "./www" + _req.getPath();
         if (stat(filepath.c_str(), &_stat) == -1)
@@ -121,10 +121,34 @@ void Response::serveErrorPage(int status)
 {
     _status = status;
 
-    std::string errorPage = "./www/" + to_string98(status) + ".html";
+    std::string errorPage = "./www/errorPage.html";
+    std::string codeStr = to_string98(status);
+    std::string msgStr = "Unknown Error";
+   
     _body = ft_readFile(errorPage);
     if (_body.empty())
-        _body = to_string98(status) + " Error";
+    {
+        _body = codeStr + " Error";
+        return;
+    }
+
+    std::map<int, std::string>::iterator it = _mapStatusCodes.find(status);
+    if (it != _mapStatusCodes.end())
+        msgStr = it->second;
+
+    size_t pos = 0;
+    while ((pos = _body.find("{{CODE}}", pos)) != std::string::npos)
+    {
+        _body.replace(pos, 8, codeStr);
+        pos += codeStr.length();
+    }
+
+    pos = 0;
+    while ((pos = _body.find("{{MESSAGE}}", pos)) != std::string::npos)
+    {
+        _body.replace(pos, 11, msgStr);
+        pos += msgStr.length();
+    }
 }
 
 void Response::Get()
@@ -211,7 +235,7 @@ void Response::Post()
     }
 
     int contentLength = 0;
-    contentLength = std::atoi(contentLengthStr.c_str()); // if atoi not allowed, i will create one
+    contentLength = std::atoi(contentLengthStr.c_str());
 
     if (contentLength <= 0)
     {
@@ -298,36 +322,103 @@ std::string Response::build()
     throw ResponseException("405 Method Not Allowed");
   }
 
-
   initHeaders(_headers);
   response = mergeResponseToString();
   return response;
 }
 
+std::string Response::build(int status)
+{
+    std::string response; 
+    initStatusCodes(_mapStatusCodes);
+    initMediaTypes(_mapMediaTypes);
+    serveErrorPage(status);
+    initHeaders(_headers);
+    response = mergeResponseToString();
+    return response;
+}
+
 void Response::initStatusCodes(std::map<int, std::string> &m)
 {
-  m.insert(std::make_pair(200, " OK"));
-  m.insert(std::make_pair(201, " Created"));
-  
-  m.insert(std::make_pair(301, " Moved Permanently"));
-  m.insert(std::make_pair(302, " Found"));
+    static const std::pair<int, const char*> codes[] = 
+    {
+        std::make_pair(100, " Continue"),
+        std::make_pair(101, " Switching Protocols"),
+        std::make_pair(200, " OK"),
 
-  m.insert(std::make_pair(400, " Bad Request"));
-  m.insert(std::make_pair(401, " Unauthorized"));
-  m.insert(std::make_pair(403, " Forbidden"));
-  m.insert(std::make_pair(404, " Not Found"));
-  m.insert(std::make_pair(415, " Unsupported Media Type"));
+        std::make_pair(201, " Created"),
+        std::make_pair(202, " Accepted"),
+        std::make_pair(204, " No Content"),
+        
+        std::make_pair(301, " Moved Permanently"),
+        std::make_pair(302, " Found"),
+        std::make_pair(303, " See Other"),
+        std::make_pair(307, " Temporary Redirect"),
+        std::make_pair(308, " Permanent Redirect"),
+        
+        std::make_pair(400, " Bad Request"),
+        std::make_pair(401, " Unauthorized"),
+        std::make_pair(403, " Forbidden"),
+        std::make_pair(404, " Not Found"),
+        std::make_pair(405, " Method Not Allowed"),
+        std::make_pair(408, " Request Timeout"),
+        std::make_pair(409, " Conflict"),
+        std::make_pair(411, " Length Required"),
+        std::make_pair(413, " Payload Too Large"),
+        std::make_pair(414, " URI Too Long"),
+        std::make_pair(415, " Unsupported Media Type"),
+        std::make_pair(429, " Too Many Requests"),
+        
+        std::make_pair(500, " Internal Server Error"),
+        std::make_pair(501, " Not Implemented"),
+        std::make_pair(502, " Bad Gateway"),
+        std::make_pair(503, " Service Unavailable"),
+        std::make_pair(504, " Gateway Timeout"),
+        std::make_pair(505, " HTTP Version Not Supported")
+    };
 
-  m.insert(std::make_pair(500, " Internal Server Error"));
-  m.insert(std::make_pair(502, " Bad Gateway"));
-  m.insert(std::make_pair(503, " Service Unavailable"));
+    for (size_t i = 0; i < sizeof(codes) / sizeof(codes[0]); ++i)
+        m.insert(codes[i]);
 }
 
 void Response::initMediaTypes(std::map<std::string, std::string> &m)
 {
-  m.insert(std::make_pair(".txt",  "text/plain"));
-  m.insert(std::make_pair(".html", "text/html"));
-  m.insert(std::make_pair(".png",  "image/png"));
-  m.insert(std::make_pair(".jpg",  "image/jpeg"));
-  m.insert(std::make_pair(".json", "application/json"));
+    static const std::pair<const char*, const char*> types[] =
+    {
+        // Text
+        std::make_pair(".txt",  "text/plain"),
+        std::make_pair(".html", "text/html"),
+        std::make_pair(".htm",  "text/html"),
+        std::make_pair(".css",  "text/css"),
+        std::make_pair(".csv",  "text/csv"),
+        std::make_pair(".js",   "application/javascript"),
+
+        // Application
+        std::make_pair(".json", "application/json"),
+        std::make_pair(".xml",  "application/xml"),
+        std::make_pair(".pdf",  "application/pdf"),
+        std::make_pair(".zip",  "application/zip"),
+
+        // Images
+        std::make_pair(".png",  "image/png"),
+        std::make_pair(".jpg",  "image/jpeg"),
+        std::make_pair(".jpeg", "image/jpeg"),
+        std::make_pair(".gif",  "image/gif"),
+        std::make_pair(".bmp",  "image/bmp"),
+        std::make_pair(".ico",  "image/x-icon"),
+        std::make_pair(".svg",  "image/svg+xml"),
+        std::make_pair(".webp", "image/webp"),
+
+        // Audio
+        std::make_pair(".mp3",  "audio/mpeg"),
+        std::make_pair(".wav",  "audio/wav"),
+
+        // Video
+        std::make_pair(".mp4",  "video/mp4"),
+        std::make_pair(".webm", "video/webm"),
+        std::make_pair(".avi",  "video/x-msvideo")
+    };
+
+    for (size_t i = 0; i < sizeof(types) / sizeof(types[0]); ++i)
+        m.insert(std::make_pair(types[i].first, types[i].second));
 }
