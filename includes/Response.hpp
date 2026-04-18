@@ -23,6 +23,7 @@ public:
     
     std::string returnMediaType(const std::string& path);
     std::string mergeResponseToString();
+    std::string build(int status);
     std::string build();
 
     void        serveErrorPage(int status);
