@@ -368,6 +368,7 @@ void Response::initStatusCodes(std::map<int, std::string> &m)
         std::make_pair(414, " URI Too Long"),
         std::make_pair(415, " Unsupported Media Type"),
         std::make_pair(429, " Too Many Requests"),
+        std::make_pair(431, " Request Header Fields Too Large"),
         
         std::make_pair(500, " Internal Server Error"),
         std::make_pair(501, " Not Implemented"),

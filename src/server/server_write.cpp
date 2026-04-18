@@ -5,6 +5,16 @@ void Server::sendresponse(Client *cl)
 {
   if (cl->getState() == PROCESSING)
   {
+    DEBUG_INFO("Response");
+      Response res(req);
+    if (_status_error)
+    {
+      cl->setWriteBuffer(res.build(_status_error));
+      //std::cout << cl->getWriteBuffer() << std::endl;
+    }
+    else
+      cl->setWriteBuffer(res.build());
+    cl->setState(SENDING);
     /*EPOLLOUT fires on client_fd:
     TODO: PROCESSING:
     build response headers
@@ -12,10 +22,6 @@ void Server::sendresponse(Client *cl)
     GET    → find file, transition to RESPONDING
     POST   → move tmp_file to final location, transition to RESPONDING
     */
-    DEBUG_INFO("Response");
-    Response res(req);
-    cl->setWriteBuffer(res.build());
-    cl->setState(SENDING);
   }
   else if (cl->getState() == SENDING)
   {
@@ -36,6 +42,7 @@ void Server::sendresponse(Client *cl)
     */
     
     // send data to client and close connection after done
+
     send(cl->getFd(), cl->getWriteBuffer().c_str(), cl->getWriteBuffer().length(), 0);
     cl->setState(DONE); 
   }

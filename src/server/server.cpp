@@ -7,6 +7,7 @@ Server::Server()
   _port = 8080;
   _ip = "127.0.0.1";
   _epoll_event.events = EPOLLIN;
+  _status_error = 0;
 }
 
 Server::~Server() { close(_socket_fd);
@@ -80,7 +81,9 @@ void Server::_handelClient(socklen_t size_socket)
     else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
     {
       Client *cl = _clients.getClient(_events[i].data.fd);
-      if (!cl){/*TODO:erroo*/ continue;}
+      if (!cl){
+        DEBUG_ERROR("Client Not found in local list but it is on epool list");
+        /*erroo*/ continue;}
       else if (_events[i].events & EPOLLIN)
         this->readrequest(cl);
       else if (_events[i].events & EPOLLOUT)

@@ -2,6 +2,7 @@
 #define SERVER_HPP
 
 
+#include "Client.hpp"
 #include "ManageClients.hpp"
 #include "Request.hpp"
 #include "settings.hpp"
@@ -12,6 +13,7 @@
 
 class Server {
   private:
+    int _status_error; // if 0 there is no error // send error to res.build(_status_error) to create response base on error  
     int _port;
     int _socket_fd;
     int _epoll_fd;
@@ -41,6 +43,9 @@ class Server {
 
     // new connection
     void newconnection(socklen_t size_socket);
+    // on error
+    void callError(int err_code, Client *cl);
+
     // i/o
     void readrequest(Client *cl);
     void sendresponse(Client *cl);
