@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <string>
 
-Request::Request():_tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0),_is_request_large(false)
+Request::Request():_content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0),_is_request_large(false)
 {}
 
 Request::Request(const Request &other) : _path(other._path), _version(other._version), _method(other._method), _headers(other._headers) {};
@@ -213,7 +213,8 @@ void Request::requestParser(const std::string &raw)
 
   _parseFirstLine(lines);
   _parseAllHeaders(lines);
-  if (!to_integer<std::string, size_t>(getHeaderValue("Content-Length"), _content_size))
+  // NOTE: importent to add request methods that have body here like "put" if you use it
+  if (_method == "POST" && !to_integer<std::string, size_t>(getHeaderValue("Content-Length"), _content_size))
   {
     DEBUG_ERROR("request parser: invalid Content-Length");
     throw RequestException("400 Bad Request");
