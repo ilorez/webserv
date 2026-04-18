@@ -51,3 +51,11 @@ bool Server::createTmpFile(Client *cl)
   cl->clearReadBuffer();
   return true;
 }
+
+
+void Server::callError(int err_code, Client *cl)
+{
+    _status_error = err_code;
+    cl->setState(PROCESSING);
+}
+

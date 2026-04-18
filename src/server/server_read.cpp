@@ -36,12 +36,10 @@ void Server::readheaders(Client *cl)
   pos = cl->getReadBuffer().find("\r\n\r\n");
   if ( pos == std::string::npos)
   {
-      if (cl->getReadBuffer().size() > MAX_HEADER_SIZE)
+      if (cl->getReadBuffer().size() >= MAX_HEADER_SIZE)
       {
         DEBUG_ERROR("headers is to large, more then 16kb");
-        //TODO: send error 431 to client 
-        // 431 Request Header Fields Too Large
-        _clients.disconnect(cl->getFd());
+        callError(431, cl);
       }
     // stay in reading headers and move to next client
     return;
@@ -49,7 +47,8 @@ void Server::readheaders(Client *cl)
   if (pos < 1)
   {
     DEBUG_ERROR("Empty request");
-    // TODO: send bad request
+    // send bad request
+    callError(400, cl);
     _clients.disconnect(cl->getFd());
     return;
   }
@@ -57,13 +56,13 @@ void Server::readheaders(Client *cl)
   //std::cout << headers << std::endl;
   cl->setReadBuffer(cl->getReadBuffer().substr(pos+4));
   DEBUG_INFO("Request");
-  std::cout << headers << std::endl;
   try {
     req.requestParser(headers);
   } catch (const std::exception &e)
   {
     std::cerr << ERROR_MSG << "request 1: "<< e.what() << std::endl;
-    // TODO: send bad request
+    // send bad request
+    callError(400, cl);
   }
   if (req.getMethod() == "POST")
   {
