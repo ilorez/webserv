@@ -57,23 +57,23 @@ void Server::readheaders(Client *cl)
   cl->setReadBuffer(cl->getReadBuffer().substr(pos+4));
   DEBUG_INFO("Request");
   try {
-    req.requestParser(headers);
+    cl->getReq().requestParser(headers);
   } catch (const std::exception &e)
   {
     std::cerr << ERROR_MSG << "request 1: "<< e.what() << std::endl;
     // send bad request
     callError(400, cl);
   }
-  if (req.getMethod() == "POST")
+  if (cl->getReq().getMethod() == "POST")
   {
-    if (cl->getReadBuffer().size() >= req.getContentLen())
+    if (cl->getReadBuffer().size() >= cl->getReq().getContentLen())
     {
       cl->setState(PROCESSING);
       return;
     }
     cl->setState(READING_BODY);
-    req.setIsRequestLarge(req.getContentLen() > USE_TMP_SIZE);
-    if (req.isRequsetLarge())
+    cl->getReq().setIsRequestLarge(cl->getReq().getContentLen() > USE_TMP_SIZE);
+    if (cl->getReq().isRequsetLarge())
       if (!this->createTmpFile(cl))
         _clients.disconnect(cl->getFd());
   }
@@ -87,7 +87,7 @@ void Server::readrequest(Client *cl)
     this->readheaders(cl);
   if (cl->getState() == READING_BODY) 
   {
-    if (req.isRequsetLarge())
+    if (cl->getReq().isRequsetLarge())
       readFromSocket(cl);   // write to tmp
     else
       readFromSocket(cl, 0); // write to string
@@ -114,7 +114,7 @@ void  Server::readFromSocket(Client *cl)
     transition to PROCESSING
   */
   // register client as EPOLLOUT using epoll_ctl(MOD)
-  //std::cout << req.getBytesCounter() << std::endl;
+  //std::cout << cl->getReq().getBytesCounter() << std::endl;
   char buf[CHUNK_SIZE];
   // read from socket the chunk size
   int bytes = recv(cl->getFd(), buf, CHUNK_SIZE, 0);
@@ -124,9 +124,9 @@ void  Server::readFromSocket(Client *cl)
     _clients.disconnect(cl->getFd());
     return ;
   }
-  req.incrementBytesCounter(bytes);
-  write(req.getTmpFd(), buf, bytes);
-  if (req.getBytesCounter() >= req.getContentLen())
+  cl->getReq().incrementBytesCounter(bytes);
+  write(cl->getReq().getTmpFd(), buf, bytes);
+  if (cl->getReq().getBytesCounter() >= cl->getReq().getContentLen())
     cl->setState(PROCESSING);
 }
 
@@ -142,6 +142,6 @@ void  Server::readFromSocket(Client *cl, int)
   }
   // put in the readbuffer
   cl->appendToReadBuffer(buf, bytes);
-  if (cl->getReadBuffer().size() >= req.getContentLen())
+  if (cl->getReadBuffer().size() >= cl->getReq().getContentLen())
     cl->setState(PROCESSING);
 }

@@ -1,6 +1,6 @@
 #include "../includes/container.hpp"
 
-Response::Response(Request req)
+Response::Response(Request &req)
   : _req(req)
 {}
 

@@ -38,16 +38,16 @@ void Server::newconnection(socklen_t size_socket)
 
 bool Server::createTmpFile(Client *cl)
 {
-  req.setTmpFileName(makeTmpPath(cl->getFd()));
-  int tfd = open(req.getTmpFileName().c_str(), O_RDWR | O_APPEND | O_CREAT);
+  cl->getReq().setTmpFileName(makeTmpPath(cl->getFd()));
+  int tfd = open(cl->getReq().getTmpFileName().c_str(), O_RDWR | O_APPEND | O_CREAT);
   if (tfd < 0)
   {
     DEBUG_ERROR("readFromSocket: could not create tmp file");
     return false;
   }
-  req.setTmpFd(tfd);
-  write(req.getTmpFd(), cl->getReadBuffer().c_str(), cl->getReadBuffer().size());
-  req.setBytesCounter(cl->getReadBuffer().size());
+  cl->getReq().setTmpFd(tfd);
+  write(cl->getReq().getTmpFd(), cl->getReadBuffer().c_str(), cl->getReadBuffer().size());
+  cl->getReq().setBytesCounter(cl->getReadBuffer().size());
   cl->clearReadBuffer();
   return true;
 }

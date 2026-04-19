@@ -6,7 +6,7 @@ void Server::sendresponse(Client *cl)
   if (cl->getState() == PROCESSING)
   {
     DEBUG_INFO("Response");
-      Response res(req);
+      Response res(cl->getReq());
     if (_status_error)
     {
       cl->setWriteBuffer(res.build(_status_error));
