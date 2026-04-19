@@ -1,6 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "Request.hpp"
 #include <string>
 #include <ctime>
 
@@ -23,6 +24,7 @@ class Client
         size_t       _writeOffset;
         time_t       _lastActivity;
         ClientState  _state;
+        Request     _req;
     public:
         Client(int fd);
         ~Client();
@@ -34,6 +36,7 @@ class Client
         size_t              getWriteOffset() const;
         time_t              getLastActivity() const;
         ClientState         getState()       const;
+        Request&            getReq()       ;
         
         // setters
         void  setState(ClientState state);

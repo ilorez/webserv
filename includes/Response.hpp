@@ -8,11 +8,11 @@ private:
     std::map<int, std::string>          _mapStatusCodes;
     std::map<std::string, std::string>  _headers;
     std::string     _body;
-    Request         _req;
+    Request         &_req;
     int             _status;
 
 public:
-    Response(Request req);
+    Response(Request &req);
     Response(const Response &other);
     Response &operator=(const Response &other);
     ~Response();

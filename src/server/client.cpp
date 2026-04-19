@@ -50,6 +50,11 @@ ClientState Client::getState() const
   	return (_state);
 }
 
+Request& Client::getReq()
+{
+  return _req;
+}
+
 
 // setters
 void Client::setState(ClientState state)
@@ -73,6 +78,7 @@ void Client::updateLastActivity()
 {
 	_lastActivity = time(NULL);
 }
+
 
 
 // methods
@@ -101,3 +107,5 @@ bool Client::isTimedOut(int timeoutSeconds) const
 {
 	return ((time(NULL) - _lastActivity) > timeoutSeconds);
 }
+
+

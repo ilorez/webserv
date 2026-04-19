@@ -22,7 +22,6 @@ class Server {
     ManageClients _clients;
     struct epoll_event _events[MAX_EVENTS];
     struct epoll_event _epoll_event;
-    Request req;
     // ...
   public:
     // orthodox

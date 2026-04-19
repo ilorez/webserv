@@ -220,3 +220,8 @@ void Request::requestParser(const std::string &raw)
     throw RequestException("400 Bad Request");
   }
 }
+
+bool Request::isCGI()
+{
+  return (_path.find("cgi") != std::string::npos);
+}

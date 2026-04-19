@@ -2,6 +2,7 @@
 #define REQUEST_HPP
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -26,7 +27,7 @@ public:
   Request &operator=(const Request &other);
   ~Request();
 
-  // getters and setters
+  // getters
   std::string getVersion() const;
   std::string getMethod() const;
   size_t getContentLen() const;
@@ -38,14 +39,18 @@ public:
   size_t getBytesCounter() const;
         
 
+  // setters
   void  setTmpFileName(std::string name);
   void  setTmpFd(int fd);
   void  setIsRequestLarge(bool value);
   void  setBytesCounter(size_t bytes);
   void  incrementBytesCounter(size_t bytes);
-
   void setPath(const std::string &path);
   void requestParser(const std::string &request);
+
+  // methods
+  bool isCGI();
+
 private:
   // parse request
   void _parseFirstLine(const std::vector<std::string> &lines);
