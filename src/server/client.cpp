@@ -1,5 +1,6 @@
 #include "../../includes/Client.hpp"
 #include "../../includes/debug.hpp"
+#include <sys/epoll.h>
 #include <unistd.h>
 
 Client::Client(int fd) : _fd(fd), _writeOffset(0), _lastActivity(time(NULL)),
@@ -9,15 +10,13 @@ Client::Client(int fd) : _fd(fd), _writeOffset(0), _lastActivity(time(NULL)),
 Client::~Client()
 {
   DEBUG_INFO("Client disructor called");
-  close(_fd);
-  
+  if (_fd >= 0)
+    close(_fd);
 }
 
 // its private you can't use this 
-Client::Client(const Client &other)
-{
-	(void)other;
-}
+Client::Client(const Client &o): _fd(o._fd), _readBuffer(o._readBuffer), _writeBuffer(o._writeBuffer), _writeOffset(o._writeOffset), _lastActivity(o._lastActivity), _state(o._state), _req(o._req), _is_cgi(o._is_cgi) {}
+
 Client &Client::operator=(const Client &other)
 {
 	(void)other;
@@ -55,6 +54,11 @@ Request& Client::getReq()
   return _req;
 }
 
+bool Client::isCGI() const
+{
+  return (_is_cgi);
+}
+
 
 // setters
 void Client::setState(ClientState state)
@@ -79,7 +83,15 @@ void Client::updateLastActivity()
 	_lastActivity = time(NULL);
 }
 
+void Client::setIsCGI(bool value)
+{
+  _is_cgi = value;
+}
 
+void Client::invalidateFd()
+{
+  _fd = -1;
+}
 
 // methods
 void Client::appendToReadBuffer(const char *data, size_t len)
@@ -108,4 +120,8 @@ bool Client::isTimedOut(int timeoutSeconds) const
 	return ((time(NULL) - _lastActivity) > timeoutSeconds);
 }
 
+void Client::disconnect(int epfd)
+{
+  epoll_ctl(epfd, EPOLL_CTL_DEL, _fd, NULL);
+}
 

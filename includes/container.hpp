@@ -40,6 +40,7 @@
 
 //
 #include "./Client.hpp"
+#include "./CGIClient.hpp"
 #include "./ManageClients.hpp"
 
 
