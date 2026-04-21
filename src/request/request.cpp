@@ -223,5 +223,7 @@ void Request::requestParser(const std::string &raw)
 
 bool Request::isCGI()
 {
+  // TODO: update this function, its really important to know if this is a cgi
+  // any user can send a path contains cgi and everyting will be break
   return (_path.find("cgi") != std::string::npos);
 }

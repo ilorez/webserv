@@ -58,6 +58,15 @@ void Server::readheaders(Client *cl)
   DEBUG_INFO("Request");
   try {
     cl->getReq().requestParser(headers);
+    // there is two isCGI one in request, that check path
+    // and another one in client that tell if this class is CGIClient or Client
+    // I mean yes that make confuse, but i like it like that
+    if (cl->getReq().isCGI())
+    {
+      // in case of CGI i'm upgrading the Client class to CGI by using copy constructor
+      cl->setIsCGI(true);
+      _clients.updateToCGI(cl->getFd());
+    }
   } catch (const std::exception &e)
   {
     std::cerr << ERROR_MSG << "request 1: "<< e.what() << std::endl;

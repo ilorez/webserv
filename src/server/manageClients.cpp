@@ -38,10 +38,11 @@ void    ManageClients::addClient(int fd){
   _clients.insert(std::make_pair(fd, cl));
 }
 
-void    ManageClients::removeClient(int fd)
+void    ManageClients::disconnect(int fd)
 {
   std::map<int, Client*>::iterator it = _clients.find(fd);
   if ( it != _clients.end()) {
+    it->second->disconnect(_epfd);
     delete it->second;
     _clients.erase(it);
     return ;
@@ -83,8 +84,11 @@ void ManageClients::checkTimeout()
   }
 }
 
-void ManageClients::disconnect(int fd)
+void ManageClients::updateToCGI(int fd)
 {
-    epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
-    this->removeClient(fd);
+  DEBUG_INFO("update to CGI called");
+  Client *oc = _clients[fd];
+  CGIClient* nc = new CGIClient(*oc); 
+  delete oc;
+  _clients[fd] = nc;
 }

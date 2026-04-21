@@ -17,7 +17,7 @@ enum ClientState
 
 class Client
 {
-    private:
+    protected:
         int          _fd;
         std::string  _readBuffer;
         std::string  _writeBuffer;
@@ -25,9 +25,10 @@ class Client
         time_t       _lastActivity;
         ClientState  _state;
         Request     _req;
+        bool _is_cgi;
     public:
         Client(int fd);
-        ~Client();
+        virtual ~Client();
 
         // getters
         int                 getFd()          const;
@@ -36,13 +37,16 @@ class Client
         size_t              getWriteOffset() const;
         time_t              getLastActivity() const;
         ClientState         getState()       const;
-        Request&            getReq()       ;
+        Request&            getReq();
+        bool                isCGI()          const;
         
         // setters
         void  setState(ClientState state);
         void  setWriteBuffer(const std::string& data);
         void  setReadBuffer(const std::string& data);
         void  updateLastActivity();
+        void  setIsCGI(bool value);
+        void invalidateFd();
 
         // methods
         void  appendToReadBuffer(const char* data, size_t len);
@@ -50,8 +54,9 @@ class Client
         void  clearReadBuffer();
         void  clearWriteBuffer();
         bool  isTimedOut(int timeoutSeconds) const;
-    private:
-        Client(const Client&);
+        virtual void  disconnect(int epfd);
+    protected:
+        Client(const Client& cl);
         Client& operator=(const Client&);
 
 };
