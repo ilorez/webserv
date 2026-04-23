@@ -1,7 +1,8 @@
 
 #include "../../includes/container.hpp"
 
-CGIClient::CGIClient(int fd): Client(fd), _child_pid(-1), _cgi_headers_parsed(false){}
+CGIClient::CGIClient(int fd): Client(fd), _child_pid(-1), _cgi_headers_parsed(false){
+}
 CGIClient::CGIClient(Client &cl): Client(cl), _child_pid(-1), _cgi_headers_parsed(false){
   cl.invalidateFd(); // stop ~Client() closing the _fd
 }
@@ -28,6 +29,7 @@ CGIClient &CGIClient::operator=(const CGIClient &other)
 
 void CGIClient::disconnect(int epfd)
 {
+  (void) _pipe_in, (void)_pipe_out, (void)_child_pid, (void)_cgi_headers_parsed;
   // TODO
   // unrigister pipes from epoll
   // close pipes
