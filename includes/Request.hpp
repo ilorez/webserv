@@ -37,6 +37,9 @@ public:
   int  getTmpFd() const;
   bool                isRequsetLarge() const;
   size_t getBytesCounter() const;
+
+  // TODO
+  std::string getBody() const;
         
 
   // setters
@@ -47,6 +50,8 @@ public:
   void  incrementBytesCounter(size_t bytes);
   void setPath(const std::string &path);
   void requestParser(const std::string &request);
+  //TODO
+  void setBody(std::string &value);
 
   // methods
   bool isCGI();

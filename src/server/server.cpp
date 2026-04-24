@@ -15,7 +15,8 @@ Server::~Server() { close(_socket_fd);
 
 void Server::run()
 {
-  this->_initSocket(); socklen_t size_socket = sizeof(_addr);
+  this->_initSocket(); 
+  socklen_t size_socket = sizeof(_addr);
   _epoll_fd = epoll_create(1);
   if (_epoll_fd == -1)
     throw ServerException("server run: epoll_create fail");
@@ -75,12 +76,12 @@ void Server::_handelClient(socklen_t size_socket)
   for (int i = 0; i < n; i++)
   {
     // new client
-    if (_events[i].data.fd == _socket_fd)
+    Client *cl = static_cast<Client*>(_events[i].data.ptr);
+    if (cl->getFd() == _socket_fd)
       this->newconnection(size_socket);
     // EPOLLIN fires on client_fd:
     else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
     {
-      Client *cl = _clients.getClient(_events[i].data.fd);
       if (!cl){
         DEBUG_ERROR("Client Not found in local list but it is on epool list");
         /*erroo*/ continue;}
@@ -97,11 +98,15 @@ void Server::_handelClient(socklen_t size_socket)
     else if (_events[i].events & EPOLLHUP || _events[i].events & EPOLLERR)
     {
       // client disconnected or error
-      _clients.disconnect(_events[i].data.fd);
+      _clients.disconnect(cl->getFd());
     }
   }
   // INFO: checking timeout everytime can reduce performance
   // check timeout n=0
+  // TODO: its not good to update it everytime, the only thing i need from socket is fd, the good thing is that socket created one time
+  // and things i need to change for remove remove it from client is more then just few bytes
+  // what you need is just the give the socket fd the max future time so its never timed out, and you never update it
+  _clients.getClient(_socket_fd)->updateLastActivity();
   _clients.checkTimeout();
 }
 

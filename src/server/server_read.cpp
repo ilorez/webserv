@@ -107,7 +107,7 @@ void Server::readrequest(Client *cl)
       || cl->getState() == DONE
       )
   {
-  _switchEpollRegisration(cl->getFd(),EPOLLOUT);
+  _switchEpollRegisration(cl, EPOLLOUT);
   epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, cl->getFd(), &_epoll_event);
   }
 }

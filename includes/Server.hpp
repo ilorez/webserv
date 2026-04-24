@@ -62,7 +62,7 @@ class Server {
       // TODO:handelReadyClient
       // TODO:_client_disconnected
       void _handelClientDisconnect();
-      void _switchEpollRegisration(int client_fd, uint32_t ev);
+      void _switchEpollRegisration(Client *cl, uint32_t ev);
 };
 
 #endif

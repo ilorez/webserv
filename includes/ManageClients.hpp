@@ -13,7 +13,7 @@ class ManageClients
         ManageClients();
         ~ManageClients();
 
-        void    addClient(int fd);
+        Client* addClient(int fd);
         Client* getClient(int fd);
         bool    clientExists(int fd) const;
         void    setEpfd(int fd);
