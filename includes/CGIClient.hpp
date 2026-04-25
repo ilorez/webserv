@@ -19,6 +19,8 @@ class CGIClient: public Client
     int _pipe_out[2];
     pid_t _child_pid;
     bool _cgi_headers_parsed;
+    bool _download_switch; // on: for socket, off: for pipe
+    bool _upload_switch;  // off: for pipe, on: for socket 
   public:
     CGIClient(int fd);
     CGIClient(Client &cl);

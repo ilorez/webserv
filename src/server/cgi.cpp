@@ -1,7 +1,7 @@
 
 #include "../../includes/container.hpp"
 
-CGIClient::CGIClient(int fd): Client(fd), _child_pid(-1), _cgi_headers_parsed(false){
+CGIClient::CGIClient(int fd): Client(fd), _child_pid(-1), _cgi_headers_parsed(false), _download_switch(true), _upload_switch(false){
 }
 CGIClient::CGIClient(Client &cl): Client(cl), _child_pid(-1), _cgi_headers_parsed(false){
   cl.invalidateFd(); // stop ~Client() closing the _fd
@@ -36,6 +36,8 @@ void CGIClient::disconnect(int epfd)
   // kill process if not already killed
   Client::disconnect(epfd);
 }
+
+
 
 
 // create pipe

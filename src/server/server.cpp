@@ -77,14 +77,14 @@ void Server::_handelClient(socklen_t size_socket)
   {
     // new client
     Client *cl = static_cast<Client*>(_events[i].data.ptr);
+    if (!cl){
+        DEBUG_ERROR("Client Not found in local list but it is on epool list");
+        /*erroo*/ continue;}
     if (cl->getFd() == _socket_fd)
       this->newconnection(size_socket);
     // EPOLLIN fires on client_fd:
     else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
     {
-      if (!cl){
-        DEBUG_ERROR("Client Not found in local list but it is on epool list");
-        /*erroo*/ continue;}
       else if (_events[i].events & EPOLLIN)
         this->readrequest(cl);
       else if (_events[i].events & EPOLLOUT)
