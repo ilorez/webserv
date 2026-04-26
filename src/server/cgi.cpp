@@ -30,6 +30,7 @@ CGIClient &CGIClient::operator=(const CGIClient &other)
 void CGIClient::disconnect(int epfd)
 {
   (void) _pipe_in, (void)_pipe_out, (void)_child_pid, (void)_cgi_headers_parsed;
+  (void) _download_switch, (void) _upload_switch;
   // TODO
   // unrigister pipes from epoll
   // close pipes

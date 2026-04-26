@@ -12,9 +12,7 @@ Server::Server()
 
 Server::~Server() { close(_socket_fd);
 }
-
-void Server::run()
-{
+void Server::run() {
   this->_initSocket(); 
   socklen_t size_socket = sizeof(_addr);
   _epoll_fd = epoll_create(1);
@@ -85,7 +83,7 @@ void Server::_handelClient(socklen_t size_socket)
     // EPOLLIN fires on client_fd:
     else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
     {
-      else if (_events[i].events & EPOLLIN)
+      if (_events[i].events & EPOLLIN)
         this->readrequest(cl);
       else if (_events[i].events & EPOLLOUT)
         this->sendresponse(cl);
