@@ -86,7 +86,12 @@ void Server::_handelClient(socklen_t size_socket)
       if (eh->is_cgi)
         eh->cgi->handel(eh->fd, _events[i].events);
       else if (_events[i].events & EPOLLIN)
+      {
         this->readrequest(eh->cl);
+        if (eh->cl->getState() == PROCESSING || eh->cl->getState() == SENDING ){
+          _switchEpollRegisration(eh, EPOLLOUT);
+          epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, eh->cl->getFd(), &_epoll_event);}
+      }
       else if (_events[i].events & EPOLLOUT)
         this->sendresponse(eh->cl);
       // update clinet last activity to now

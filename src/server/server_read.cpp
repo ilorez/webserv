@@ -69,6 +69,9 @@ void Server::readheaders(Client *cl)
       // TODO: Now we will work on cgi part
       // you don't need to append anything here or change anything, everything
       // already coll just call new handler for cgi in epool loop
+      // TODO: run setup cgi
+      // TODO: how about if i already ready body or the request is get not post ??
+      // i should never register the socket EPOLLIN in that case because its will never fired
       return;
     }
   } catch (const std::exception &e)
@@ -104,16 +107,7 @@ void Server::readrequest(Client *cl)
       readFromSocket(cl);   // write to tmp
     else
       readFromSocket(cl, 0); // write to string
-  }
-  if (
-      cl->getState() == PROCESSING 
-      || cl->getState() == SENDING 
-      || cl->getState() == DONE
-      )
-  {
-  _switchEpollRegisration(cl, EPOLLOUT);
-  epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, cl->getFd(), &_epoll_event);
-  }
+  } 
 }
 
 void  Server::readFromSocket(Client *cl)

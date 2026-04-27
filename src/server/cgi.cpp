@@ -2,10 +2,24 @@
 #include "../../includes/container.hpp"
 #include <cstdint>
 #include <sys/epoll.h>
+#include <unistd.h>
 
-CGIClient::CGIClient(int fd): Client(fd), _child_pid(-1), _cgi_headers_parsed(false), _download_switch(true), _upload_switch(false){
+CGIClient::CGIClient(int fd): Client(fd),
+  _child_pid(-1), _cgi_headers_parsed(false)
+
+  //,_download_switch(true), _upload_switch(false)
+{
+  _pipe_in[0] = -1;
+  _pipe_in[1] = -1;
+  _pipe_out[0] = -1;
+  _pipe_out[1] = -1;
 }
+
 CGIClient::CGIClient(Client &cl): Client(cl), _child_pid(-1), _cgi_headers_parsed(false){
+  _pipe_in[0] = -1;
+  _pipe_in[1] = -1;
+  _pipe_out[0] = -1;
+  _pipe_out[1] = -1;
   cl.invalidateFd(); // stop ~Client() closing the _fd
 }
 
@@ -32,12 +46,63 @@ CGIClient &CGIClient::operator=(const CGIClient &other)
 void CGIClient::disconnect(int epfd)
 {
   (void) _pipe_in, (void)_pipe_out, (void)_child_pid, (void)_cgi_headers_parsed;
-  (void) _download_switch, (void) _upload_switch;
+  //(void) _download_switch, (void) _upload_switch;
   // TODO
   // unrigister pipes from epoll
   // close pipes
   // kill process if not already killed
   Client::disconnect(epfd);
+}
+
+void CGIClient::setupPipes(int epfd)
+{
+  if (pipe(_pipe_in) != 0 || pipe(_pipe_out) != 0)
+  {
+    DEBUG_ERROR("pipe failed");
+    this->setState(DONE);
+    return;
+  }
+  DEBUG_INFO("PIPEs has been setuped");
+}
+
+void CGIClient::registerPipeOut(int epfd)
+{
+  // create epoll holder
+  t_epollhold *tmp = new t_epollhold();
+  tmp->fd = _pipe_out[0];
+  tmp->is_cgi = true;
+  tmp->cgi = this;
+
+  // setup event
+  epoll_event ev;
+  ev.events = EPOLLIN;
+  ev.data.ptr = tmp;
+
+  // applying non-blocking
+  fcntl(_pipe_out[0], F_SETFL, O_NONBLOCK);
+
+  // adding to epoll queu
+  epoll_ctl(epfd, EPOLL_CTL_ADD, _pipe_out[0], &ev); 
+}
+
+void CGIClient::registerPipeIn(int epfd)
+{
+  // create epoll holder
+  t_epollhold *tmp = new t_epollhold();
+  tmp->fd = _pipe_in[1];
+  tmp->is_cgi = true;
+  tmp->cgi = this;
+
+  // setup event
+  epoll_event ev;
+  ev.events = EPOLLOUT;
+  ev.data.ptr = tmp;
+
+  // applying non-blocking
+  fcntl(_pipe_in[1], F_SETFL, O_NONBLOCK);
+
+  // adding to epoll queu
+  epoll_ctl(epfd, EPOLL_CTL_ADD, _pipe_in[1], &ev); 
 }
 
 void CGIClient::handel(int fd, uint32_t evs)
