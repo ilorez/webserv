@@ -6,20 +6,37 @@
 
 // add client
 void Server::_addClient(int client_fd) {
-  Client *cl = _clients.addClient(client_fd);
+  t_epollhold *tmp = new t_epollhold();
+  tmp->fd = client_fd;
+  tmp->is_cgi = false;
+  tmp->cl = _clients.addClient(client_fd);
   // applying non-blocking mode to everyclient fd
   fcntl(client_fd, F_SETFL, O_NONBLOCK);
-  
   // adding to epoll queu
-  _switchEpollRegisration( cl, EPOLLIN);
+  _switchEpollRegisration( tmp, EPOLLIN);
   epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &_epoll_event); 
   // NOTE:epoll ctl copy the ev into kernel
 }
 
+// add client
+void Server::_addSocketToEpoll(int sfd) {
+  t_epollhold *tmp = new t_epollhold();
+  tmp->fd = sfd;
+  tmp->is_cgi = false;
+  tmp->cl = NULL;
+  // applying non-blocking
+  fcntl(sfd, F_SETFL, O_NONBLOCK);
+  
+  // adding to epoll queu
+  _switchEpollRegisration( tmp, EPOLLIN);
+  epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, sfd, &_epoll_event); 
+  // NOTE:epoll ctl copy the ev into kernel
+}
+
 // switch epoll regitration
-void Server::_switchEpollRegisration(Client *cl, uint32_t ev)
+void Server::_switchEpollRegisration(t_epollhold *eh, uint32_t ev)
 {
-  _epoll_event.data.ptr = cl;
+  _epoll_event.data.ptr = eh;
   _epoll_event.events = ev;
 }
 

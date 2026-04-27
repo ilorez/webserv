@@ -19,7 +19,7 @@ void Server::run() {
   if (_epoll_fd == -1)
     throw ServerException("server run: epoll_create fail");
   _clients.setEpfd(_epoll_fd);
-  this->_addClient(_socket_fd);
+  this->_addSocketToEpoll(_socket_fd);
   while (1)
     this->_handelClient(size_socket);
 }
@@ -74,29 +74,33 @@ void Server::_handelClient(socklen_t size_socket)
   for (int i = 0; i < n; i++)
   {
     // new client
-    Client *cl = static_cast<Client*>(_events[i].data.ptr);
-    if (!cl){
-        DEBUG_ERROR("Client Not found in local list but it is on epool list");
+    t_epollhold *eh = static_cast<t_epollhold*>(_events[i].data.ptr);
+    if (!eh){
+        DEBUG_ERROR("epoll data ptr is invalid");
         /*erroo*/ continue;}
-    if (cl->getFd() == _socket_fd)
+    if (eh->fd == _socket_fd)
       this->newconnection(size_socket);
     // EPOLLIN fires on client_fd:
     else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
     {
-      if (_events[i].events & EPOLLIN)
-        this->readrequest(cl);
+      if (eh->is_cgi)
+        eh->cgi->handel(eh->fd, _events[i].events);
+      else if (_events[i].events & EPOLLIN)
+        this->readrequest(eh->cl);
       else if (_events[i].events & EPOLLOUT)
-        this->sendresponse(cl);
+        this->sendresponse(eh->cl);
       // update clinet last activity to now
-      if (cl->getState() ==  DONE)
-        _clients.disconnect(cl->getFd());
+      if (eh->cl->getState() ==  DONE)// should work for cgi and cl
+        _clients.disconnect(eh->cl->getFd());
+        // TODO: delete eh
       else
-        cl->updateLastActivity();
+        eh->cl->updateLastActivity();
     }
     else if (_events[i].events & EPOLLHUP || _events[i].events & EPOLLERR)
     {
       // client disconnected or error
-      _clients.disconnect(cl->getFd());
+      _clients.disconnect(eh->cl->getFd());
+      // TODO: delete eh
     }
   }
   // INFO: checking timeout everytime can reduce performance

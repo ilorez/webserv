@@ -1,5 +1,7 @@
 
 #include "../../includes/container.hpp"
+#include <cstdint>
+#include <sys/epoll.h>
 
 CGIClient::CGIClient(int fd): Client(fd), _child_pid(-1), _cgi_headers_parsed(false), _download_switch(true), _upload_switch(false){
 }
@@ -36,6 +38,28 @@ void CGIClient::disconnect(int epfd)
   // close pipes
   // kill process if not already killed
   Client::disconnect(epfd);
+}
+
+void CGIClient::handel(int fd, uint32_t evs)
+{
+  // work on switch algorithm
+  // if you think its not required for everything to work
+  // correctly don't use it
+  // but i think you need for things like adding or removing fds from the epoll
+  // so i mean you need it to switch betwen reading/writing from/to socket/pipe
+  if (evs & EPOLLIN)
+  {
+    if (fd == this->_fd)
+    {}
+    // socket
+
+  }
+  if (evs & EPOLLOUT)
+  {
+    if (fd == this->_fd)
+    // socket
+
+  }
 }
 
 

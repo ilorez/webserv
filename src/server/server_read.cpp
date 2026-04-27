@@ -66,6 +66,10 @@ void Server::readheaders(Client *cl)
       // in case of CGI i'm upgrading the Client class to CGI by using copy constructor
       cl->setIsCGI(true);
       _clients.updateToCGI(cl->getFd());
+      // TODO: Now we will work on cgi part
+      // you don't need to append anything here or change anything, everything
+      // already coll just call new handler for cgi in epool loop
+      return;
     }
   } catch (const std::exception &e)
   {

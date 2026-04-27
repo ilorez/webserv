@@ -3,6 +3,7 @@
 
 #include "Client.hpp"
 #include <ctime>
+#include <sys/epoll.h>
 
 class CGIClient: public Client
 {
@@ -26,6 +27,7 @@ class CGIClient: public Client
     CGIClient(Client &cl);
     ~CGIClient();
     void disconnect(int epfd);
+    void handel(int fd, uint32_t evs);
     // methods
     //void setupPipes();
     //char **buildEnv();
