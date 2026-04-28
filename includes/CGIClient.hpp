@@ -29,9 +29,9 @@ class CGIClient: public Client
     void disconnect(int epfd);
     void handel(int fd, uint32_t evs);
     // methods
-    void setupPipes(int epfd);
+    void setupPipes();
     //char **buildEnv();
-    //void ft_exec();
+    void ft_exec(int epfd);
     //
     // writeBodyChunk() // write POST body chunk to _pipe_in[1]
     // readOutputChunk() // read CGI response chunk from _pipe_out[0] into writeBuffer

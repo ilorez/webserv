@@ -54,16 +54,17 @@ void CGIClient::disconnect(int epfd)
   Client::disconnect(epfd);
 }
 
-void CGIClient::setupPipes(int epfd)
+void CGIClient::setupPipes()
 {
   if (pipe(_pipe_in) != 0 || pipe(_pipe_out) != 0)
   {
     DEBUG_ERROR("pipe failed");
     this->setState(DONE);
-    return;
+    throw CGIException("pipe error");
   }
   DEBUG_INFO("PIPEs has been setuped");
 }
+
 
 void CGIClient::registerPipeOut(int epfd)
 {
@@ -85,6 +86,7 @@ void CGIClient::registerPipeOut(int epfd)
   epoll_ctl(epfd, EPOLL_CTL_ADD, _pipe_out[0], &ev); 
 }
 
+// when sending input to cgi script
 void CGIClient::registerPipeIn(int epfd)
 {
   // create epoll holder
@@ -103,6 +105,48 @@ void CGIClient::registerPipeIn(int epfd)
 
   // adding to epoll queu
   epoll_ctl(epfd, EPOLL_CTL_ADD, _pipe_in[1], &ev); 
+}
+
+void	ft_change_fd(int fd, int to)
+{
+	if (fd == to)
+		  return;
+  if (dup2(fd, to) == -1)
+    throw CGIException("dup2 failed");
+	close(fd);
+}
+
+void ft_closefd(int &fd)
+{
+  close(fd);
+  fd = -1;
+}
+
+void CGIClient::ft_exec(int epfd)
+{
+  setupPipes();
+  int pid = fork();
+  if (pid == -1)
+    throw CGIException("fork failed");
+  if (pid == 0)
+  {
+    // child
+    close (_pipe_in[1]);
+    close (_pipe_out[0]);
+    ft_change_fd(_pipe_in[0], STDIN_FILENO);
+    ft_change_fd(_pipe_out[1], STDOUT_FILENO);
+    // TODO
+    //execv("/bin/ls", NULL);
+    exit(126);
+  }
+  // parent
+  ft_closefd(_pipe_in[0]);
+  ft_closefd(_pipe_out[1]);
+  // registed pipe out
+  registerPipeOut(epfd);
+  // TODO: is post only method have body ?
+  if (_req.getMethod() != "POST")
+    ft_closefd(_pipe_in[1]);
 }
 
 void CGIClient::handel(int fd, uint32_t evs)

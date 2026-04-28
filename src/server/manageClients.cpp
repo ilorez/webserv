@@ -86,11 +86,10 @@ void ManageClients::checkTimeout()
   }
 }
 
-void ManageClients::updateToCGI(int fd)
-{
-  DEBUG_INFO("update to CGI called");
+CGIClient* ManageClients::updateToCGI(int fd) { DEBUG_INFO("update to CGI called");
   Client *oc = _clients[fd];
   CGIClient* nc = new CGIClient(*oc); 
   delete oc;
   _clients[fd] = nc;
+  return nc;
 }

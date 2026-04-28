@@ -1,7 +1,7 @@
 # vpaths
 vpath %.hpp includes
 vpath %.h includes
-vpath %.cpp src src/server src/request src/response src/config
+vpath %.cpp src src/server src/request src/response src/config src/cgi
 
 NAME = webserv 
 
@@ -14,9 +14,9 @@ HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp 
 					Client.hpp ManageClients.hpp Response.hpp Server.hpp utils.hpp WebServExceptions.hpp
 
 F_SRCS = request.cpp utils.cpp response.cpp exceptions.cpp
-F_SERVER = server.cpp client.cpp manageClients.cpp server_utils.cpp server_read.cpp server_write.cpp cgi.cpp
-
-SRCS = main.cpp $(F_SERVER) $(F_SRCS) 
+F_SERVER = server.cpp client.cpp manageClients.cpp server_utils.cpp server_read.cpp server_write.cpp
+F_CGI = cgi.cpp
+SRCS = main.cpp $(F_SERVER) $(F_SRCS) $(F_CGI)
 
 OBJS = $(addprefix $(BUILD_DR),$(SRCS:%.cpp=%.o))
 
