@@ -6,10 +6,13 @@
 
 // add client
 void Server::_addClient(int client_fd) {
+  Client *cl = _clients.addClient(client_fd);
+  // TODO: last
+
   t_epollhold *tmp = new t_epollhold();
   tmp->fd = client_fd;
   tmp->is_cgi = false;
-  tmp->cl = _clients.addClient(client_fd);
+  tmp->cl = ;
   // applying non-blocking mode to everyclient fd
   fcntl(client_fd, F_SETFL, O_NONBLOCK);
   // adding to epoll queu

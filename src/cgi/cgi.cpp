@@ -170,9 +170,7 @@ void CGIClient::handel(int fd, uint32_t evs)
       // this at first time is registred in epoll
       // after fired read output an put it into write buffer
       // and register socket output
-
     }
-
   }
   if (evs & EPOLLOUT)
   {

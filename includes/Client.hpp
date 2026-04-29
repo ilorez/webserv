@@ -1,6 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "EpollHold.hpp"
 #include "Request.hpp"
 #include <string>
 #include <ctime>
@@ -24,6 +25,7 @@ class Client
         size_t       _writeOffset;
         time_t       _lastActivity;
         ClientState  _state;
+        t_epollhold  _sock;
         Request     _req;
         bool _is_cgi;
     public:
