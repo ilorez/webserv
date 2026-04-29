@@ -4,9 +4,7 @@
 
 Server::Server()
 {
-  _port = 8080;
-  _ip = "127.0.0.1";
-  _epoll_event.events = EPOLLIN;
+  _port = 8080; _ip = "127.0.0.1"; _epoll_event.events = EPOLLIN;
   _status_error = 0;
 }
 
