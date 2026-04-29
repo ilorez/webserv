@@ -20,6 +20,9 @@ class CGIClient: public Client
     int _pipe_out[2];
     pid_t _child_pid;
     bool _cgi_headers_parsed;
+    size_t _read_counter;
+    bool _socket_done;
+    bool _cgi_pipe_done;
     //bool _download_switch; // on: for socket, off: for pipe
     //bool _upload_switch;  // off: for pipe, on: for socket 
   public:
@@ -38,6 +41,11 @@ class CGIClient: public Client
     // isBodyFullySent()// check POST body fully written
     // parseCGIHeaders() // strip CGI headers from output (confirm with Ali)
     
+    // i/o
+    void writeToReadBuffer();
+    void writeToPipe();
+    void writeToWriteBuffer();
+    void writeToSocket();
 
     void registerPipeOut(int epfd); // : register pipe_out[0] with EPOLLIN
     void registerPipeIn(int epfd); // : register pipe_in[1] with EPOLLOUT (POST only)
