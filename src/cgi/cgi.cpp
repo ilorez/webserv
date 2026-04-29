@@ -158,16 +158,40 @@ void CGIClient::handel(int fd, uint32_t evs)
   // so i mean you need it to switch betwen reading/writing from/to socket/pipe
   if (evs & EPOLLIN)
   {
-    if (fd == this->_fd)
-    {}
     // socket
+    if (fd == this->_fd) // 1
+    {
+      // read from socket and put into readbuffer
+      // remove fd from epoll and add pipe in
+    }
+    // pipe output
+    else if (fd == this->_pipe_out[0]) // 3
+    {
+      // this at first time is registred in epoll
+      // after fired read output an put it into write buffer
+      // and register socket output
+
+    }
 
   }
   if (evs & EPOLLOUT)
   {
-    if (fd == this->_fd)
     // socket
-
+    if (fd == this->_fd) // 4
+    {
+      // read from write buffer and put in socket
+      // if write buffer is empty
+      // remove from epoll
+      // and register againt the pipe out in case of cgi not end
+      // if end // change state to DONE
+    }
+    // pipe input
+    else if (fd == this->_pipe_in[1]) // 2
+    {
+      // read from buffer and put into pipe
+      // if buffer is empty => remove the pipe in 1 from epoll
+      // and add socket again to epoll in case of content len is not end
+    }
   }
 }
 
