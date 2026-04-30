@@ -3,7 +3,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-Client::Client(int fd) : _fd(fd), _writeOffset(0), _lastActivity(time(NULL)),
+Client::Client(int fd, int epfd) : _fd(fd), _epoll_events(EPOLLIN | EPOLLRDHUP), _epfd(epfd), _writeOffset(0), _lastActivity(time(NULL)),
 	_state(READING_HEADERS){
     _clsock_hold.cl = this;
     _clsock_hold.fd = fd;
@@ -18,7 +18,7 @@ Client::~Client()
 }
 
 // its private you can't use this 
-Client::Client(const Client &o): _fd(o._fd), _readBuffer(o._readBuffer), _writeBuffer(o._writeBuffer), _writeOffset(o._writeOffset), _lastActivity(o._lastActivity), _state(o._state), _req(o._req), _is_cgi(o._is_cgi) {}
+Client::Client(const Client &o): _fd(o._fd), _epfd(o._epfd), _readBuffer(o._readBuffer), _writeBuffer(o._writeBuffer), _writeOffset(o._writeOffset), _lastActivity(o._lastActivity), _state(o._state), _req(o._req), _is_cgi(o._is_cgi) {}
 
 Client &Client::operator=(const Client &other)
 {
@@ -60,6 +60,11 @@ Request& Client::getReq()
 bool Client::isCGI() const
 {
   return (_is_cgi);
+}
+
+t_epollhold& getClSockHolder() const
+{
+  return _clsock_hold;
 }
 
 

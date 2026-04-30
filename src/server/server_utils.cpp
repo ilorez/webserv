@@ -7,13 +7,10 @@
 // add client
 void Server::_addClient(int client_fd) {
   Client *cl = _clients.addClient(client_fd);
-  cl->->fd = client_fd;
-  tmp->is_cgi = false;
-  tmp->cl = cl;
   // applying non-blocking mode to everyclient fd
   fcntl(client_fd, F_SETFL, O_NONBLOCK);
   // adding to epoll queu
-  _switchEpollRegisration( tmp, EPOLLIN);
+  _switchEpollRegisration( &cl->getClSockHolder(), EPOLLIN);
   epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &_epoll_event); 
   // NOTE:epoll ctl copy the ev into kernel
 }
@@ -21,11 +18,8 @@ void Server::_addClient(int client_fd) {
 // add client
 void Server::_addSocketToEpoll(int sfd) {
   _srvsock_hold.fd = sfd;
-  _srvsock_hold.is_cgi = false;
-  _srvsock_hold.cl = NULL;
   // applying non-blocking
   fcntl(sfd, F_SETFL, O_NONBLOCK);
-  
   // adding to epoll queu
   _switchEpollRegisration( &_srvsock_hold, EPOLLIN);
   epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, sfd, &_epoll_event); 

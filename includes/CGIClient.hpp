@@ -29,7 +29,7 @@ class CGIClient: public Client
     //bool _download_switch; // on: for socket, off: for pipe
     //bool _upload_switch;  // off: for pipe, on: for socket 
   public:
-    CGIClient(int fd);
+    CGIClient(int fd, int epfd);
     CGIClient(Client &cl);
     ~CGIClient();
     void disconnect(int epfd);
@@ -37,7 +37,7 @@ class CGIClient: public Client
     // methods
     void setupPipes();
     //char **buildEnv();
-    void ft_exec(int epfd);
+    void ft_exec();
     //
     // writeBodyChunk() // write POST body chunk to _pipe_in[1]
     // readOutputChunk() // read CGI response chunk from _pipe_out[0] into writeBuffer
@@ -50,8 +50,8 @@ class CGIClient: public Client
     void writeToWriteBuffer();
     void writeToSocket();
 
-    void registerPipeOut(int epfd); // : register pipe_out[0] with EPOLLIN
-    void registerPipeIn(int epfd); // : register pipe_in[1] with EPOLLOUT (POST only)
+    void registerPipeOut(); // : register pipe_out[0] with EPOLLIN
+    void registerPipeIn(); // : register pipe_in[1] with EPOLLOUT (POST only)
     
     // TODO:
     // unregisterPipes(): remove both pipe fds from epoll

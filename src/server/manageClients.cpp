@@ -35,7 +35,7 @@ Client*    ManageClients::addClient(int fd){
     DEBUG_ERROR("manage client: addClient: client already exist");
     return it->second; // TODO: is it really fine like that
   }
-  Client* cl = new Client(fd);
+  Client* cl = new Client(fd, _epfd);
   _clients.insert(std::make_pair(fd, cl));
   return cl;
 }

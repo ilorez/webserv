@@ -1,9 +1,5 @@
-#include <ctime>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
+#include "../includes/container.hpp"
+#include <sys/epoll.h>
 
 char toLowerCase(unsigned char c)
 {
@@ -64,4 +60,12 @@ std::string makeTmpPath(int cl_fd)
   std::ostringstream oss;
   oss << "/tmp/webserv_" << cl_fd << "_" << std::time(NULL) << ".tmp";
   return oss.str(); 
+}
+// switch epoll regitration
+struct epoll_event create_ev(t_epollhold *eh, uint32_t ev)
+{
+  struct epoll_event r;
+  r.events = ev;
+  r.data.ptr = eh;
+  return r;
 }

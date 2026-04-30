@@ -6,6 +6,7 @@ Server::Server()
 {
   _port = 8080; _ip = "127.0.0.1"; _epoll_event.events = EPOLLIN;
   _status_error = 0;
+  _srvsock_hold.is_cgi = false;
 }
 
 Server::~Server() { close(_socket_fd);

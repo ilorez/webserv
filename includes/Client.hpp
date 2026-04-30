@@ -20,6 +20,8 @@ class Client
 {
     protected:
         int          _fd;
+        uint32_t    _epoll_events;
+        int _epfd;
         std::string  _readBuffer;
         std::string  _writeBuffer;
         size_t       _writeOffset;
@@ -30,7 +32,7 @@ class Client
         bool _is_cgi;
         t_epollhold _clsock_hold;
     public:
-        Client(int fd);
+        Client(int fd, int epfd);
         virtual ~Client();
 
         // getters
@@ -42,6 +44,7 @@ class Client
         ClientState         getState()       const;
         Request&            getReq();
         bool                isCGI()          const;
+        t_epollhold&         getClSockHolder()       const;
         
         // setters
         void  setState(ClientState state);
