@@ -5,6 +5,9 @@
 
 Client::Client(int fd) : _fd(fd), _writeOffset(0), _lastActivity(time(NULL)),
 	_state(READING_HEADERS){
+    _clsock_hold.cl = this;
+    _clsock_hold.fd = fd;
+    _clsock_hold.is_cgi = false;
 }
 
 Client::~Client()

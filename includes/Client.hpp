@@ -28,6 +28,7 @@ class Client
         t_epollhold  _sock;
         Request     _req;
         bool _is_cgi;
+        t_epollhold _clsock_hold;
     public:
         Client(int fd);
         virtual ~Client();

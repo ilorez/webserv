@@ -2,6 +2,7 @@
 #define CGICLIENT_HPP
 
 #include "Client.hpp"
+#include "EpollHold.hpp"
 #include <ctime>
 #include <sys/epoll.h>
 
@@ -23,6 +24,8 @@ class CGIClient: public Client
     size_t _read_counter;
     bool _socket_done;
     bool _cgi_pipe_done;
+    t_epollhold _pipe_in_hold;
+    t_epollhold _pipe_out_hold;
     //bool _download_switch; // on: for socket, off: for pipe
     //bool _upload_switch;  // off: for pipe, on: for socket 
   public:

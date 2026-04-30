@@ -1,8 +1,9 @@
 #ifndef EPOLLHOLD
 #define EPOLLHOLD
 
-#include "CGIClient.hpp"
-#include "Client.hpp"
+
+class Client;
+class CGIClient;
 
 typedef struct s_epollhold
 {
