@@ -15,22 +15,25 @@
 #include <vector>
 #include <cctype>
 #include <sys/stat.h>
+#include <cstdint>
 #include "Lexer.hpp"
 #include "locationConfig.hpp"
 
-
 using namespace std;
-
 
 class ServerConfig
 {
 private:
 	std::string _host;
-	unsigned int _port;
+	uint16_t _port;
 	std::string _serverName;
 	std::string _root;
-	size_t _clientMaxBodySize;
-	std::string _index;
+	unsigned long _clientMaxBodySize;
+	std::vector<std::string> _index;
+	bool _autoindex;
+
+	std::map<int, string> __errorPage;
+
 	vector<LocationConfig> _locations;
 
 public:
@@ -43,7 +46,10 @@ public:
 	void setServerName(const string &serverName);
 	void setRoot(const string &root);
 	void setClientMaxBodySize(const string &clientMaxBodySize);
-	// void setIndex(const string &index) { this->_index = index; }
+	void setErrorPages(const std::vector<std::string> &errorPage );
+	void setAutoIndex(const std::string &index);
+	void setIndex(const std::vector<std::string> &index );
+
 };
 
 #endif

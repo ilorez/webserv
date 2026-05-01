@@ -39,6 +39,9 @@ public:
 	void parseLocation(ServerConfig &serverBlock);
 	void parseDirective(ServerConfig &serverBlock);
 
+	std::vector<std::string> parseParams();
+	
+
 	bool expect(TokenType type);
 	Token advance();
 	Token peek();

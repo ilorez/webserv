@@ -1,0 +1,108 @@
+############### Only Inside Server Block: 
+===================================
+=> support multiple server blocks.
+===================================
+=> listen identifier
+===================================
+=> default error pages
+
+error_page status_code(necessary) status_code(optional) path(necessary) 
+
+examples:
+error_page 404 /404.html;	✅ valid
+error_page 404 403 /err.html;	✅ valid
+error_page 404 403;	❌ error
+error_page ; ❌ error
+
+std::map<int, string> errorPages;
+===================================
+=> maximum allowed size for client request bodies
+
+client_max_body_size num[K,M,G]
+
+examples: 
+client_max_body_size 1000; ✅ valid, 1000 bytes
+client_max_body_size 100k; ✅ valid, 1000 kelobytes
+client_max_body_size 10M; ✅ valid, 10 megabytes
+client_max_body_size 1G ; ✅ valid, 1gegabyte
+
+client_max_body_size ; ❌ error
+client_max_body_size 10 10; ❌ error
+
+===================================
+=>  root identifier 
+root "path"(necessary) ;
+
+
+examples:
+root /tmp/www;	✅ valid
+root /tmp/www /var/www/html; ❌ error
+root ; ❌ error
+root "/tmp/www"; to be decided
+===================================
+=> Directory Listing
+
+autoindex on(necessary);
+
+examples:
+autoindex on;	✅ valid
+autoindex off; ✅ valid
+autoindex ON; ✅ valid
+
+autoindex 12; ❌ error
+autoindex on off; ❌ error
+
+// note: only inside location blocks
+
+===================================
+File to serve when the request resource is directory:
+
+index file1(necessary) file2(optional) file3(optional)
+
+index ; => ❌ error
+index file1; => ✅ valid
+index file1 file2 file3; => ✅ valid
+
+std::vector
+
+
+############### Only Inside Location Block: 
+
+===================================
+  
+return code(necessary) "string"(optional)
+
+examples: 
+return 200; => ✅ valid
+return ; => ❌ error
+return 200 "OK" => 	❌ error, expected semi-colon
+return 200 "OK"; => ✅ valid
+return 900; => 	❌ error, Expected, a valid status code
+return 404 "" => ✅ valid
+return 404 
+
+
+struct ReturnDirective{
+    unsigned int status;
+    std::string value; // empty if none
+}
+
+returnDirective return . i could put a vriable inside the server class to denote if it has a return directive.
+
+===================================
+
+=> methods identifer;
+
+allow_methods method(necessary) method(optional) ... ;
+
+examples:
+
+allow_methods GET; => ✅ valid
+allow_methods GET POST DELETE; => ✅ valid
+allow_methods ; => 	❌ error
+allow_methods NONe; => 	❌ error
+
+
+std::set<std::string> allowedMethods;
+
+=============================================

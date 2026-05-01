@@ -22,9 +22,15 @@ using namespace std;
 class LocationConfig
 {
 private:
+	std::string _path;
+	std::string _root;
 	vector<string> _methods;
-	string index;
+	std::vector<std::string> _index;
+	bool _autoindex;
 
+	// return 
+
+	unsigned long clientMaxBodySize;
 public:
 	LocationConfig() {};
 	~LocationConfig() {};
