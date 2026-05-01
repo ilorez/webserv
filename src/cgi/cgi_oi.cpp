@@ -1,6 +1,7 @@
 
 #include "../../includes/container.hpp"
 #include <sys/epoll.h>
+#include <sys/types.h>
 
 void CGIClient::writeToReadBuffer()
 {
@@ -11,7 +12,12 @@ void CGIClient::writeToReadBuffer()
   // put in the readbuffer
   this->appendToReadBuffer(buf, bytes);
   _read_counter += bytes;
+  this->turnToPipe();
+  }
 
+// register pipe in EPOLLOUT and unregistre socket EPOLLIN
+void CGIClient::turnToPipe()
+{
   // unregister EPOLLIN event from socket 
   _epoll_events &= ~EPOLLIN;
   struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
@@ -28,10 +34,10 @@ void CGIClient::writeToReadBuffer()
 
 void CGIClient::writeToPipe()
 {
-  int bytes = write(_pipe_in[1], _readBuffer.c_str(), _readBuffer.size());
+  ssize_t bytes = write(_pipe_in[1], _readBuffer.c_str(), _readBuffer.size());
   if (bytes == -1)
     throw CGIException("write: writeToPipe: failed");
-  if (bytes < _readBuffer.size())
+  if (static_cast<size_t>(bytes) < _readBuffer.size())
   {
     // keep pipe registred
     // substring readBuffer

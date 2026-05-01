@@ -20,7 +20,7 @@ class Client
 {
     protected:
         int          _fd;
-        uint32_t    _epoll_events;
+        int    _epoll_events;
         int _epfd;
         std::string  _readBuffer;
         std::string  _writeBuffer;
@@ -44,7 +44,7 @@ class Client
         ClientState         getState()       const;
         Request&            getReq();
         bool                isCGI()          const;
-        t_epollhold&         getClSockHolder()       const;
+        t_epollhold&         getClSockHolder();
         
         // setters
         void  setState(ClientState state);

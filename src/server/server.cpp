@@ -74,6 +74,7 @@ void Server::_handelClient(socklen_t size_socket)
   {
     // new client
     t_epollhold *eh = static_cast<t_epollhold*>(_events[i].data.ptr);
+    std::cout << eh->cl->getFd() << std::endl;
     if (!eh){
         DEBUG_ERROR("epoll data ptr is invalid");
         /*erroo*/ continue;}
@@ -83,11 +84,15 @@ void Server::_handelClient(socklen_t size_socket)
     else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
     {
       if (eh->is_cgi)
+      {
+        DEBUG_INFO("Yeah");
         eh->cgi->handel(eh->fd, _events[i].events);
+      }
       else if (_events[i].events & EPOLLIN)
       {
         this->readrequest(eh->cl);
         if (eh->cl->getState() == PROCESSING || eh->cl->getState() == SENDING ){
+
           _switchEpollRegisration(eh, EPOLLOUT);
           epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, eh->cl->getFd(), &_epoll_event);}
       }
@@ -96,7 +101,6 @@ void Server::_handelClient(socklen_t size_socket)
       // update clinet last activity to now
       if (eh->cl->getState() ==  DONE)// should work for cgi and cl
         _clients.disconnect(eh->cl->getFd());
-        // TODO: delete eh
       else
         eh->cl->updateLastActivity();
     }
@@ -104,15 +108,15 @@ void Server::_handelClient(socklen_t size_socket)
     {
       // client disconnected or error
       _clients.disconnect(eh->cl->getFd());
-      // TODO: delete eh
     }
   }
   // INFO: checking timeout everytime can reduce performance
   // check timeout n=0
+  //
   // TODO: its not good to update it everytime, the only thing i need from socket is fd, the good thing is that socket created one time
   // and things i need to change for remove remove it from client is more then just few bytes
   // what you need is just the give the socket fd the max future time so its never timed out, and you never update it
-  _clients.getClient(_socket_fd)->updateLastActivity();
+  //_clients.getClient(_socket_fd)->updateLastActivity();
   _clients.checkTimeout();
 }
 

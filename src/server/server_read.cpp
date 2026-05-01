@@ -65,13 +65,13 @@ void Server::readheaders(Client *cl)
     {
       // in case of CGI i'm upgrading the Client class to CGI by using copy constructor
       cl->setIsCGI(true);
-      (_clients.updateToCGI(cl->getFd()))->ft_exec(_epoll_fd);
-      // TODO: Now we will work on cgi part
-      // you don't need to append anything here or change anything, everything
-      // already coll just call new handler for cgi in epool loop
-      // TODO: run setup cgi
-      // TODO: how about if i already ready body or the request is get not post ??
+      CGIClient* cgi =  _clients.updateToCGI(cl->getFd());
+      // if i already ready body or the request is get not post
       // i should never register the socket EPOLLIN in that case because its will never fired
+      if (cgi->getReq().getMethod() == "POST" && cgi->getReadBuffer().size() >= cgi->getReq().getContentLen())
+        cgi->turnToPipe();
+      // run setup cgi
+      cgi->ft_exec();
       return;
     }
   } catch (const std::exception &e)

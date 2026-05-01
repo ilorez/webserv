@@ -69,3 +69,12 @@ struct epoll_event create_ev(t_epollhold *eh, uint32_t ev)
   r.data.ptr = eh;
   return r;
 }
+
+void ft_closefd(int &fd)
+{
+  if (fd == -1)
+    return;
+  close(fd);
+  fd = -1;
+}
+

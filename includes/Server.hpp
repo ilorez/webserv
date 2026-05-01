@@ -21,7 +21,7 @@ class Server {
     std::string _ip;
     struct sockaddr_in _addr;
     ManageClients _clients;
-    //struct epoll_event _events[MAX_EVENTS];
+    struct epoll_event _events[MAX_EVENTS];
     struct epoll_event _epoll_event;
     t_epollhold _srvsock_hold;
     // ...

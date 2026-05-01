@@ -13,4 +13,6 @@ char toLowerCase(unsigned char c);
 std::string makeTmpPath(int cl_fd);
 struct epoll_event create_ev(t_epollhold *eh, uint32_t ev);
 
+void ft_closefd(int &fd);
+
 #endif

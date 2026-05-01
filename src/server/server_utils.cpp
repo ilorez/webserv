@@ -6,11 +6,13 @@
 
 // add client
 void Server::_addClient(int client_fd) {
-  Client *cl = _clients.addClient(client_fd);
   // applying non-blocking mode to everyclient fd
   fcntl(client_fd, F_SETFL, O_NONBLOCK);
+
+  Client *cl = _clients.addClient(client_fd);
+  t_epollhold &eh = cl->getClSockHolder();
   // adding to epoll queu
-  _switchEpollRegisration( &cl->getClSockHolder(), EPOLLIN);
+  _switchEpollRegisration( &eh, EPOLLIN);
   epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &_epoll_event); 
   // NOTE:epoll ctl copy the ev into kernel
 }
@@ -43,6 +45,7 @@ void Server::newconnection(socklen_t size_socket)
     throw ServerException("accept() failed.");
   // adding to clinet list
   this->_addClient(client_fd);
+  DEBUG_INFO("New Client Added");
 }
 
 

@@ -6,17 +6,18 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/04/30 15:11:27 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/01 10:58:25 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/container.hpp"
-#include <cstdint>
+#include <csignal>
 #include <sys/epoll.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd),
-  _child_pid(-1), _cgi_headers_parsed(false)
+  _cgi_headers_parsed(false), _pid(-1)
 //,_download_switch(true), _upload_switch(false)
 {
   _pipe_in[0] = -1;
@@ -29,10 +30,9 @@ CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd),
   _pipe_out_hold.cgi = this;
 }
 
-CGIClient::CGIClient(Client &cl): Client(cl), _child_pid(-1), _cgi_headers_parsed(false){
+CGIClient::CGIClient(Client &cl): Client(cl), _cgi_headers_parsed(false){
   _pipe_in[0] = -1;
-  _pipe_in[1] = -1;
-  _pipe_out[0] = -1;
+  _pipe_in[1] = -1; _pipe_out[0] = -1;
   _pipe_out[1] = -1;
   _pipe_in_hold.is_cgi = true;
   _pipe_in_hold.cgi = this;
@@ -44,10 +44,21 @@ CGIClient::CGIClient(Client &cl): Client(cl), _child_pid(-1), _cgi_headers_parse
 CGIClient::~CGIClient()
 {
   DEBUG_INFO("CGIClient disructor called");
-  // TODO
+  int status;
+
+  // unregistred pipes
+  epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_in[1], NULL);
+  epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_out[0], NULL);
+
   // kill
-  // wait pids
+  if (_pid != -1)
+    kill(_pid, SIGKILL);
+  // waitpid
+  waitpid(_pid, &status, 0);
+
   // close pipes
+  ft_closefd(_pipe_in[1]);
+  ft_closefd(_pipe_out[0]);
 }
 
 // its private you can't use this 
@@ -63,12 +74,7 @@ CGIClient &CGIClient::operator=(const CGIClient &other)
 
 void CGIClient::disconnect(int epfd)
 {
-  (void) _pipe_in, (void)_pipe_out, (void)_child_pid, (void)_cgi_headers_parsed;
-  //(void) _download_switch, (void) _upload_switch;
-  // TODO
-  // unrigister pipes from epoll
-  // close pipes
-  // kill process if not already killed
+  (void)_cgi_headers_parsed;
   Client::disconnect(epfd);
 }
 
@@ -85,15 +91,14 @@ void CGIClient::setupPipes()
   DEBUG_INFO("PIPEs has been setuped");
 }
 
-
 void CGIClient::registerPipeOut()
 {
-  // create epoll holder
-  // setup event
-  struct epoll_event ev = create_ev(&_pipe_out_hold, EPOLLIN)
-
   // applying non-blocking
   fcntl(_pipe_out[0], F_SETFL, O_NONBLOCK);
+
+  // create epoll holder
+  // setup event
+  struct epoll_event ev = create_ev(&_pipe_out_hold, EPOLLIN);
 
   // adding to epoll queu
   epoll_ctl(_epfd, EPOLL_CTL_ADD, _pipe_out[0], &ev); 
@@ -102,10 +107,10 @@ void CGIClient::registerPipeOut()
 // when sending input to cgi script
 void CGIClient::registerPipeIn()
 {
-  struct epoll_event ev = create_ev(&_pipe_out_hold, EPOLLOUT)
-
   // applying non-blocking
   fcntl(_pipe_in[1], F_SETFL, O_NONBLOCK);
+
+  struct epoll_event ev = create_ev(&_pipe_out_hold, EPOLLOUT);
 
   // adding to epoll queu
   epoll_ctl(_epfd, EPOLL_CTL_ADD, _pipe_in[1], &ev); 
@@ -120,27 +125,23 @@ void	ft_change_fd(int fd, int to)
 	close(fd);
 }
 
-void ft_closefd(int &fd)
-{
-  close(fd);
-  fd = -1;
-}
-
 void CGIClient::ft_exec()
 {
   setupPipes();
-  int pid = fork();
-  if (pid == -1)
+  _pid = fork();
+  if (_pid == -1)
     throw CGIException("fork failed");
-  if (pid == 0)
+  if (_pid == 0)
   {
     // child
     close (_pipe_in[1]);
     close (_pipe_out[0]);
     ft_change_fd(_pipe_in[0], STDIN_FILENO);
     ft_change_fd(_pipe_out[1], STDOUT_FILENO);
-    // TODO
-    //execv("/bin/ls", NULL);
+    char *argv[] = { (char*)"/usr/bin/python3", (char*)"./storage/scriptsCGI/hello.py", NULL };
+    char *env[]  = { (char*)"REQUEST_METHOD=GET", (char*)"QUERY_STRING=name=John", NULL };
+    execve("/usr/bin/python3", argv, env);
+    //execve("/usr/bin/python3", argv, buildEnv());
     exit(126);
   }
   // parent
@@ -150,7 +151,10 @@ void CGIClient::ft_exec()
   registerPipeOut();
   // TODO: is post only method have body ?
   if (_req.getMethod() != "POST")
+  {
+    epoll_ctl(_epfd, EPOLL_CTL_DEL, _fd, NULL);
     ft_closefd(_pipe_in[1]);
+  }
 }
 
 void CGIClient::handel(int fd, uint32_t evs)
