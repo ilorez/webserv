@@ -3,6 +3,27 @@
 #include "locationConfig.hpp"
 #include "ServerConfig.hpp"
 
+std::vector<std::string> Config::parseParams()
+{
+	std::vector<std::string> params;
+	std::string param = advance().getLexeme();
+
+	while (param != ";")
+	{
+		if (isAtEnd())
+		{
+			cout << peek().getLine() << endl;
+			throw std::runtime_error("Missing ';' after directive");
+		}
+		params.push_back(param);
+		param = advance().getLexeme();
+	}
+
+	if (params.empty())
+		throw std::runtime_error("directive requires at least one argument");
+	return (params);
+}
+
 // Getters and Setters
 int Config::getStatus() const { return this->_status; }
 
@@ -11,6 +32,7 @@ Config::Config(std::vector<Token> &Tokens)
 	_status = 0;
 	_index = 0;
 	_Tokens = Tokens;
+
 	this->Parser();
 };
 
@@ -71,38 +93,40 @@ void Config::parseServer()
 void Config::parseLocation(ServerConfig &serverBlock)
 {
 	LocationConfig locationBlock;
-	// cout << "Inside location" << endl;
+	// cout << "Inside ~location" << endl;
 	_index++;
 };
 void Config::parseDirective(ServerConfig &serverBlock)
 {
 	TokenType keyType = advance().getType();
+	std::string TokLexeme = peek().getLexeme();
 
 	if (keyType == HOST)
-		serverBlock.setHost(peek().getLexeme());
+		serverBlock.setHost(TokLexeme);
 	else if (keyType == LISTEN)
-		serverBlock.setPort(peek().getLexeme());
+		serverBlock.setPort(TokLexeme);
 	else if (keyType == SERVER_NAME)
-		serverBlock.setServerName(peek().getLexeme());
+		serverBlock.setServerName(TokLexeme);
 	else if (keyType == ROOT)
-		serverBlock.setRoot(peek().getLexeme());
+		serverBlock.setRoot(TokLexeme);
 	else if (keyType == CLIENT_MAX_BODY_SIZE)
-		serverBlock.setClientMaxBodySize(peek().getLexeme());
-	// else if (keyType == ERROR_PAGE)
-	// else if (keyType == ALLOW_METHODS)
-	// else if (keyType == RETURN)
-	// else if (keyType == AUTOINDEX)
-	// else if (keyType == INDEX)
-	// else if (keyType == UPLOAD_STORE)
-	// else if (keyType == CGI_EXT)
-	// else if (keyType == CGI_PATH)
+		serverBlock.setClientMaxBodySize(TokLexeme); // an9adha dbbb
+	else if (keyType == AUTOINDEX)
+		serverBlock.setAutoIndex(TokLexeme);
+	else if (keyType == ERROR_PAGE)
+		serverBlock.setErrorPages(parseParams());
+	else if (keyType == INDEX)
+		serverBlock.setIndex(parseParams());
 	else
 		parseError(peek(), "Unknown identifier"); // unknown identifier
 
-	advance(); // skip the key
+	if (keyType == HOST || keyType == LISTEN || keyType == SERVER_NAME || keyType == ROOT || keyType == CLIENT_MAX_BODY_SIZE || keyType == AUTOINDEX)
+		advance();
 	if (!expect(SEMICOLON))
 		parseError(peek(), "\';\' Expected"); // semicolon expected as end of line
 }
+// else if (keyType == ALLOW_METHODS)
+// 	parseAllowedMethods(serverBlock);
 
 void Config::Parser()
 {

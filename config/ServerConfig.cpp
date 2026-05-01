@@ -11,6 +11,8 @@ ServerConfig::ServerConfig()
 };
 
 ServerConfig::~ServerConfig() {};
+
+// ? methods
 void ServerConfig::setClientMaxBodySize(const string &clientMaxBodySize) // todo: ask friends about the max body size that we would support
 {
 	if (clientMaxBodySize.find_first_not_of("0123456789") != string::npos)
@@ -21,7 +23,13 @@ void ServerConfig::setClientMaxBodySize(const string &clientMaxBodySize) // todo
 	this->_clientMaxBodySize = num;
 }
 
-void ServerConfig::setRoot(const string &root) { this->_root = root; }
+void ServerConfig::setRoot(const string &root)
+{
+	if (root.find_first_of("*?[]()!<") != string::npos)
+		throw logic_error("Invalid path.");
+
+	this->_root = root;
+}
 
 void ServerConfig::setServerName(const string &serverName) { this->_serverName = serverName; }
 
@@ -43,4 +51,22 @@ void ServerConfig::setPort(const std::string &port) // todo: needs a better pars
 		throw logic_error("Invalid Port");
 
 	this->_port = num;
+}
+
+void ServerConfig::setErrorPages(const std::vector<std::string> &errorPage)
+{
+}
+
+void ServerConfig::setIndex(const std::vector<std::string> &index)
+{
+}
+
+void ServerConfig::setAutoIndex(const std::string &index)
+{
+	if (index == "on")
+		this->_autoindex = true;
+	else if (index == "off")
+		this->_autoindex = false;
+	else
+		throw logic_error("Invalid autoIndex value.");
 }
