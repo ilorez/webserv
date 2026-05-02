@@ -13,19 +13,24 @@ void CGIClient::writeToReadBuffer()
   this->appendToReadBuffer(buf, bytes);
   _read_counter += bytes;
   this->turnToPipe();
-  }
+}
 
-// register pipe in EPOLLOUT and unregistre socket EPOLLIN
-void CGIClient::turnToPipe()
+void CGIClient::removeEpollinEventFromSocket()
 {
   // unregister EPOLLIN event from socket 
   _epoll_events &= ~EPOLLIN;
   struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
   epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
+}
+
+// register pipe in EPOLLOUT and unregistre socket EPOLLIN
+void CGIClient::turnToPipe()
+{
+  // unregister EPOLLIN event from socket 
+  removeEpollinEventFromSocket();
 
   // register pipe in 1
-  ev.data.ptr = &_pipe_in_hold;
-  ev.events = EPOLLOUT;
+  struct epoll_event ev = create_ev(&_pipe_in_hold, EPOLLOUT);
   epoll_ctl(_epfd, EPOLL_CTL_ADD, _pipe_in[1], &ev);
   if (_read_counter >= _req.getContentLen())
     _socket_done = true;

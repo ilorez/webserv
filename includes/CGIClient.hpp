@@ -47,7 +47,7 @@ class CGIClient: public Client
     void writeToWriteBuffer();
     void writeToSocket();
 
-
+    void removeEpollinEventFromSocket();
     void turnToPipe();
     void registerPipeOut(); // : register pipe_out[0] with EPOLLIN
     void registerPipeIn(); // : register pipe_in[1] with EPOLLOUT (POST only)

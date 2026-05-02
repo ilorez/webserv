@@ -74,7 +74,7 @@ void Server::_handelClient(socklen_t size_socket)
   {
     // new client
     t_epollhold *eh = static_cast<t_epollhold*>(_events[i].data.ptr);
-    std::cout << eh->cl->getFd() << std::endl;
+    std::cout << eh->fd << std::endl;
     if (!eh){
         DEBUG_ERROR("epoll data ptr is invalid");
         /*erroo*/ continue;}

@@ -68,10 +68,20 @@ void Server::readheaders(Client *cl)
       CGIClient* cgi =  _clients.updateToCGI(cl->getFd());
       // if i already ready body or the request is get not post
       // i should never register the socket EPOLLIN in that case because its will never fired
-      if (cgi->getReq().getMethod() == "POST" && cgi->getReadBuffer().size() >= cgi->getReq().getContentLen())
-        cgi->turnToPipe();
+      if (cgi->getReq().getMethod() == "POST")
+      {
+        if (cgi->getReadBuffer().size() >= cgi->getReq().getContentLen())
+            cgi->turnToPipe();
+      }
+      else
+        cgi->removeEpollinEventFromSocket();
+        
       // run setup cgi
-      cgi->ft_exec();
+      try {
+        cgi->ft_exec();
+      } catch (std::exception &e){
+
+      }
       return;
     }
   } catch (const std::exception &e)
