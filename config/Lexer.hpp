@@ -89,13 +89,14 @@ public:
 	Scanner &operator=(const Scanner &other);
 	~Scanner();
 
-	// helper functions
+	// helpers
 	char peek();
 	bool expect(char c);
 	char advance();
 	bool isAtEnd();
 	void lexerError(char c);
 
+	// parsing
 	void addToken(const TokenType type);
 	void addToken(const size_t len);
 	void scanToken();

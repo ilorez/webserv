@@ -3,9 +3,7 @@
 #include "locationConfig.hpp"
 #include "ServerConfig.hpp"
 
-// Getters and Setters
-int Config::getStatus() const { return this->_status; }
-
+// constuctor & destructor
 Config::Config(std::vector<Token> &Tokens)
 {
 	_status = 0;
@@ -15,29 +13,12 @@ Config::Config(std::vector<Token> &Tokens)
 	this->Parser();
 };
 
-// helper methods
-static void parseError(const Token &token, const std::string &msg) // todo: write a better error handling approach
-{
-	cerr << msg << ". Line: " << token.getLine() << endl;
-	exit(1);
-}
+Config::~Config() {};
 
-std::vector<std::string> Config::parseParams()
-{
-	std::vector<std::string> params;
+// Getters and Setters
+int Config::getStatus() const { return this->_status; }
 
-	while (peek().getType() != SEMICOLON)
-	{
-		if (isAtEnd())
-			throw std::runtime_error("Missing ';' after directive");
-		params.push_back(advance().getLexeme());
-	}
-
-	if (params.empty())
-		throw std::runtime_error("directive requires at least one argument");
-	return (params);
-}
-
+// helpers
 bool Config::expect(const TokenType type)
 {
 	if (type == END_OF_FILE)
@@ -60,6 +41,29 @@ bool Config::isAtEnd()
 {
 	return (peek().getType() == END_OF_FILE ? true : false);
 }
+static void parseError(const Token &token, const std::string &msg)
+{
+	cerr << msg << ". Line: " << token.getLine() << endl;
+	exit(1);
+}
+
+// parsing
+std::vector<std::string> Config::parseParams()
+{
+	std::vector<std::string> params;
+
+	while (peek().getType() != SEMICOLON)
+	{
+		if (isAtEnd())
+			throw std::runtime_error("Missing ';' after directive");
+		params.push_back(advance().getLexeme());
+	}
+
+	if (params.empty())
+		throw std::runtime_error("directive requires at least one argument");
+	return (params);
+}
+
 void Config::parseServer()
 {
 	ServerConfig serverBlock;
@@ -76,7 +80,7 @@ void Config::parseServer()
 		}
 		else
 		{
-			parseDirective(serverBlock);
+			parseServerDirective(serverBlock);
 		}
 	}
 	if (!expect(RIGHT_BRACE))
@@ -88,9 +92,23 @@ void Config::parseServer()
 
 void Config::parseLocation(ServerConfig &serverBlock)
 {
-	// ? parse location
+	LocationConfig locationBlock(serverBlock);
+
+	locationBlock.setPath(advance().getLexeme());
+	if (!expect(LEFT_BRACE))
+		parseError(peek(), "\'{\' Expected");
+
+	while (!isAtEnd() && peek().getType() != RIGHT_BRACE)
+	{
+		parseLocationDirective(locationBlock);
+	}
+	if (!expect(RIGHT_BRACE))
+	{
+		parseError(peek(), "\'}\' Expected");
+	}
+	serverBlock.setLocation(locationBlock);
 };
-void Config::parseDirective(ServerConfig &serverBlock)
+void Config::parseServerDirective(ServerConfig &serverBlock)
 {
 	TokenType keyType = advance().getType();
 	std::string TokLexeme = peek().getLexeme();
@@ -122,6 +140,30 @@ void Config::parseDirective(ServerConfig &serverBlock)
 		parseError(peek(), "\';\' Expected");
 }
 
+void Config::parseLocationDirective(LocationConfig &locationBlock)
+{
+	TokenType keyType = advance().getType();
+	std::string TokLexeme = peek().getLexeme();
+
+	if (keyType == ROOT)
+		locationBlock.setRoot(TokLexeme);
+	else if (keyType == CLIENT_MAX_BODY_SIZE)
+		locationBlock.setClientMaxBodySize(TokLexeme);
+	else if (keyType == AUTOINDEX)
+		locationBlock.setAutoIndex(TokLexeme);
+	else if (keyType == INDEX)
+		locationBlock.setIndex(parseParams());
+	else if (keyType == ALLOW_METHODS)
+		locationBlock.setMethods(parseParams());
+	else
+		parseError(peek(), "Unknown identifier");
+
+	if (keyType == ROOT || keyType == CLIENT_MAX_BODY_SIZE || keyType == AUTOINDEX)
+		advance();
+
+	if (!expect(SEMICOLON))
+		parseError(peek(), "\';\' Expected");
+}
 void Config::Parser()
 {
 	while (!isAtEnd())
@@ -138,5 +180,3 @@ void Config::Parser()
 		}
 	}
 };
-
-Config::~Config() {};

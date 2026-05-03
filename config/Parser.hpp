@@ -15,10 +15,11 @@
 #include <vector>
 #include <cctype>
 #include <sys/stat.h>
-#include "ServerConfig.hpp"
-#include "locationConfig.hpp"
 
 using namespace std;
+
+class ServerConfig;
+class LocationConfig;
 
 class Config
 {
@@ -33,15 +34,16 @@ public:
 	Config(std::vector<Token> &Tokens);
 	~Config();
 
-	// methods
+	// parsing
 	void Parser();
 	void parseServer();
 	void parseLocation(ServerConfig &serverBlock);
-	void parseDirective(ServerConfig &serverBlock);
+	void parseServerDirective(ServerConfig &serverBlock);
+	void parseLocationDirective(LocationConfig &locationBlock);
 
 	std::vector<std::string> parseParams();
-	
 
+	// helpers
 	bool expect(TokenType type);
 	Token advance();
 	Token peek();

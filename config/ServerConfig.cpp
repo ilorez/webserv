@@ -3,12 +3,13 @@
 #include "locationConfig.hpp"
 #include "ServerConfig.hpp"
 
+//? constructor & destructor
 ServerConfig::ServerConfig()
 {
 	this->_host = "127.0.0.1";
 	this->_port = 8080;
 	this->_serverName = "localhost";
-	this->_root = "html";				// ./html/ . like nginx default
+	this->_root = "./html";				// ./html/ . like nginx default
 	this->_clientMaxBodySize = 1048576; // 1mg, like nginx default
 	this->_autoindex = false;
 	this->_index = {"index.html"};
@@ -16,20 +17,51 @@ ServerConfig::ServerConfig()
 
 ServerConfig::~ServerConfig() {};
 
-// ? methods
+//? getters
+const std::string &ServerConfig::getHost() const { return this->_host; }
+uint16_t ServerConfig::getPort() const { return this->_port; }
+const std::string &ServerConfig::getServerName() const { return this->_serverName; }
+const std::string &ServerConfig::getRoot() const { return this->_root; }
+unsigned long ServerConfig::getClientMaxBodySize() const { return this->_clientMaxBodySize; }
+const std::vector<std::string> &ServerConfig::getIndex() const { return this->_index; }
+bool ServerConfig::getAutoIndex() const { return this->_autoindex; }
+const std::map<int, std::string> &ServerConfig::getErrorPages() const { return this->_errorPage; }
+const std::vector<LocationConfig> &ServerConfig::getLocations() const { return this->_locations; }
+
+//? helpers
+bool ServerConfig::isValidPath(const std::string &path)
+{
+	if (path.empty() || path.find_first_of("*?[]()!<") != string::npos)
+		return false;
+
+	return true;
+}
+
+bool ServerConfig::IsvalidStatusCode(const std::string &str)
+{
+	int num;
+
+	if (str.size() != 3 || str.find_first_not_of("0123456789") != string::npos)
+		return false;
+
+	num = atoi(str.c_str());
+	return num < 100 || num > 599 ? false : true;
+}
+
+// ? setters
 void ServerConfig::setClientMaxBodySize(const string &clientMaxBodySize) // ! i might need to check for overflow
 {
 	uint64_t num = 0;
 	size_t i = 0;
+
+	if (clientMaxBodySize.empty())
+		throw logic_error("Invalid client_max_body_size");
 
 	if (clientMaxBodySize.find_first_not_of("0") == string::npos)
 	{
 		this->_clientMaxBodySize = 0;
 		return;
 	}
-
-	if (clientMaxBodySize.empty())
-		throw logic_error("Invalid client_max_body_size");
 
 	for (; i < clientMaxBodySize.size() && isdigit(clientMaxBodySize[i]); i++)
 		num = num * 10 + (clientMaxBodySize[i] - '0');
@@ -169,35 +201,4 @@ void ServerConfig::setAutoIndex(const std::string &index)
 void ServerConfig::setLocation(const LocationConfig &locationBlock)
 {
 	this->_locations.push_back(locationBlock);
-}
-
-const std::string &ServerConfig::getHost() const { return this->_host; }
-uint16_t ServerConfig::getPort() const { return this->_port; }
-const std::string &ServerConfig::getServerName() const { return this->_serverName; }
-const std::string &ServerConfig::getRoot() const { return this->_root; }
-unsigned long ServerConfig::getClientMaxBodySize() const { return this->_clientMaxBodySize; }
-const std::vector<std::string> &ServerConfig::getIndex() const { return this->_index; }
-bool ServerConfig::getAutoIndex() const { return this->_autoindex; }
-const std::map<int, std::string> &ServerConfig::getErrorPages() const { return this->_errorPage; }
-const std::vector<LocationConfig> &ServerConfig::getLocations() const { return this->_locations; }
-
-// helpers
-
-bool ServerConfig::isValidPath(const std::string &path)
-{
-	if (path.empty() || path.find_first_of("*?[]()!<") != string::npos)
-		return false;
-
-	return true;
-}
-
-bool ServerConfig::IsvalidStatusCode(const std::string &str)
-{
-	int num;
-
-	if (str.size() != 3 || str.find_first_not_of("0123456789") != string::npos)
-		return false;
-
-	num = atoi(str.c_str());
-	return num < 100 || num > 599 ? false : true;
 }

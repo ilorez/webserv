@@ -45,7 +45,23 @@ std::vector<Token> Scanner::getTokens()
 	return (this->Tokens);
 }
 
-// helper functions
+// helpers
+char Scanner::advance()
+{
+	return (this->_raw[_current++]);
+}
+
+bool Scanner::expect(char c)
+{
+	if (isAtEnd())
+		return false;
+	if (c != this->_raw[_current])
+		return false;
+
+	_current++;
+	return (true);
+}
+
 void Scanner::lexerError(char c)
 {
 	_hadError = 1;
@@ -62,6 +78,7 @@ char Scanner::peek()
 	return (this->_raw[_current]);
 }
 
+// parsing
 void Scanner::readWord()
 {
 	char c;
@@ -177,18 +194,3 @@ void Scanner::addToken(const size_t len)
 	this->Tokens.push_back(newToken);
 }
 
-char Scanner::advance()
-{
-	return (this->_raw[_current++]);
-}
-
-bool Scanner::expect(char c)
-{
-	if (isAtEnd())
-		return false;
-	if (c != this->_raw[_current])
-		return false;
-
-	_current++;
-	return (true);
-}
