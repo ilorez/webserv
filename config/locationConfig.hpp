@@ -28,11 +28,13 @@ private:
 	std::vector<std::string> _index;
 	bool _autoindex;
 
-	// return 
+	// return
 
 	unsigned long clientMaxBodySize;
+
 public:
-	LocationConfig() {};
+	LocationConfig(const ServerConfig &ServerConfig) {};
+
 	~LocationConfig() {};
 };
 #endif

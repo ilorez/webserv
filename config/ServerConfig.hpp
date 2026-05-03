@@ -32,7 +32,7 @@ private:
 	std::vector<std::string> _index;
 	bool _autoindex;
 
-	std::map<int, string> __errorPage;
+	std::map<int, string> _errorPage;
 
 	vector<LocationConfig> _locations;
 
@@ -46,10 +46,25 @@ public:
 	void setServerName(const string &serverName);
 	void setRoot(const string &root);
 	void setClientMaxBodySize(const string &clientMaxBodySize);
-	void setErrorPages(const std::vector<std::string> &errorPage );
+	void setErrorPages(const std::vector<std::string> &errorPage);
 	void setAutoIndex(const std::string &index);
-	void setIndex(const std::vector<std::string> &index );
+	void setIndex(const std::vector<std::string> &index);
+	void setLocation(const LocationConfig &locationBlock);
 
+	// getters
+	const std::string &getHost() const;
+	uint16_t getPort() const;
+	const std::string &getServerName() const;
+	const std::string &getRoot() const;
+	unsigned long getClientMaxBodySize() const;
+	const std::vector<std::string> &getIndex() const;
+	bool getAutoIndex() const;
+	const std::map<int, std::string> &getErrorPages() const;
+	const std::vector<LocationConfig> &getLocations() const;
+
+	// helpers
+	bool IsvalidStatusCode(const std::string &str);
+	bool isValidPath(const std::string &path);
 };
 
 #endif
