@@ -140,13 +140,11 @@ void Config::parseLocation(ServerConfig &serverBlock)
 		parseError(peek(), "\'{\' Expected");
 
 	while (!isAtEnd() && peek().getType() != RIGHT_BRACE)
-	{
 		parseLocationDirective(locationBlock);
-	}
+
 	if (!expect(RIGHT_BRACE))
-	{
 		parseError(peek(), "\'}\' Expected");
-	}
+
 	serverBlock.setLocation(locationBlock);
 };
 void Config::parseLocationDirective(LocationConfig &locationBlock)
@@ -160,6 +158,10 @@ void Config::parseLocationDirective(LocationConfig &locationBlock)
 		locationBlock.setClientMaxBodySize(TokLexeme);
 	else if (keyType == AUTOINDEX)
 		locationBlock.setAutoIndex(TokLexeme);
+	else if (keyType == CGI_EXT)
+		locationBlock.setCgiExt(TokLexeme);
+	else if (keyType == CGI_PATH)
+		locationBlock.setCgiPath(TokLexeme);
 	else if (keyType == INDEX)
 		locationBlock.setIndex(parseParams());
 	else if (keyType == ALLOW_METHODS)
@@ -169,7 +171,7 @@ void Config::parseLocationDirective(LocationConfig &locationBlock)
 	else
 		parseError(peek(), "Unknown identifier");
 
-	if (keyType == ROOT || keyType == CLIENT_MAX_BODY_SIZE || keyType == AUTOINDEX)
+	if (keyType == ROOT || keyType == CLIENT_MAX_BODY_SIZE || keyType == AUTOINDEX || keyType == CGI_EXT || keyType == CGI_PATH)
 		advance();
 
 	if (!expect(SEMICOLON))
@@ -185,7 +187,6 @@ void Config::Parser()
 		{
 			advance();
 			parseServer();
-			// printServerData(this->_servers);
 		}
 		else
 		{
