@@ -1,0 +1,6 @@
+=> implement a better error handling logic
+=> handle double quoted string (lexer)
+=> handle cgi
+=> organize code accross more files
+=> verify the paths if they exists
+=> line counting problem in lexer

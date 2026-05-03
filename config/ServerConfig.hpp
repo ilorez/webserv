@@ -16,8 +16,8 @@
 #include <cctype>
 #include <sys/stat.h>
 #include <cstdint>
-#include "Lexer.hpp"
-#include "locationConfig.hpp"
+
+class LocationConfig;
 
 using namespace std;
 
@@ -37,6 +37,7 @@ private:
 	vector<LocationConfig> _locations;
 
 public:
+	// constructor & destructor
 	ServerConfig();
 	~ServerConfig();
 
@@ -45,7 +46,7 @@ public:
 	void setPort(const std::string &port);
 	void setServerName(const string &serverName);
 	void setRoot(const string &root);
-	void setClientMaxBodySize(const string &clientMaxBodySize);
+	void setClientMaxBodySize(const std::string &clientMaxBodySize);
 	void setErrorPages(const std::vector<std::string> &errorPage);
 	void setAutoIndex(const std::string &index);
 	void setIndex(const std::vector<std::string> &index);

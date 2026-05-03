@@ -52,8 +52,6 @@ autoindex ON; ✅ valid
 autoindex 12; ❌ error
 autoindex on off; ❌ error
 
-// note: only inside location blocks
-
 ===================================
 File to serve when the request resource is directory:
 
@@ -66,7 +64,6 @@ index file1 file2 file3; => ✅ valid
 std::vector
 
 
-############### Only Inside Location Block: 
 
 ===================================
   
