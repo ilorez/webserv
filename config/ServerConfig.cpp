@@ -154,7 +154,6 @@ void ServerConfig::setPort(const std::string &port)
 
 void ServerConfig::setErrorPages(const std::vector<std::string> &errorPage)
 {
-	// _errorPage.clear();
 	std::vector<int> vec;
 
 	for (size_t i = 0; i < errorPage.size(); i++)

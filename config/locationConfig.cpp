@@ -5,14 +5,16 @@
 
 // constructors & destructors
 LocationConfig::LocationConfig(const ServerConfig &serverConfig)
-    : _path(""),
-      _root(serverConfig.getRoot()),
-      _methods({"GET", "POST", "DELETE"}),
-      _index(serverConfig.getIndex()),
-      _autoindex(serverConfig.getAutoIndex()),
-      _returnUrl(""),
-      _returnCode(0),
-      _clientMaxBodySize(serverConfig.getClientMaxBodySize())
+	: _path(""),
+	  _root(serverConfig.getRoot()),
+	  _methods({"GET", "POST", "DELETE"}),
+	  _index(serverConfig.getIndex()),
+	  _autoindex(serverConfig.getAutoIndex()),
+	  _returnUrl(""),
+	  _returnCode(0),
+	  _cgiExtension(""),
+	  _cgiPath(""),
+	  _clientMaxBodySize(serverConfig.getClientMaxBodySize())
 {
 }
 LocationConfig::~LocationConfig() {};
@@ -26,7 +28,8 @@ bool LocationConfig::getAutoindex() const { return _autoindex; }
 const std::string &LocationConfig::getReturnUrl() const { return _returnUrl; }
 int LocationConfig::getReturnCode() const { return _returnCode; }
 unsigned long LocationConfig::getClientMaxBodySize() const { return _clientMaxBodySize; }
-
+const std::string &LocationConfig::getCgiExt() const { return _cgiExtension; }
+const std::string &LocationConfig::getCgiPath() const { return _cgiPath; }
 // setters
 void LocationConfig::setPath(const std::string &path)
 {
@@ -158,6 +161,21 @@ void LocationConfig::setClientMaxBodySize(const string &clientMaxBodySize) // ! 
 	this->_clientMaxBodySize = num;
 }
 
+void LocationConfig::setCgiExt(const std::string &ext)
+{
+	if (ext != ".php") // ! i will add the rest of cgi's as needed
+		throw logic_error("Invalid cgi_ext, e.g. '.php'");
+
+	_cgiExtension = ext;
+}
+
+void LocationConfig::setCgiPath(const std::string &path)
+{
+	if (!isValidPath(path))
+		throw logic_error("Invalid cgi_path");
+	_cgiPath = path;
+}
+
 // helpers
 bool LocationConfig::isMethodAllowed(const std::string &method) const
 {
@@ -179,5 +197,10 @@ bool LocationConfig::isValidStatusCode(const std::string &str)
 
 	num = atoi(str.c_str());
 	return num < 100 || num > 599 ? false : true;
+}
+
+bool LocationConfig::hasCgi() const
+{
+	return (!_cgiExtension.empty() && !_cgiPath.empty());
 }
 // parsing

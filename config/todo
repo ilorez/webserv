@@ -1,5 +1,6 @@
 => implement a better error handling logic 
-=> handle cgi
+=> handle cgi ✅
 => organize code accross more files
+=> added upload_store directive
 => handle double quoted string (lexer) ✅
 => line counting problem in lexer ✅

@@ -32,9 +32,18 @@ void printLocationData(const LocationConfig &loc)
 		if (!loc.getReturnUrl().empty())
 			cout << "\t  return url:        " << loc.getReturnUrl() << "\n";
 	}
+
+	if (loc.hasCgi())
+	{
+		cout << "\t  cgi_ext:           " << loc.getCgiExt() << "\n";
+		cout << "\t  cgi_path:          " << loc.getCgiPath() << "\n";
+	}
+
+	// if (!loc.getUploadStore().empty())
+	// 	cout << "\t  upload_store:      " << loc.getUploadStore() << "\n";
+
 	cout << "\t  " << string(50, '-') << "\n";
 }
-
 void printServerData(const vector<ServerConfig> &servers)
 {
 	for (size_t i = 0; i < servers.size(); i++)
