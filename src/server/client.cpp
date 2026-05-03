@@ -17,10 +17,15 @@ Client::~Client()
 }
 
 // its private you can't use this 
-Client::Client(const Client &o): _fd(o._fd), _epfd(o._epfd), _readBuffer(o._readBuffer), _writeBuffer(o._writeBuffer), _writeOffset(o._writeOffset), _lastActivity(o._lastActivity), _state(o._state), _req(o._req), _is_cgi(o._is_cgi) {
+Client::Client(const Client &o): 
+_fd(o._fd),_epoll_events(o._epoll_events), _epfd(o._epfd), _readBuffer(o._readBuffer),
+ _writeBuffer(o._writeBuffer), _writeOffset(o._writeOffset),
+  _lastActivity(o._lastActivity), _state(o._state), _req(o._req),
+   _is_cgi(o._is_cgi){
     _clsock_hold.cl = o._clsock_hold.cl;
     _clsock_hold.fd = o._clsock_hold.fd;
     _clsock_hold.is_cgi = o._clsock_hold.is_cgi;
+
 }
 
 Client &Client::operator=(const Client &other)

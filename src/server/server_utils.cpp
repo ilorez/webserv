@@ -12,7 +12,7 @@ void Server::_addClient(int client_fd) {
   Client *cl = _clients.addClient(client_fd);
   t_epollhold &eh = cl->getClSockHolder();
   // adding to epoll queu
-  _switchEpollRegisration( &eh, EPOLLIN);
+  _switchEpollRegisration( &eh, EPOLLIN | EPOLLHUP);
   epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &_epoll_event); 
   // NOTE:epoll ctl copy the ev into kernel
 }

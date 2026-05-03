@@ -74,7 +74,7 @@ void Server::_handelClient(socklen_t size_socket)
   {
     // new client
     t_epollhold *eh = static_cast<t_epollhold*>(_events[i].data.ptr);
-    std::cout << eh->fd << std::endl;
+    DEBUG_INFO("event fired on fd: " + to_string98(eh->fd));
     if (!eh){
         DEBUG_ERROR("epoll data ptr is invalid");
         /*erroo*/ continue;}
@@ -90,14 +90,17 @@ void Server::_handelClient(socklen_t size_socket)
       }
       else if (_events[i].events & EPOLLIN)
       {
+        DEBUG_INFO("readrequest called");
         this->readrequest(eh->cl);
         if (eh->cl->getState() == PROCESSING || eh->cl->getState() == SENDING ){
-
           _switchEpollRegisration(eh, EPOLLOUT);
           epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, eh->cl->getFd(), &_epoll_event);}
       }
       else if (_events[i].events & EPOLLOUT)
+      {
+        DEBUG_INFO("sendresponse called");
         this->sendresponse(eh->cl);
+      }
       // update clinet last activity to now
       if (eh->cl->getState() ==  DONE)// should work for cgi and cl
         _clients.disconnect(eh->cl->getFd());

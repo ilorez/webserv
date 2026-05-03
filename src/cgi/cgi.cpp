@@ -24,6 +24,8 @@ CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd),
   _pipe_in[1] = -1;
   _pipe_out[0] = -1;
   _pipe_out[1] = -1;
+  _clsock_hold.is_cgi = true;
+  _clsock_hold.cgi = this;
   _pipe_in_hold.is_cgi = true;
   _pipe_in_hold.cgi = this;
   _pipe_out_hold.is_cgi = true;
@@ -34,6 +36,8 @@ CGIClient::CGIClient(Client &cl): Client(cl), _cgi_headers_parsed(false){
   _pipe_in[0] = -1;
   _pipe_in[1] = -1; _pipe_out[0] = -1;
   _pipe_out[1] = -1;
+  _clsock_hold.is_cgi = true;
+  _clsock_hold.cgi = this;
   _pipe_in_hold.is_cgi = true;
   _pipe_in_hold.cgi = this;
   _pipe_out_hold.is_cgi = true;
