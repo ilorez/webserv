@@ -11,12 +11,19 @@ Config::Config(std::vector<Token> &Tokens)
 	_Tokens = Tokens;
 
 	this->Parser();
+
+	if (this->_servers.size() == 0) // in case the config file is empty
+	{
+		ServerConfig serv;
+		this->_servers.push_back(serv);
+	}
 };
 
 Config::~Config() {};
 
 // Getters and Setters
 int Config::getStatus() const { return this->_status; }
+const std::vector<ServerConfig> &Config::getServers() const { return _servers; }
 
 // helpers
 bool Config::expect(const TokenType type)
@@ -47,7 +54,7 @@ static void parseError(const Token &token, const std::string &msg)
 	exit(1);
 }
 
-// parsing
+// ? parsing
 std::vector<std::string> Config::parseParams()
 {
 	std::vector<std::string> params;
@@ -64,6 +71,7 @@ std::vector<std::string> Config::parseParams()
 	return (params);
 }
 
+// --------------------------- Server
 void Config::parseServer()
 {
 	ServerConfig serverBlock;
@@ -90,24 +98,6 @@ void Config::parseServer()
 	this->_servers.push_back(serverBlock);
 }
 
-void Config::parseLocation(ServerConfig &serverBlock)
-{
-	LocationConfig locationBlock(serverBlock);
-
-	locationBlock.setPath(advance().getLexeme());
-	if (!expect(LEFT_BRACE))
-		parseError(peek(), "\'{\' Expected");
-
-	while (!isAtEnd() && peek().getType() != RIGHT_BRACE)
-	{
-		parseLocationDirective(locationBlock);
-	}
-	if (!expect(RIGHT_BRACE))
-	{
-		parseError(peek(), "\'}\' Expected");
-	}
-	serverBlock.setLocation(locationBlock);
-};
 void Config::parseServerDirective(ServerConfig &serverBlock)
 {
 	TokenType keyType = advance().getType();
@@ -140,6 +130,25 @@ void Config::parseServerDirective(ServerConfig &serverBlock)
 		parseError(peek(), "\';\' Expected");
 }
 
+// --------------------------- Location
+void Config::parseLocation(ServerConfig &serverBlock)
+{
+	LocationConfig locationBlock(serverBlock);
+
+	locationBlock.setPath(advance().getLexeme());
+	if (!expect(LEFT_BRACE))
+		parseError(peek(), "\'{\' Expected");
+
+	while (!isAtEnd() && peek().getType() != RIGHT_BRACE)
+	{
+		parseLocationDirective(locationBlock);
+	}
+	if (!expect(RIGHT_BRACE))
+	{
+		parseError(peek(), "\'}\' Expected");
+	}
+	serverBlock.setLocation(locationBlock);
+};
 void Config::parseLocationDirective(LocationConfig &locationBlock)
 {
 	TokenType keyType = advance().getType();
@@ -155,6 +164,8 @@ void Config::parseLocationDirective(LocationConfig &locationBlock)
 		locationBlock.setIndex(parseParams());
 	else if (keyType == ALLOW_METHODS)
 		locationBlock.setMethods(parseParams());
+	else if (keyType == RETURN)
+		locationBlock.setReturn(parseParams());
 	else
 		parseError(peek(), "Unknown identifier");
 
@@ -164,6 +175,8 @@ void Config::parseLocationDirective(LocationConfig &locationBlock)
 	if (!expect(SEMICOLON))
 		parseError(peek(), "\';\' Expected");
 }
+
+// --------------------------- Config
 void Config::Parser()
 {
 	while (!isAtEnd())

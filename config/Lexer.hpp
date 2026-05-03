@@ -101,9 +101,10 @@ public:
 	void addToken(const size_t len);
 	void scanToken();
 	void readWord();
+	void readString();
 
-	//   getters and setters
-	int getHadError();
+		//   getters and setters
+		int getHadError();
 	std::vector<Token> getTokens();
 };
 

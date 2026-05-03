@@ -64,7 +64,7 @@ public:
 	const std::vector<LocationConfig> &getLocations() const;
 
 	// helpers
-	bool IsvalidStatusCode(const std::string &str);
+	bool isValidStatusCode(const std::string &str);
 	bool isValidPath(const std::string &path);
 };
 
