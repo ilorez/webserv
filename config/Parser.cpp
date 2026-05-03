@@ -3,27 +3,6 @@
 #include "locationConfig.hpp"
 #include "ServerConfig.hpp"
 
-std::vector<std::string> Config::parseParams()
-{
-	std::vector<std::string> params;
-	std::string param = advance().getLexeme();
-
-	while (param != ";")
-	{
-		if (isAtEnd())
-		{
-			cout << peek().getLine() << endl;
-			throw std::runtime_error("Missing ';' after directive");
-		}
-		params.push_back(param);
-		param = advance().getLexeme();
-	}
-
-	if (params.empty())
-		throw std::runtime_error("directive requires at least one argument");
-	return (params);
-}
-
 // Getters and Setters
 int Config::getStatus() const { return this->_status; }
 
@@ -41,6 +20,22 @@ static void parseError(const Token &token, const std::string &msg) // todo: writ
 {
 	cerr << msg << ". Line: " << token.getLine() << endl;
 	exit(1);
+}
+
+std::vector<std::string> Config::parseParams()
+{
+	std::vector<std::string> params;
+
+	while (peek().getType() != SEMICOLON)
+	{
+		if (isAtEnd())
+			throw std::runtime_error("Missing ';' after directive");
+		params.push_back(advance().getLexeme());
+	}
+
+	if (params.empty())
+		throw std::runtime_error("directive requires at least one argument");
+	return (params);
 }
 
 bool Config::expect(const TokenType type)
@@ -88,13 +83,12 @@ void Config::parseServer()
 	{
 		parseError(peek(), "\'}\' Expected");
 	}
+	this->_servers.push_back(serverBlock);
 }
 
 void Config::parseLocation(ServerConfig &serverBlock)
 {
-	LocationConfig locationBlock;
-	// cout << "Inside ~location" << endl;
-	_index++;
+	// ? parse location
 };
 void Config::parseDirective(ServerConfig &serverBlock)
 {
@@ -110,7 +104,7 @@ void Config::parseDirective(ServerConfig &serverBlock)
 	else if (keyType == ROOT)
 		serverBlock.setRoot(TokLexeme);
 	else if (keyType == CLIENT_MAX_BODY_SIZE)
-		serverBlock.setClientMaxBodySize(TokLexeme); // an9adha dbbb
+		serverBlock.setClientMaxBodySize(TokLexeme);
 	else if (keyType == AUTOINDEX)
 		serverBlock.setAutoIndex(TokLexeme);
 	else if (keyType == ERROR_PAGE)
@@ -118,15 +112,15 @@ void Config::parseDirective(ServerConfig &serverBlock)
 	else if (keyType == INDEX)
 		serverBlock.setIndex(parseParams());
 	else
-		parseError(peek(), "Unknown identifier"); // unknown identifier
+		parseError(peek(), "Unknown identifier");
 
-	if (keyType == HOST || keyType == LISTEN || keyType == SERVER_NAME || keyType == ROOT || keyType == CLIENT_MAX_BODY_SIZE || keyType == AUTOINDEX)
+	if (keyType == HOST || keyType == LISTEN || keyType == SERVER_NAME ||
+		keyType == ROOT || keyType == CLIENT_MAX_BODY_SIZE || keyType == AUTOINDEX)
 		advance();
+
 	if (!expect(SEMICOLON))
-		parseError(peek(), "\';\' Expected"); // semicolon expected as end of line
+		parseError(peek(), "\';\' Expected");
 }
-// else if (keyType == ALLOW_METHODS)
-// 	parseAllowedMethods(serverBlock);
 
 void Config::Parser()
 {
@@ -136,6 +130,7 @@ void Config::Parser()
 		{
 			advance();
 			parseServer();
+			// printServerData(this->_servers);
 		}
 		else
 		{
