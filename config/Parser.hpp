@@ -51,6 +51,7 @@ public:
 
 	// getters and setters
 	int getStatus() const;
+	const std::vector<ServerConfig> &getServers() const;
 };
 
 #endif

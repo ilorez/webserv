@@ -5,14 +5,16 @@
 
 // constructors & destructors
 LocationConfig::LocationConfig(const ServerConfig &serverConfig)
-	: _path(""), _root(serverConfig.getRoot()), _index(serverConfig.getIndex()), _autoindex(serverConfig.getAutoIndex())
-	  // , _returnUrl("")
-	  // , _returnCode(0)
-	  ,
-	  _clientMaxBodySize(serverConfig.getClientMaxBodySize())
+    : _path(""),
+      _root(serverConfig.getRoot()),
+      _methods({"GET", "POST", "DELETE"}),
+      _index(serverConfig.getIndex()),
+      _autoindex(serverConfig.getAutoIndex()),
+      _returnUrl(""),
+      _returnCode(0),
+      _clientMaxBodySize(serverConfig.getClientMaxBodySize())
 {
 }
-
 LocationConfig::~LocationConfig() {};
 
 // getters
@@ -21,8 +23,8 @@ const std::string &LocationConfig::getRoot() const { return _root; }
 const std::vector<std::string> &LocationConfig::getMethods() const { return _methods; }
 const std::vector<std::string> &LocationConfig::getIndex() const { return _index; }
 bool LocationConfig::getAutoindex() const { return _autoindex; }
-// const std::string &LocationConfig::getReturnUrl() const { return _returnUrl; }
-// int LocationConfig::getReturnCode() const { return _returnCode; }
+const std::string &LocationConfig::getReturnUrl() const { return _returnUrl; }
+int LocationConfig::getReturnCode() const { return _returnCode; }
 unsigned long LocationConfig::getClientMaxBodySize() const { return _clientMaxBodySize; }
 
 // setters
@@ -74,7 +76,7 @@ void LocationConfig::setIndex(const std::vector<std::string> &index)
 		this->_index.push_back(file);
 	}
 }
-void LocationConfig::setAutoIndex(const std::string autoindex)
+void LocationConfig::setAutoIndex(const std::string &autoindex)
 {
 	if (autoindex == "on")
 		this->_autoindex = true;
@@ -83,8 +85,33 @@ void LocationConfig::setAutoIndex(const std::string autoindex)
 	else
 		throw logic_error("Invalid autoIndex value.");
 }
-// void LocationConfig::setReturnUrl(const std::string &url) { _returnUrl = url; }
-// void LocationConfig::setReturnCode(int code) { _returnCode = code; }
+
+void LocationConfig::setReturn(const std::vector<std::string> &params)
+{
+	if (params.size() > 2)
+		throw std::runtime_error("'return' directive takes at most 2 arguments");
+
+	if (params.size() == 1 && !params[0].empty() && (params[0][0] == '/' || params[0].find("http") == 0))
+	{
+		_returnCode = 302;
+		_returnUrl = params[0];
+		return;
+	}
+
+	if (!isValidStatusCode(params[0]))
+		throw std::runtime_error("'return' directive has invalid status code: " + params[0]);
+	int code = atoi(params[0].c_str());
+	_returnCode = code;
+
+	if (params.size() == 2)
+		_returnUrl = params[1];
+	else
+	{
+		if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308)
+			throw std::runtime_error("redirect code " + params[0] + " requires a URL");
+	}
+}
+
 void LocationConfig::setClientMaxBodySize(const string &clientMaxBodySize) // ! i might need to check for overflow
 {
 	uint64_t num = 0;
@@ -143,7 +170,7 @@ bool LocationConfig::isValidPath(const std::string &path)
 
 	return true;
 }
-bool LocationConfig::IsvalidStatusCode(const std::string &str)
+bool LocationConfig::isValidStatusCode(const std::string &str)
 {
 	int num;
 

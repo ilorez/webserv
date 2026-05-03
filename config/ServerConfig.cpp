@@ -37,7 +37,7 @@ bool ServerConfig::isValidPath(const std::string &path)
 	return true;
 }
 
-bool ServerConfig::IsvalidStatusCode(const std::string &str)
+bool ServerConfig::isValidStatusCode(const std::string &str)
 {
 	int num;
 
@@ -110,6 +110,12 @@ void ServerConfig::setHost(const string &host)
 	if (host.empty())
 		throw logic_error("Invalid Host");
 
+	if (host == "localhost")
+	{
+		this->_host = host;
+		return;
+	}
+
 	std::istringstream ss(host);
 	std::string octet;
 	int count = 0;
@@ -139,7 +145,7 @@ void ServerConfig::setPort(const std::string &port)
 	if (port.find_first_not_of("0123456789") != std::string::npos)
 		throw logic_error("Invalid Port");
 
-	int num = atoi(port.c_str());
+	long num = atol(port.c_str());
 	if (num < 1024 || num > 65535)
 		throw logic_error("Invalid Port");
 
@@ -148,12 +154,12 @@ void ServerConfig::setPort(const std::string &port)
 
 void ServerConfig::setErrorPages(const std::vector<std::string> &errorPage)
 {
-	_errorPage.clear();
+	// _errorPage.clear();
 	std::vector<int> vec;
 
 	for (size_t i = 0; i < errorPage.size(); i++)
 	{
-		if (!IsvalidStatusCode(errorPage[i]))
+		if (!isValidStatusCode(errorPage[i]))
 		{
 			break;
 		}

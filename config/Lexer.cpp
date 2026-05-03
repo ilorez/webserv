@@ -6,7 +6,7 @@ using namespace std;
 Scanner::Scanner(const std::string &raw)
 {
 	_start = _current = 0;
-	_line = 0;
+	_line = 1;
 	_hadError = 0;
 	this->_raw = raw;
 
@@ -101,6 +101,29 @@ void Scanner::readWord()
 	addToken(_current - _start);
 }
 
+void Scanner::readString()
+{
+	while (!isAtEnd() && peek() != '"')
+	{
+		if (peek() == '\n')
+			_line++;
+		advance();
+	}
+
+	if (isAtEnd())
+	{
+		_hadError = 1;
+		cerr << "Error: Unterminated string at line " << _line << endl;
+		return;
+	}
+
+	advance(); // consume closing '"'
+
+	string literal = _raw.substr(_start + 1, _current - _start - 2);
+	Token newToken(STRING, literal, _line);
+	Tokens.push_back(newToken);
+}
+
 void Scanner::scanToken()
 {
 	char c = advance();
@@ -129,6 +152,9 @@ void Scanner::scanToken()
 		}
 		_current--;
 		readWord();
+		break;
+	case '"':
+		readString();
 		break;
 	case '\n':
 		_line++;
@@ -193,4 +219,3 @@ void Scanner::addToken(const size_t len)
 	Token newToken(type, literal, _line);
 	this->Tokens.push_back(newToken);
 }
-
