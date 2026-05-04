@@ -1,6 +1,7 @@
-=> implement a better error handling logic 
+=> implement a better error handling logic ✅
 => handle cgi ✅
-=> organize code accross more files
+=> organize code accross more files 
 => added upload_store directive
 => handle double quoted string (lexer) ✅
 => line counting problem in lexer ✅
+=> add hasReturn method ✅

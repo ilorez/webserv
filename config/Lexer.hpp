@@ -16,8 +16,6 @@
 #include <cctype>
 #include <sys/stat.h>
 
-using namespace std;
-
 enum TokenType
 {
 	// structural
@@ -103,8 +101,8 @@ public:
 	void readWord();
 	void readString();
 
-		//   getters and setters
-		int getHadError();
+	//   getters and setters
+	int getHadError();
 	std::vector<Token> getTokens();
 };
 

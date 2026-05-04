@@ -1,5 +1,5 @@
 #include "Lexer.hpp"
-#include "Parser.hpp"
+#include "Config.hpp"
 #include "ServerConfig.hpp"
 #include "locationConfig.hpp"
 
@@ -94,14 +94,14 @@ void printServerData(const vector<ServerConfig> &servers)
 
 int main()
 {
-	string fileName = "default2.conf";
-	ifstream readfile(fileName.c_str());
-	string line, all_lines;
+	std::string fileName = "default2.conf";
+	std::ifstream readfile(fileName.c_str());
+	std::string line, all_lines;
 	std::vector<Token> allTokens;
 
 	if (!readfile.is_open())
 	{
-		cerr << "Error: Cannot open file " + fileName << endl;
+		std::cerr << "Error: Cannot open file " + fileName << std::endl;
 		return (1);
 	}
 
@@ -118,9 +118,16 @@ int main()
 	allTokens = tokenizer.getTokens();
 
 	// start parsing
-	Config configObj(allTokens);
+	try
+	{
+		Config configObj(allTokens);
+		printServerData(configObj.getServers());
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << e.what() << '\n';
+	}
 
-	printServerData(configObj.getServers());
 	return 0;
 }
 

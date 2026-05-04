@@ -1,7 +1,8 @@
 #include "Lexer.hpp"
-#include "Parser.hpp"
+#include "Config.hpp"
 #include "locationConfig.hpp"
 #include "ServerConfig.hpp"
+#include "utils.hpp"
 
 //? constructor & destructor
 ServerConfig::ServerConfig()
@@ -29,35 +30,17 @@ const std::map<int, std::string> &ServerConfig::getErrorPages() const { return t
 const std::vector<LocationConfig> &ServerConfig::getLocations() const { return this->_locations; }
 
 //? helpers
-bool ServerConfig::isValidPath(const std::string &path)
-{
-	if (path.empty() || path.find_first_of("*?[]()!<") != string::npos)
-		return false;
-
-	return true;
-}
-
-bool ServerConfig::isValidStatusCode(const std::string &str)
-{
-	int num;
-
-	if (str.size() != 3 || str.find_first_not_of("0123456789") != string::npos)
-		return false;
-
-	num = atoi(str.c_str());
-	return num < 100 || num > 599 ? false : true;
-}
 
 // ? setters
-void ServerConfig::setClientMaxBodySize(const string &clientMaxBodySize) // ! i might need to check for overflow
+void ServerConfig::setClientMaxBodySize(const std::string &clientMaxBodySize, size_t line) // ! i might need to check for overflow
 {
 	uint64_t num = 0;
 	size_t i = 0;
 
 	if (clientMaxBodySize.empty())
-		throw logic_error("Invalid client_max_body_size");
+		errorMsg("Invalid client_max_body_size", line);
 
-	if (clientMaxBodySize.find_first_not_of("0") == string::npos)
+	if (clientMaxBodySize.find_first_not_of("0") == std::string::npos)
 	{
 		this->_clientMaxBodySize = 0;
 		return;
@@ -69,7 +52,7 @@ void ServerConfig::setClientMaxBodySize(const string &clientMaxBodySize) // ! i 
 	if (i < clientMaxBodySize.size())
 	{
 		if (i != clientMaxBodySize.size() - 1)
-			throw logic_error("Invalid client_max_body_size");
+			errorMsg("Invalid client_max_body_size", line);
 
 		switch (toupper(clientMaxBodySize[i]))
 		{
@@ -85,30 +68,30 @@ void ServerConfig::setClientMaxBodySize(const string &clientMaxBodySize) // ! i 
 			num *= 1024 * 1024 * 1024;
 			break;
 		default:
-			throw logic_error("Invalid client_max_body_size suffix");
+			errorMsg("Invalid client_max_body_size suffix", line);
 		}
 	}
 
 	if (num == 0)
-		throw logic_error("Invalid client_max_body_size");
+		errorMsg("Invalid client_max_body_size", line);
 
 	this->_clientMaxBodySize = num;
 }
 
-void ServerConfig::setRoot(const string &root)
+void ServerConfig::setRoot(const std::string &root, size_t line)
 {
 	if (!isValidPath(root))
-		throw logic_error("Invalid root path");
+		errorMsg("Invalid root path", line);
 
 	this->_root = root;
 }
 
-void ServerConfig::setServerName(const string &serverName) { this->_serverName = serverName; }
+void ServerConfig::setServerName(const std::string &serverName) { this->_serverName = serverName; }
 
-void ServerConfig::setHost(const string &host)
+void ServerConfig::setHost(const std::string &host, size_t line)
 {
 	if (host.empty())
-		throw logic_error("Invalid Host");
+		errorMsg("Invalid Host", line);
 
 	if (host == "localhost")
 	{
@@ -124,35 +107,35 @@ void ServerConfig::setHost(const string &host)
 	{
 		count++;
 		if (octet.empty() || octet.size() > 3)
-			throw logic_error("Invalid Host");
+			errorMsg("Invalid Host", line);
 
-		if (octet.find_first_not_of("0123456789") != string::npos)
-			throw logic_error("Invalid Host");
+		if (octet.find_first_not_of("0123456789") != std::string::npos)
+			errorMsg("Invalid Host", line);
 
 		int num = atoi(octet.c_str());
 		if (num < 0 || num > 255)
-			throw logic_error("Invalid Host");
+			errorMsg("Invalid Host", line);
 	}
 
 	if (count != 4)
-		throw logic_error("Invalid Host");
+		errorMsg("Invalid Host", line);
 
 	this->_host = host;
 }
 
-void ServerConfig::setPort(const std::string &port)
+void ServerConfig::setPort(const std::string &port, size_t line)
 {
 	if (port.find_first_not_of("0123456789") != std::string::npos)
-		throw logic_error("Invalid Port");
+		errorMsg("Invalid Port", line);
 
 	long num = atol(port.c_str());
 	if (num < 1024 || num > 65535)
-		throw logic_error("Invalid Port");
+		errorMsg("Invalid Port", line);
 
 	this->_port = (uint16_t)num;
 }
 
-void ServerConfig::setErrorPages(const std::vector<std::string> &errorPage)
+void ServerConfig::setErrorPages(const std::vector<std::string> &errorPage, size_t line)
 {
 	std::vector<int> vec;
 
@@ -166,18 +149,18 @@ void ServerConfig::setErrorPages(const std::vector<std::string> &errorPage)
 	}
 
 	if (vec.empty() || vec.size() != errorPage.size() - 1)
-		throw runtime_error("Invalid error_page Arguments");
+		errorMsg("Invalid error_page Arguments", line);
 
 	std::string path = errorPage[vec.size()];
 	if (!isValidPath(path))
-		throw logic_error("Invalid error_page path");
+		errorMsg("Invalid error_page path", line);
 	for (size_t i = 0; i < vec.size(); i++)
 	{
 		_errorPage.insert(std::make_pair(vec[i], path));
 	}
 }
 
-void ServerConfig::setIndex(const std::vector<std::string> &index)
+void ServerConfig::setIndex(const std::vector<std::string> &index, size_t line)
 {
 	std::string file;
 	this->_index.clear();
@@ -186,21 +169,21 @@ void ServerConfig::setIndex(const std::vector<std::string> &index)
 	{
 		file = index[i];
 		if (file.empty())
-			throw logic_error("File cannot be empty.");
-		if (file.find_first_of("*?[]()!<") != string::npos)
-			throw logic_error("Invalid path." + file);
+			errorMsg("File cannot be empty.", line);
+		if (file.find_first_of("*?[]()!<") != std::string::npos)
+			errorMsg("Invalid path." + file, line);
 		this->_index.push_back(file);
 	}
 }
 
-void ServerConfig::setAutoIndex(const std::string &index)
+void ServerConfig::setAutoIndex(const std::string &index, size_t line)
 {
 	if (index == "on")
 		this->_autoindex = true;
 	else if (index == "off")
 		this->_autoindex = false;
 	else
-		throw logic_error("Invalid autoIndex value.");
+		errorMsg("Invalid autoIndex value.", line);
 }
 
 void ServerConfig::setLocation(const LocationConfig &locationBlock)

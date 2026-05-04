@@ -19,8 +19,6 @@
 
 class LocationConfig;
 
-using namespace std;
-
 class ServerConfig
 {
 private:
@@ -32,9 +30,9 @@ private:
 	std::vector<std::string> _index;
 	bool _autoindex;
 
-	std::map<int, string> _errorPage;
+	std::map<int, std::string> _errorPage;
 
-	vector<LocationConfig> _locations;
+	std::vector<LocationConfig> _locations;
 
 public:
 	// constructor & destructor
@@ -42,14 +40,14 @@ public:
 	~ServerConfig();
 
 	// getters and setters
-	void setHost(const string &host);
-	void setPort(const std::string &port);
-	void setServerName(const string &serverName);
-	void setRoot(const string &root);
-	void setClientMaxBodySize(const std::string &clientMaxBodySize);
-	void setErrorPages(const std::vector<std::string> &errorPage);
-	void setAutoIndex(const std::string &index);
-	void setIndex(const std::vector<std::string> &index);
+	void setHost(const std::string &host, size_t line);
+	void setPort(const std::string &port, size_t line);
+	void setServerName(const std::string &serverName);
+	void setRoot(const std::string &root, size_t line);
+	void setClientMaxBodySize(const std::string &clientMaxBodySize, size_t line);
+	void setErrorPages(const std::vector<std::string> &errorPage, size_t line);
+	void setAutoIndex(const std::string &index, size_t line);
+	void setIndex(const std::vector<std::string> &index, size_t line);
 	void setLocation(const LocationConfig &locationBlock);
 
 	// getters
@@ -64,8 +62,6 @@ public:
 	const std::vector<LocationConfig> &getLocations() const;
 
 	// helpers
-	bool isValidStatusCode(const std::string &str);
-	bool isValidPath(const std::string &path);
 };
 
 #endif

@@ -65,7 +65,7 @@ bool Scanner::expect(char c)
 void Scanner::lexerError(char c)
 {
 	_hadError = 1;
-	cerr << "Error: " << "Unexpected Character " << "\"" << c << "\"" << " in _line " << _line << endl;
+	std::cerr << "Error: " << "Unexpected Character " << "\"" << c << "\"" << " in _line " << _line << std::endl;
 }
 
 bool Scanner::isAtEnd()
@@ -117,9 +117,9 @@ void Scanner::readString()
 		return;
 	}
 
-	advance(); // consume closing '"'
+	advance();
 
-	string literal = _raw.substr(_start + 1, _current - _start - 2);
+	std::string literal = _raw.substr(_start + 1, _current - _start - 2);
 	Token newToken(STRING, literal, _line);
 	Tokens.push_back(newToken);
 }
@@ -179,7 +179,7 @@ void Scanner::addToken(const TokenType type)
 void Scanner::addToken(const size_t len)
 {
 	TokenType type;
-	string literal = this->_raw.substr(_start, len);
+	std::string literal = this->_raw.substr(_start, len);
 
 	if (literal == "server")
 		type = SERVER;
