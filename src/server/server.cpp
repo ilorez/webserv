@@ -2,6 +2,7 @@
 #include "../../includes/container.hpp"
 #include <sys/epoll.h>
 
+// #constructors
 Server::Server()
 {
   _port = 8080; _ip = "127.0.0.1"; _epoll_event.events = EPOLLIN;
@@ -9,9 +10,13 @@ Server::Server()
   _srvsock_hold.is_cgi = false;
 }
 
-Server::~Server() { close(_socket_fd);
+Server::~Server() 
+{ 
+  close(_socket_fd);
 }
-void Server::run() {
+
+void Server::run() 
+{
   this->_initSocket(); 
   socklen_t size_socket = sizeof(_addr);
   _epoll_fd = epoll_create(1);
@@ -72,22 +77,22 @@ void Server::_handelClient(socklen_t size_socket)
   }
   for (int i = 0; i < n; i++)
   {
-    // new client
     t_epollhold *eh = static_cast<t_epollhold*>(_events[i].data.ptr);
     DEBUG_INFO("event fired on fd: " + to_string98(eh->fd));
     if (!eh){
         DEBUG_ERROR("epoll data ptr is invalid");
         /*erroo*/ continue;}
+    // new client
     if (eh->fd == _socket_fd)
       this->newconnection(size_socket);
-    // EPOLLIN fires on client_fd:
     else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
     {
       if (eh->is_cgi)
       {
-        DEBUG_INFO("Yeah");
+        DEBUG_INFO("Workign with a CGI");
         eh->cgi->handel(eh->fd, _events[i].events);
       }
+      // EPOLLIN fires on client_fd:
       else if (_events[i].events & EPOLLIN)
       {
         DEBUG_INFO("readrequest called");
@@ -96,14 +101,16 @@ void Server::_handelClient(socklen_t size_socket)
           _switchEpollRegisration(eh, EPOLLOUT);
           epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, eh->cl->getFd(), &_epoll_event);}
       }
+      // EPOLLOUT fires on client_fd:
       else if (_events[i].events & EPOLLOUT)
       {
         DEBUG_INFO("sendresponse called");
         this->sendresponse(eh->cl);
       }
-      // update clinet last activity to now
-      if (eh->cl->getState() ==  DONE)// should work for cgi and cl
+      // disconnect should work for cgi and cl
+      if (eh->cl->getState() ==  DONE)
         _clients.disconnect(eh->cl->getFd());
+      // update clinet last activity to now
       else
         eh->cl->updateLastActivity();
     }

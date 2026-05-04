@@ -1,9 +1,7 @@
 
 #include "../../includes/container.hpp"
 
-void Server::readheaders(Client *cl)
-{
-  /*
+/*
   read client headers
   n = read(fd, buf, sizeof(buf))
    user close connection n == 0  → EOF       → disconnect()
@@ -18,18 +16,18 @@ void Server::readheaders(Client *cl)
       check method:
         DELETE → transition to PROCESSING GET    → transition to PROCESSING
         POST   → transition to READING_BODY
-  */
-  // read from user client socket
-  //
-  // read to the line before \r\n\r\n 
+*/
+void Server::readheaders(Client *cl)
+{
+  
+  // read to the lines before \r\n\r\n "headers" 
   char tmp[BUF_SIZE]; // 8kb
   size_t pos = 0;
-  //TODO: how about if user sending one byte by one byte
   int bytes = recv(cl->getFd(), tmp, BUF_SIZE, 0);
   if (bytes <= 0)
   {
     DEBUG_WARN("error with recv in reading headers, or client discoonect");
-    _clients.disconnect(cl->getFd());
+    cl->setState(DONE);
     return ;
   }
   cl->appendToReadBuffer(tmp, bytes);
