@@ -29,13 +29,15 @@ ManageClients &ManageClients::operator=(const ManageClients &other)
 	return (*this);
 }
 
-void    ManageClients::addClient(int fd){
-  if (_clients.find(fd) != _clients.end()) {
+Client*    ManageClients::addClient(int fd){
+  std::map<int, Client*>::iterator it = _clients.find(fd);
+  if ( it != _clients.end()) {
     DEBUG_ERROR("manage client: addClient: client already exist");
-    return ;
+    return it->second; // TODO: is it really fine like that
   }
-  Client* cl = new Client(fd);
+  Client* cl = new Client(fd, _epfd);
   _clients.insert(std::make_pair(fd, cl));
+  return cl;
 }
 
 void    ManageClients::disconnect(int fd)
@@ -76,7 +78,7 @@ void ManageClients::checkTimeout()
     if (it->second->isTimedOut(TIMEOUT_SECONDS))
     {
       // delete from epoll
-      epoll_ctl(_epfd, EPOLL_CTL_DEL, it->first, NULL);
+      it->second->disconnect(_epfd);
       delete it->second;
       _clients.erase(it);
     }
@@ -84,11 +86,10 @@ void ManageClients::checkTimeout()
   }
 }
 
-void ManageClients::updateToCGI(int fd)
-{
-  DEBUG_INFO("update to CGI called");
+CGIClient* ManageClients::updateToCGI(int fd) { DEBUG_INFO("update to CGI called");
   Client *oc = _clients[fd];
   CGIClient* nc = new CGIClient(*oc); 
   delete oc;
   _clients[fd] = nc;
+  return nc;
 }

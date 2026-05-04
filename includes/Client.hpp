@@ -1,6 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "EpollHold.hpp"
 #include "Request.hpp"
 #include <string>
 #include <ctime>
@@ -19,15 +20,19 @@ class Client
 {
     protected:
         int          _fd;
+        int    _epoll_events;
+        int _epfd;
         std::string  _readBuffer;
         std::string  _writeBuffer;
         size_t       _writeOffset;
         time_t       _lastActivity;
         ClientState  _state;
+        t_epollhold  _sock;
         Request     _req;
         bool _is_cgi;
+        t_epollhold _clsock_hold;
     public:
-        Client(int fd);
+        Client(int fd, int epfd);
         virtual ~Client();
 
         // getters
@@ -39,6 +44,7 @@ class Client
         ClientState         getState()       const;
         Request&            getReq();
         bool                isCGI()          const;
+        t_epollhold&         getClSockHolder();
         
         // setters
         void  setState(ClientState state);

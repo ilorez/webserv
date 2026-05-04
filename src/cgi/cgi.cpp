@@ -1,18 +1,68 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   cgi.cpp                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
+/*   Updated: 2026/05/01 10:58:25 by znajdaou         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "../../includes/container.hpp"
+#include <csignal>
+#include <sys/epoll.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
-CGIClient::CGIClient(int fd): Client(fd), _child_pid(-1), _cgi_headers_parsed(false){}
-CGIClient::CGIClient(Client &cl): Client(cl), _child_pid(-1), _cgi_headers_parsed(false){
+CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd),
+  _cgi_headers_parsed(false), _pid(-1)
+//,_download_switch(true), _upload_switch(false)
+{
+  _pipe_in[0] = -1;
+  _pipe_in[1] = -1;
+  _pipe_out[0] = -1;
+  _pipe_out[1] = -1;
+  _clsock_hold.is_cgi = true;
+  _clsock_hold.cgi = this;
+  _pipe_in_hold.is_cgi = true;
+  _pipe_in_hold.cgi = this;
+  _pipe_out_hold.is_cgi = true;
+  _pipe_out_hold.cgi = this;
+}
+
+CGIClient::CGIClient(Client &cl): Client(cl), _cgi_headers_parsed(false){
+  _pipe_in[0] = -1;
+  _pipe_in[1] = -1; _pipe_out[0] = -1;
+  _pipe_out[1] = -1;
+  _clsock_hold.is_cgi = true;
+  _clsock_hold.cgi = this;
+  _pipe_in_hold.is_cgi = true;
+  _pipe_in_hold.cgi = this;
+  _pipe_out_hold.is_cgi = true;
+  _pipe_out_hold.cgi = this;
   cl.invalidateFd(); // stop ~Client() closing the _fd
 }
 
 CGIClient::~CGIClient()
 {
   DEBUG_INFO("CGIClient disructor called");
-  // TODO
+  int status;
+
+  // unregistred pipes
+  epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_in[1], NULL);
+  epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_out[0], NULL);
+
   // kill
-  // wait pids
+  if (_pid != -1)
+    kill(_pid, SIGKILL);
+  // waitpid
+  waitpid(_pid, &status, 0);
+
   // close pipes
+  ft_closefd(_pipe_in[1]);
+  ft_closefd(_pipe_out[0]);
 }
 
 // its private you can't use this 
@@ -28,12 +78,128 @@ CGIClient &CGIClient::operator=(const CGIClient &other)
 
 void CGIClient::disconnect(int epfd)
 {
-  // TODO
-  // unrigister pipes from epoll
-  // close pipes
-  // kill process if not already killed
+  (void)_cgi_headers_parsed;
   Client::disconnect(epfd);
 }
+
+void CGIClient::setupPipes()
+{
+  if (pipe(_pipe_in) != 0 || pipe(_pipe_out) != 0)
+  {
+    DEBUG_ERROR("pipe failed");
+    this->setState(DONE);
+    throw CGIException("pipe error");
+  }
+  _pipe_in_hold.fd = _pipe_in[1];
+  _pipe_out_hold.fd = _pipe_out[0];
+  DEBUG_INFO("PIPEs has been setuped");
+}
+
+void CGIClient::registerPipeOut()
+{
+  // applying non-blocking
+  fcntl(_pipe_out[0], F_SETFL, O_NONBLOCK);
+
+  // create epoll holder
+  // setup event
+  struct epoll_event ev = create_ev(&_pipe_out_hold, EPOLLIN);
+
+  // adding to epoll queu
+  epoll_ctl(_epfd, EPOLL_CTL_ADD, _pipe_out[0], &ev); 
+}
+
+// when sending input to cgi script
+void CGIClient::registerPipeIn()
+{
+  // applying non-blocking
+  fcntl(_pipe_in[1], F_SETFL, O_NONBLOCK);
+
+  struct epoll_event ev = create_ev(&_pipe_out_hold, EPOLLOUT);
+
+  // adding to epoll queu
+  epoll_ctl(_epfd, EPOLL_CTL_ADD, _pipe_in[1], &ev); 
+}
+
+void	ft_change_fd(int fd, int to)
+{
+	if (fd == to)
+		  return;
+  if (dup2(fd, to) == -1)
+    throw CGIException("dup2 failed");
+	close(fd);
+}
+
+void CGIClient::ft_exec()
+{
+  setupPipes();
+  _pid = fork();
+  if (_pid == -1)
+    throw CGIException("fork failed");
+  if (_pid == 0)
+  {
+    // child
+    close (_pipe_in[1]);
+    close (_pipe_out[0]);
+    ft_change_fd(_pipe_in[0], STDIN_FILENO);
+    ft_change_fd(_pipe_out[1], STDOUT_FILENO);
+    char *argv[] = { (char*)"/usr/bin/python3", (char*)"./storage/scriptsCGI/hello.py", NULL };
+    char *env[]  = { (char*)"REQUEST_METHOD=GET", (char*)"QUERY_STRING=name=John", NULL };
+    execve("/usr/bin/python3", argv, env);
+    //execve("/usr/bin/python3", argv, buildEnv());
+    exit(126);
+  }
+  // parent
+  ft_closefd(_pipe_in[0]);
+  ft_closefd(_pipe_out[1]);
+  // registed pipe out
+  registerPipeOut();
+  // TODO: is post only method have body ?
+  if (_req.getMethod() != "POST")
+  {
+    epoll_ctl(_epfd, EPOLL_CTL_DEL, _fd, NULL);
+    ft_closefd(_pipe_in[1]);
+  }
+}
+
+void CGIClient::handel(int fd, uint32_t evs)
+{
+  // work on switch algorithm
+  // if you think its not required for everything to work
+  // correctly don't use it
+  // but i think you need for things like adding or removing fds from the epoll
+  // so i mean you need it to switch betwen reading/writing from/to socket/pipe
+  if (evs & EPOLLIN)
+  {
+    // socket
+    if (fd == this->_fd) // 1
+          writeToReadBuffer();
+    // pipe output
+    else if (fd == this->_pipe_out[0]) // 3
+      // this at first time is registred in epoll
+      // after fired read output an put it into write buffer
+      // and register socket output
+      writeToWriteBuffer();
+  }
+  if (evs & EPOLLOUT)
+  {
+    // socket
+    if (fd == this->_fd) // 4
+      // read from write buffer and put in socket
+      // if write buffer is empty
+      // remove EPOOLLOUT from epoll events
+      // and register againt the pipe out in case of cgi not end
+      // if end // change state to DONE
+      writeToSocket();
+    // pipe input
+    else if (fd == this->_pipe_in[1]) // 2
+      // read from buffer and put into pipe
+      // if buffer is empty => remove the pipe in 1 from epoll
+      // and add socket again to epoll in case of content len is not end
+      writeToPipe();    
+  }
+}
+
+
 
 
 // create pipe

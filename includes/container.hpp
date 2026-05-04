@@ -43,6 +43,9 @@
 #include "./CGIClient.hpp"
 #include "./ManageClients.hpp"
 
+//
+#include "./EpollHold.hpp"
+
 
 
 #endif

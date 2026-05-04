@@ -3,6 +3,7 @@
 
 
 #include "Client.hpp"
+#include "EpollHold.hpp"
 #include "ManageClients.hpp"
 #include "Request.hpp"
 #include "settings.hpp"
@@ -22,6 +23,7 @@ class Server {
     ManageClients _clients;
     struct epoll_event _events[MAX_EVENTS];
     struct epoll_event _epoll_event;
+    t_epollhold _srvsock_hold;
     // ...
   public:
     // orthodox
@@ -59,10 +61,11 @@ class Server {
       void _initSocket();
       void _handelClient(socklen_t);
       void _addClient(int client_fd);
+      void _addSocketToEpoll(int sfd); // for only socket
       // TODO:handelReadyClient
       // TODO:_client_disconnected
       void _handelClientDisconnect();
-      void _switchEpollRegisration(int client_fd, uint32_t ev);
+      void _switchEpollRegisration(t_epollhold *cl, uint32_t ev);
 };
 
 #endif

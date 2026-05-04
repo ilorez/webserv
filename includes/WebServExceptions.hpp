@@ -34,6 +34,17 @@ public:
     const char* what() const throw();
 };
 
+class CGIException : public std::exception
+{
+private:
+    std::string _msg;
+public:
+    CGIException(const std::string& msg);
+    ~CGIException() throw();
+    const char* what() const throw();
+};
+
+
 
 
 #endif

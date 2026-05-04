@@ -1,9 +1,7 @@
 
 #include "../../includes/container.hpp"
 
-void Server::readheaders(Client *cl)
-{
-  /*
+/*
   read client headers
   n = read(fd, buf, sizeof(buf))
    user close connection n == 0  → EOF       → disconnect()
@@ -18,18 +16,18 @@ void Server::readheaders(Client *cl)
       check method:
         DELETE → transition to PROCESSING GET    → transition to PROCESSING
         POST   → transition to READING_BODY
-  */
-  // read from user client socket
-  //
-  // read to the line before \r\n\r\n 
+*/
+void Server::readheaders(Client *cl)
+{
+  
+  // read to the lines before \r\n\r\n "headers" 
   char tmp[BUF_SIZE]; // 8kb
   size_t pos = 0;
-  //TODO: how about if user sending one byte by one byte
   int bytes = recv(cl->getFd(), tmp, BUF_SIZE, 0);
   if (bytes <= 0)
   {
     DEBUG_WARN("error with recv in reading headers, or client discoonect");
-    _clients.disconnect(cl->getFd());
+    cl->setState(DONE);
     return ;
   }
   cl->appendToReadBuffer(tmp, bytes);
@@ -65,7 +63,24 @@ void Server::readheaders(Client *cl)
     {
       // in case of CGI i'm upgrading the Client class to CGI by using copy constructor
       cl->setIsCGI(true);
-      _clients.updateToCGI(cl->getFd());
+      CGIClient* cgi =  _clients.updateToCGI(cl->getFd());
+      // if i already ready body or the request is get not post
+      // i should never register the socket EPOLLIN in that case because its will never fired
+      if (cgi->getReq().getMethod() == "POST")
+      {
+        if (cgi->getReadBuffer().size() >= cgi->getReq().getContentLen())
+            cgi->turnToPipe();
+      }
+      else
+        cgi->removeEpollinEventFromSocket();
+        
+      // run setup cgi
+      try {
+        cgi->ft_exec();
+      } catch (std::exception &e){
+
+      }
+      return;
     }
   } catch (const std::exception &e)
   {
@@ -100,16 +115,7 @@ void Server::readrequest(Client *cl)
       readFromSocket(cl);   // write to tmp
     else
       readFromSocket(cl, 0); // write to string
-  }
-  if (
-      cl->getState() == PROCESSING 
-      || cl->getState() == SENDING 
-      || cl->getState() == DONE
-      )
-  {
-  _switchEpollRegisration(cl->getFd(),EPOLLOUT);
-  epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, cl->getFd(), &_epoll_event);
-  }
+  } 
 }
 
 void  Server::readFromSocket(Client *cl)

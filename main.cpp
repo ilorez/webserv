@@ -11,6 +11,8 @@ int main()
     std::cerr << ERROR_MSG << "request: "<< e.what() << std::endl;
   } catch (const ResponseException &e) {
     std::cerr << ERROR_MSG << "response: "<< e.what() << std::endl;
+  } catch (const CGIException &e) {
+    std::cerr << ERROR_MSG << "cgi: "<< e.what() << std::endl;
   } catch (const std::exception &e) {
     std::cerr << ERROR_MSG << "error: "<< e.what() << std::endl;
   }

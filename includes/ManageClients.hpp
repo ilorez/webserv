@@ -2,6 +2,7 @@
 #define MANAGECLIENTS_HPP
 
 #include <map>
+#include "CGIClient.hpp"
 #include "Client.hpp"
 
 class ManageClients
@@ -13,13 +14,13 @@ class ManageClients
         ManageClients();
         ~ManageClients();
 
-        void    addClient(int fd);
+        Client* addClient(int fd);
         Client* getClient(int fd);
         bool    clientExists(int fd) const;
         void    setEpfd(int fd);
         void    checkTimeout();
         void    disconnect(int fd);
-        void    updateToCGI(int fd);
+        CGIClient*    updateToCGI(int fd);
     private:
         ManageClients(const ManageClients& other);
         ManageClients& operator=(const ManageClients& other);
