@@ -15,8 +15,7 @@
 #include <vector>
 #include <cctype>
 #include <sys/stat.h>
-
-using namespace std;
+#include "Lexer.hpp"
 
 class ServerConfig;
 class LocationConfig;

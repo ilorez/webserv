@@ -1,7 +1,8 @@
 #include "Lexer.hpp"
-#include "Parser.hpp"
+#include "Config.hpp"
 #include "locationConfig.hpp"
 #include "ServerConfig.hpp"
+#include "utils.hpp"
 
 // constuctor & destructor
 Config::Config(std::vector<Token> &Tokens)
@@ -48,11 +49,6 @@ bool Config::isAtEnd()
 {
 	return (peek().getType() == END_OF_FILE ? true : false);
 }
-static void parseError(const Token &token, const std::string &msg)
-{
-	cerr << msg << ". Line: " << token.getLine() << endl;
-	exit(1);
-}
 
 // ? parsing
 std::vector<std::string> Config::parseParams()
@@ -62,12 +58,12 @@ std::vector<std::string> Config::parseParams()
 	while (peek().getType() != SEMICOLON)
 	{
 		if (isAtEnd())
-			throw std::runtime_error("Missing ';' after directive");
+			errorMsg("Missing ';' after directive", peek().getLine());
 		params.push_back(advance().getLexeme());
 	}
 
 	if (params.empty())
-		throw std::runtime_error("directive requires at least one argument");
+		errorMsg("directive requires at least one argument", peek().getLine());
 	return (params);
 }
 
@@ -77,7 +73,7 @@ void Config::parseServer()
 	ServerConfig serverBlock;
 
 	if (!expect(LEFT_BRACE))
-		parseError(peek(), "\'{\' Expected");
+		errorMsg("\'{\' Expected", peek().getLine() - 1);
 
 	while (!isAtEnd() && peek().getType() != RIGHT_BRACE)
 	{
@@ -93,41 +89,42 @@ void Config::parseServer()
 	}
 	if (!expect(RIGHT_BRACE))
 	{
-		parseError(peek(), "\'}\' Expected");
+		errorMsg("\'}\' Expected", peek().getLine() - 1);
 	}
 	this->_servers.push_back(serverBlock);
 }
 
 void Config::parseServerDirective(ServerConfig &serverBlock)
 {
+	size_t line = peek().getLine();
 	TokenType keyType = advance().getType();
 	std::string TokLexeme = peek().getLexeme();
 
 	if (keyType == HOST)
-		serverBlock.setHost(TokLexeme);
+		serverBlock.setHost(TokLexeme, line);
 	else if (keyType == LISTEN)
-		serverBlock.setPort(TokLexeme);
+		serverBlock.setPort(TokLexeme, line);
 	else if (keyType == SERVER_NAME)
 		serverBlock.setServerName(TokLexeme);
 	else if (keyType == ROOT)
-		serverBlock.setRoot(TokLexeme);
+		serverBlock.setRoot(TokLexeme, line);
 	else if (keyType == CLIENT_MAX_BODY_SIZE)
-		serverBlock.setClientMaxBodySize(TokLexeme);
+		serverBlock.setClientMaxBodySize(TokLexeme, line);
 	else if (keyType == AUTOINDEX)
-		serverBlock.setAutoIndex(TokLexeme);
+		serverBlock.setAutoIndex(TokLexeme, line);
 	else if (keyType == ERROR_PAGE)
-		serverBlock.setErrorPages(parseParams());
+		serverBlock.setErrorPages(parseParams(), line);
 	else if (keyType == INDEX)
-		serverBlock.setIndex(parseParams());
+		serverBlock.setIndex(parseParams(), line);
 	else
-		parseError(peek(), "Unknown identifier");
+		errorMsg("Unknown identifier", line);
 
 	if (keyType == HOST || keyType == LISTEN || keyType == SERVER_NAME ||
 		keyType == ROOT || keyType == CLIENT_MAX_BODY_SIZE || keyType == AUTOINDEX)
 		advance();
 
 	if (!expect(SEMICOLON))
-		parseError(peek(), "\';\' Expected");
+		errorMsg("\';\' Expected", line);
 }
 
 // --------------------------- Location
@@ -135,47 +132,48 @@ void Config::parseLocation(ServerConfig &serverBlock)
 {
 	LocationConfig locationBlock(serverBlock);
 
-	locationBlock.setPath(advance().getLexeme());
+	locationBlock.setPath(advance().getLexeme(), peek().getLine());
 	if (!expect(LEFT_BRACE))
-		parseError(peek(), "\'{\' Expected");
+		errorMsg("\'{\' Expected", peek().getLine() - 1);
 
 	while (!isAtEnd() && peek().getType() != RIGHT_BRACE)
 		parseLocationDirective(locationBlock);
 
 	if (!expect(RIGHT_BRACE))
-		parseError(peek(), "\'}\' Expected");
+		errorMsg("\'}\' Expected", peek().getLine() - 1);
 
 	serverBlock.setLocation(locationBlock);
 };
 void Config::parseLocationDirective(LocationConfig &locationBlock)
 {
+	size_t line = peek().getLine();
 	TokenType keyType = advance().getType();
 	std::string TokLexeme = peek().getLexeme();
 
 	if (keyType == ROOT)
-		locationBlock.setRoot(TokLexeme);
+		locationBlock.setRoot(TokLexeme, line);
 	else if (keyType == CLIENT_MAX_BODY_SIZE)
-		locationBlock.setClientMaxBodySize(TokLexeme);
+		locationBlock.setClientMaxBodySize(TokLexeme, line);
 	else if (keyType == AUTOINDEX)
-		locationBlock.setAutoIndex(TokLexeme);
+		locationBlock.setAutoIndex(TokLexeme, line);
 	else if (keyType == CGI_EXT)
-		locationBlock.setCgiExt(TokLexeme);
+		locationBlock.setCgiExt(TokLexeme, line);
 	else if (keyType == CGI_PATH)
-		locationBlock.setCgiPath(TokLexeme);
+		locationBlock.setCgiPath(TokLexeme, line);
 	else if (keyType == INDEX)
-		locationBlock.setIndex(parseParams());
+		locationBlock.setIndex(parseParams(), line);
 	else if (keyType == ALLOW_METHODS)
-		locationBlock.setMethods(parseParams());
+		locationBlock.setMethods(parseParams(), line);
 	else if (keyType == RETURN)
-		locationBlock.setReturn(parseParams());
+		locationBlock.setReturn(parseParams(), line);
 	else
-		parseError(peek(), "Unknown identifier");
+		errorMsg("Unknown identifier", line);
 
 	if (keyType == ROOT || keyType == CLIENT_MAX_BODY_SIZE || keyType == AUTOINDEX || keyType == CGI_EXT || keyType == CGI_PATH)
 		advance();
 
 	if (!expect(SEMICOLON))
-		parseError(peek(), "\';\' Expected");
+		errorMsg("\';\' Expected", line);
 }
 
 // --------------------------- Config
@@ -190,7 +188,7 @@ void Config::Parser()
 		}
 		else
 		{
-			parseError(peek(), "Config file Error");
+			errorMsg("Config file error", peek().getLine());
 		}
 	}
 };

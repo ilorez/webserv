@@ -1,7 +1,8 @@
 #include "Lexer.hpp"
-#include "Parser.hpp"
+#include "Config.hpp"
 #include "locationConfig.hpp"
 #include "ServerConfig.hpp"
+#include "utils.hpp"
 
 // constructors & destructors
 LocationConfig::LocationConfig(const ServerConfig &serverConfig)
@@ -31,40 +32,40 @@ unsigned long LocationConfig::getClientMaxBodySize() const { return _clientMaxBo
 const std::string &LocationConfig::getCgiExt() const { return _cgiExtension; }
 const std::string &LocationConfig::getCgiPath() const { return _cgiPath; }
 // setters
-void LocationConfig::setPath(const std::string &path)
+void LocationConfig::setPath(const std::string &path, size_t line)
 {
 	if (!isValidPath(path))
-		throw logic_error("Expect a valid path after 'location'"); // !
+		errorMsg("Expect a valid path after 'location'", line); // !
 
 	this->_path = path;
 }
-void LocationConfig::setRoot(const std::string &root)
+void LocationConfig::setRoot(const std::string &root, size_t line)
 {
 
 	if (!isValidPath(root))
-		throw logic_error("Invalid root path"); // !
+		errorMsg("Invalid root path", line); // !
 
 	this->_root = root;
 }
-void LocationConfig::setMethods(const std::vector<std::string> &methods)
+void LocationConfig::setMethods(const std::vector<std::string> &methods, size_t line)
 {
 	this->_methods.clear();
 
 	for (size_t i = 0; i < methods.size(); i++)
 	{
 		if (methods[i] != "GET" && methods[i] != "POST" && methods[i] != "DELETE")
-			throw std::invalid_argument("Invalid HTTP method: " + methods[i]);
+			errorMsg("Invalid HTTP method: " + methods[i], line);
 
 		for (size_t j = 0; j < this->_methods.size(); j++)
 		{
 			if (this->_methods[j] == methods[i])
-				throw std::invalid_argument("Duplicate HTTP method: " + methods[i]);
+				errorMsg("Duplicate HTTP method: " + methods[i], line);
 		}
 
 		this->_methods.push_back(methods[i]);
 	}
 }
-void LocationConfig::setIndex(const std::vector<std::string> &index)
+void LocationConfig::setIndex(const std::vector<std::string> &index, size_t line)
 {
 	std::string file;
 	this->_index.clear();
@@ -73,26 +74,26 @@ void LocationConfig::setIndex(const std::vector<std::string> &index)
 	{
 		file = index[i];
 		if (file.empty())
-			throw logic_error("File cannot be empty.");
-		if (file.find_first_of("*?[]()!<") != string::npos)
-			throw logic_error("Invalid path." + file);
+			errorMsg("File cannot be empty.", line);
+		if (file.find_first_of("*?[]()!<") != std::string::npos)
+			errorMsg("Invalid path." + file, line);
 		this->_index.push_back(file);
 	}
 }
-void LocationConfig::setAutoIndex(const std::string &autoindex)
+void LocationConfig::setAutoIndex(const std::string &autoindex, size_t line)
 {
 	if (autoindex == "on")
 		this->_autoindex = true;
 	else if (autoindex == "off")
 		this->_autoindex = false;
 	else
-		throw logic_error("Invalid autoIndex value.");
+		errorMsg("Invalid autoIndex value.", line);
 }
 
-void LocationConfig::setReturn(const std::vector<std::string> &params)
+void LocationConfig::setReturn(const std::vector<std::string> &params, size_t line)
 {
 	if (params.size() > 2)
-		throw std::runtime_error("'return' directive takes at most 2 arguments");
+		errorMsg("'return' directive takes at most 2 arguments", line);
 
 	if (params.size() == 1 && !params[0].empty() && (params[0][0] == '/' || params[0].find("http") == 0))
 	{
@@ -102,7 +103,7 @@ void LocationConfig::setReturn(const std::vector<std::string> &params)
 	}
 
 	if (!isValidStatusCode(params[0]))
-		throw std::runtime_error("'return' directive has invalid status code: " + params[0]);
+		errorMsg("'return' directive has invalid status code: " + params[0], line);
 	int code = atoi(params[0].c_str());
 	_returnCode = code;
 
@@ -111,19 +112,19 @@ void LocationConfig::setReturn(const std::vector<std::string> &params)
 	else
 	{
 		if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308)
-			throw std::runtime_error("redirect code " + params[0] + " requires a URL");
+			errorMsg("redirect code " + params[0] + " requires a URL", line);
 	}
 }
 
-void LocationConfig::setClientMaxBodySize(const string &clientMaxBodySize) // ! i might need to check for overflow
+void LocationConfig::setClientMaxBodySize(const std::string &clientMaxBodySize, size_t line) // ! i might need to check for overflow
 {
 	uint64_t num = 0;
 	size_t i = 0;
 
 	if (clientMaxBodySize.empty())
-		throw logic_error("Invalid client_max_body_size");
+		errorMsg("Invalid client_max_body_size", line);
 
-	if (clientMaxBodySize.find_first_not_of("0") == string::npos)
+	if (clientMaxBodySize.find_first_not_of("0") == std::string::npos)
 	{
 		this->_clientMaxBodySize = 0;
 		return;
@@ -135,7 +136,7 @@ void LocationConfig::setClientMaxBodySize(const string &clientMaxBodySize) // ! 
 	if (i < clientMaxBodySize.size())
 	{
 		if (i != clientMaxBodySize.size() - 1)
-			throw logic_error("Invalid client_max_body_size");
+			errorMsg("Invalid client_max_body_size", line);
 
 		switch (toupper(clientMaxBodySize[i]))
 		{
@@ -151,56 +152,44 @@ void LocationConfig::setClientMaxBodySize(const string &clientMaxBodySize) // ! 
 			num *= 1024 * 1024 * 1024;
 			break;
 		default:
-			throw logic_error("Invalid client_max_body_size suffix");
+			errorMsg("Invalid client_max_body_size suffix", line);
 		}
 	}
 
 	if (num == 0)
-		throw logic_error("Invalid client_max_body_size");
+		errorMsg("Invalid client_max_body_size", line);
 
 	this->_clientMaxBodySize = num;
 }
 
-void LocationConfig::setCgiExt(const std::string &ext)
+void LocationConfig::setCgiExt(const std::string &ext, size_t line)
 {
 	if (ext != ".php") // ! i will add the rest of cgi's as needed
-		throw logic_error("Invalid cgi_ext, e.g. '.php'");
+		errorMsg("Invalid cgi_ext, e.g. '.php'", line);
 
 	_cgiExtension = ext;
 }
 
-void LocationConfig::setCgiPath(const std::string &path)
+void LocationConfig::setCgiPath(const std::string &path, size_t line)
 {
 	if (!isValidPath(path))
-		throw logic_error("Invalid cgi_path");
+		errorMsg("Invalid cgi_path", line);
 	_cgiPath = path;
 }
 
 // helpers
 bool LocationConfig::isMethodAllowed(const std::string &method) const
 {
-	return std::find(_methods.begin(), _methods.end(), method) != _methods.end();
-}
-bool LocationConfig::isValidPath(const std::string &path)
-{
-	if (path.empty() || path.find_first_of("*?[]()!<") != string::npos)
-		return false;
-
-	return true;
-}
-bool LocationConfig::isValidStatusCode(const std::string &str)
-{
-	int num;
-
-	if (str.size() != 3 || str.find_first_not_of("0123456789") != string::npos)
-		return false;
-
-	num = atoi(str.c_str());
-	return num < 100 || num > 599 ? false : true;
+	return (std::find(_methods.begin(), _methods.end(), method) != _methods.end());
 }
 
 bool LocationConfig::hasCgi() const
 {
 	return (!_cgiExtension.empty() && !_cgiPath.empty());
+}
+
+bool LocationConfig::hasReturn() const
+{
+	return (_returnCode != 0);
 }
 // parsing

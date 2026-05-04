@@ -17,8 +17,6 @@
 #include <cctype>
 #include <sys/stat.h>
 
-using namespace std;
-
 class ServerConfig;
 
 class LocationConfig
@@ -53,22 +51,21 @@ public:
 	const std::string &getCgiPath() const;
 
 	// setter
-	void setPath(const std::string &path);
-	void setRoot(const std::string &root);
-	void setMethods(const std::vector<std::string> &methods);
-	void setIndex(const std::vector<std::string> &index);
-	void setAutoIndex(const std::string &autoindex);
-	void setReturn(const std::vector<std::string> &params);
-	void setClientMaxBodySize(const string &clientMaxBodySize);
-	void setCgiExt(const std::string &ext);
-	void setCgiPath(const std::string &path);
+	void setPath(const std::string &path, size_t line);
+	void setRoot(const std::string &root, size_t line);
+	void setMethods(const std::vector<std::string> &methods, size_t line);
+	void setIndex(const std::vector<std::string> &index, size_t line);
+	void setAutoIndex(const std::string &autoindex, size_t line);
+	void setReturn(const std::vector<std::string> &params, size_t line);
+	void setClientMaxBodySize(const std::string &clientMaxBodySize, size_t line);
+	void setCgiExt(const std::string &ext, size_t line);
+	void setCgiPath(const std::string &path, size_t line);
 
 	// helpers
 
 	bool isMethodAllowed(const std::string &method) const;
-	bool isValidPath(const std::string &path);
-	bool isValidStatusCode(const std::string &str);
 	bool hasCgi() const;
+	bool hasReturn() const;
 };
 
 #endif
