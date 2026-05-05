@@ -1,10 +1,9 @@
 #ifndef CGICLIENT_HPP
 #define CGICLIENT_HPP
 
+#include <sys/epoll.h>
 #include "Client.hpp"
 #include "EpollHold.hpp"
-#include <ctime>
-#include <sys/epoll.h>
 
 class CGIClient: public Client
 {
@@ -40,6 +39,7 @@ class CGIClient: public Client
     void ft_exec();
 
     // parseCGIHeaders() // check CGI headers (Ali)
+    virtual void preSetup();
     
     // i/o
     void writeToReadBuffer();

@@ -5,8 +5,8 @@
 // #constructors
 Server::Server()
 {
-  _port = 8080; _ip = "127.0.0.1"; _epoll_event.events = EPOLLIN;
-  _status_error = 0;
+  _port = 8080; _ip = "127.0.0.1";
+  _epoll_event.events = EPOLLIN;
   _srvsock_hold.is_cgi = false;
 }
 
@@ -64,7 +64,12 @@ void Server::_initSocket()
   if (listen(_socket_fd, MAX_CONX_QUEUE))
     throw ServerException("listen() failed.");
 
-  std::cout << INFO_MSG << "listen on http://" << inet_ntoa(_addr.sin_addr) << ":" << to_string98(ntohs(_addr.sin_port)) << std::endl;
+  std::cout << INFO_MSG 
+            << "listen on http://" 
+            << inet_ntoa(_addr.sin_addr) 
+            << ":" 
+            << to_string98(ntohs(_addr.sin_port)) 
+            << std::endl;
 }
 
 void Server::_handelClient(socklen_t size_socket)
@@ -73,40 +78,29 @@ void Server::_handelClient(socklen_t size_socket)
   if (n == -1)
   {
     DEBUG_ERROR("handelClient: epoll wait fail");
-    return ;
+    throw ServerException("epoll_wait: failed");
   }
   for (int i = 0; i < n; i++)
   {
     t_epollhold *eh = static_cast<t_epollhold*>(_events[i].data.ptr);
-    DEBUG_INFO("event fired on fd: " + to_string98(eh->fd));
-    if (!eh){
+    if (!eh)
+    {
         DEBUG_ERROR("epoll data ptr is invalid");
-        /*erroo*/ continue;}
+        continue;
+    }
+    DEBUG_INFO("event fired on fd: " + to_string98(eh->fd));
     // new client
     if (eh->fd == _socket_fd)
       this->newconnection(size_socket);
     else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
     {
       if (eh->is_cgi)
-      {
-        DEBUG_INFO("Workign with a CGI");
         eh->cgi->handel(eh->fd, _events[i].events);
-      }
-      // EPOLLIN fires on client_fd:
-      else if (_events[i].events & EPOLLIN)
-      {
-        DEBUG_INFO("readrequest called");
-        this->readrequest(eh->cl);
-        if (eh->cl->getState() == PROCESSING || eh->cl->getState() == SENDING ){
-          _switchEpollRegisration(eh, EPOLLOUT);
-          epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, eh->cl->getFd(), &_epoll_event);}
-      }
-      // EPOLLOUT fires on client_fd:
-      else if (_events[i].events & EPOLLOUT)
-      {
-        DEBUG_INFO("sendresponse called");
-        this->sendresponse(eh->cl);
-      }
+      else if (eh->cl->getState() == READING_HEADERS)
+        this->readheaders(eh->cl);
+      else
+        eh->cl->handel(0, _events[i].events);
+
       // disconnect should work for cgi and cl
       if (eh->cl->getState() ==  DONE)
         _clients.disconnect(eh->cl->getFd());

@@ -28,3 +28,19 @@ char **CGIClient::buildEnv()
     return env;
 }
 */
+
+void CGIClient::preSetup()
+{
+  // if i already ready body or the request is get not post
+  // i should never register the socket EPOLLIN in that case because its will never fired
+  if (_req.getMethod() == "POST")
+  {
+    if (_readBuffer.size() >= _req.getContentLen())
+        this->turnToPipe();
+  }
+  else
+    this->removeEpollinEventFromSocket();
+    
+  // run setup cgi
+  this->ft_exec();
+}

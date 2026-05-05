@@ -35,8 +35,6 @@ void Server::_switchEpollRegisration(t_epollhold *eh, uint32_t ev)
   _epoll_event.events = ev;
 }
 
-
-
 void Server::newconnection(socklen_t size_socket)
 {
   int client_fd = accept(_socket_fd, (struct sockaddr *)(&_addr), (socklen_t *)&size_socket);
@@ -48,27 +46,25 @@ void Server::newconnection(socklen_t size_socket)
   DEBUG_INFO("New Client Added");
 }
 
-
-bool Server::createTmpFile(Client *cl)
+void Server::readheaders(Client *cl)
 {
-  cl->getReq().setTmpFileName(makeTmpPath(cl->getFd()));
-  int tfd = open(cl->getReq().getTmpFileName().c_str(), O_RDWR | O_APPEND | O_CREAT);
-  if (tfd < 0)
-  {
-    DEBUG_ERROR("readFromSocket: could not create tmp file");
-    return false;
+  std::string headers = cl->readHeaders();
+  if (headers.empty())
+    return;
+  try {
+    DEBUG_INFO("Request");
+    cl->getReq().requestParser(headers);
+    if (cl->getReq().isCGI())
+    {
+      // in case of CGI i'm upgrading the Client class to CGI by using copy constructor
+      CGIClient* cgi = _clients.updateToCGI(cl->getFd());
+      cgi->preSetup();
+      return;
+    }
+  } catch (const std::exception &e){
+    std::cerr << ERROR_MSG << "parsing headers: "<< e.what() << std::endl;
+    // send bad request
+    cl->callError(400);
   }
-  cl->getReq().setTmpFd(tfd);
-  write(cl->getReq().getTmpFd(), cl->getReadBuffer().c_str(), cl->getReadBuffer().size());
-  cl->getReq().setBytesCounter(cl->getReadBuffer().size());
-  cl->clearReadBuffer();
-  return true;
+  cl->preSetup();
 }
-
-
-void Server::callError(int err_code, Client *cl)
-{
-    _status_error = err_code;
-    cl->setState(PROCESSING);
-}
-

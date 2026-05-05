@@ -1,9 +1,20 @@
-// change to use ptr instead of fd
+[ ] clean code on server folder
+[ ] clean code on cgi folder
+[ ] remove duplicate parts from this folders
+[ ] clean code struct
+[ ] remove unused attrubutes and functions
+[ ] for handel client in server, move the part of normal clinet to another file or function, "handelRequest"
+[ ] the client should have its own response attributes
+[ ] memory leeks
+[ ] link betwee response and Server
+[ ] link between CGI and request and response
+[ ] clean code
+[ ] memory leeks
+[ ] Designe webserv UI pages
+[ ] add index page 
+[ ] add upload page
+[ ] add CGI page ...
 
+[ ] check cookies
 
-// when constructors called should setup all epollholders
-// add getter for client sock
-// just keep going i understand that you don't like that there is alot things to handel
-// its anyways your only way
-// we will refactor code later anyways, i want just to make something working now
-// for later make it easy to refactor it in like 3 hours
+[ ] prepare to push
