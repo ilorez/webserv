@@ -1,4 +1,5 @@
 #include "../../includes/container.hpp"
+#include <iostream>
 #include <sys/epoll.h>
 
 Client::Client(int fd, int epfd) : _fd(fd), _epoll_events(EPOLLIN | EPOLLRDHUP), _epfd(epfd), _writeOffset(0), _lastActivity(time(NULL)),

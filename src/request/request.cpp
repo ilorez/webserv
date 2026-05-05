@@ -5,14 +5,35 @@
 Request::Request():_content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0),_is_request_large(false)
 {}
 
-Request::Request(const Request &other) : _path(other._path), _version(other._version), _method(other._method), _headers(other._headers) {};
+Request::Request(const Request &other)
+  : _content_size(other._content_size),
+    _path(other._path),
+    _version(other._version),
+    _method(other._method),
+    _body(other._body),
+    _headers(other._headers),
+    _setCookieHeaders(other._setCookieHeaders),
+    _tmp_fd(other._tmp_fd),
+    _tmp_file_name(other._tmp_file_name),
+    _bytes_counter(other._bytes_counter),
+    _is_request_large(other._is_request_large)
+{}
 
 Request &Request::operator=(const Request &other)
 {
   if (this != &other)
   {
-    this->_method = other._method;
+    this->_content_size = other._content_size;
     this->_path = other._path;
+    this->_version = other._version;
+    this->_method = other._method;
+    this->_body = other._body;
+    this->_headers = other._headers;
+    this->_setCookieHeaders = other._setCookieHeaders;
+    this->_tmp_fd = other._tmp_fd;
+    this->_tmp_file_name = other._tmp_file_name;
+    this->_bytes_counter = other._bytes_counter;
+    this->_is_request_large = other._is_request_large;
   }
   return *this;
 }
@@ -212,7 +233,7 @@ void Request::requestParser(const std::string &raw)
   split(raw, lines, del);
 
   _parseFirstLine(lines);
-  _parseAllHeaders(lines);
+  _parseAllHeaders(lines); 
   // NOTE: importent to add request methods that have body here like "put" if you use it
   if (_method == "POST" && !to_integer<std::string, size_t>(getHeaderValue("Content-Length"), _content_size))
   {

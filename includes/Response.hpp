@@ -9,17 +9,15 @@ private:
     std::map<int, std::string>          _mapStatusCodes;
     std::map<std::string, std::string>  _headers;
     std::string     _body;
-    Request         _req;
     int             _status;
+    Request         _req;
 
 public:
     Response();
-    Response(const Response &other);
-    Response &operator=(const Response &other);
     ~Response();
 
     // setters
-    void setReq(Request &req);
+    void        setReq(Request &req);
     
     void        initStatusCodes(std::map<int, std::string> &m);
     void        initMediaTypes(std::map<std::string, std::string> &m);
@@ -34,6 +32,9 @@ public:
     void        Delete();
     void        Post();
     void        Get();
+private:
+    Response(const Response &other);
+    Response &operator=(const Response &other);
 
 };
 
