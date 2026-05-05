@@ -122,18 +122,11 @@ void Client::processing()
   POST   → move tmp_file to final location, transition to RESPONDING
   */
   DEBUG_INFO("Response");
-
-  DEBUG_WARN("1");
-  std::cout << this->_req.getVersion() << std::endl;
   this->_res.setReq(this->_req);
-
-  DEBUG_WARN("3");
-  std::cout << this->_req.getVersion() << std::endl;
   if (_status_error)
   {
     DEBUG_INFO("send error page");
     this->setWriteBuffer(_res.build(_status_error));
-    //std::cout << cl->getWriteBuffer() << std::endl;
   }
   else
     this->setWriteBuffer(_res.build());

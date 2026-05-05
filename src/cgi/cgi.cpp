@@ -6,15 +6,14 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/05 12:03:46 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/05 14:20:51 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/container.hpp"
 
 
-CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd),
-  _cgi_headers_parsed(false), _pid(-1)
+CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd), _pid(-1)
 //,_download_switch(true), _upload_switch(false)
 {
   _pipe_in[0] = -1;
@@ -29,7 +28,7 @@ CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd),
   _pipe_out_hold.cgi = this;
 }
 
-CGIClient::CGIClient(Client &cl): Client(cl), _cgi_headers_parsed(false){
+CGIClient::CGIClient(Client &cl): Client(cl){
   _pipe_in[0] = -1;
   _pipe_in[1] = -1; _pipe_out[0] = -1;
   _pipe_out[1] = -1;
@@ -75,7 +74,6 @@ CGIClient &CGIClient::operator=(const CGIClient &other)
 
 void CGIClient::disconnect(int epfd)
 {
-  (void)_cgi_headers_parsed;
   Client::disconnect(epfd);
 }
 

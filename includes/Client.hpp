@@ -28,7 +28,6 @@ class Client
         size_t       _writeOffset;
         time_t       _lastActivity;
         ClientState  _state;
-        t_epollhold  _sock;
         Request     _req;
         t_epollhold _clsock_hold;
         int _status_error; // if 0 there is no error // send error to res.build(_status_error) to create response base on error  

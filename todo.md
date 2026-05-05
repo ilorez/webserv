@@ -1,10 +1,10 @@
-[ ] clean code on server folder
-[ ] clean code on cgi folder
-[ ] remove duplicate parts from this folders
-[ ] clean code struct
+[x] clean code on server folder
+[x] clean code on cgi folder
+[x] remove duplicate parts from this folders
+[x] clean code struct
 [ ] remove unused attrubutes and functions
-[ ] for handel client in server, move the part of normal clinet to another file or function, "handelRequest"
-[ ] the client should have its own response attributes
+[x] for handel client in server, move the part of normal clinet to another file or function, "handelRequest"
+[x] the client should have its own response attributes
 [ ] memory leeks
 [ ] link betwee response and Server
 [ ] link between CGI and request and response
