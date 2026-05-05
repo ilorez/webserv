@@ -18,15 +18,12 @@ class CGIClient: public Client
   private:
     int _pipe_in[2];
     int _pipe_out[2];
-    bool _cgi_headers_parsed;
     size_t _read_counter;
     bool _socket_done;
     bool _cgi_pipe_done;
     t_epollhold _pipe_in_hold;
     t_epollhold _pipe_out_hold;
     int _pid; // for child
-    //bool _download_switch; // on: for socket, off: for pipe
-    //bool _upload_switch;  // off: for pipe, on: for socket 
   public:
     CGIClient(int fd, int epfd);
     CGIClient(Client &cl);
@@ -38,7 +35,6 @@ class CGIClient: public Client
     //char **buildEnv();
     void ft_exec();
 
-    // parseCGIHeaders() // check CGI headers (Ali)
     virtual void preSetup();
     
     // i/o

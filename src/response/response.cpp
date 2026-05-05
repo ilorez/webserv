@@ -23,8 +23,6 @@ Response::~Response() {};
 void Response::setReq(Request &req)
 {
   this->_req = req;
-  DEBUG_WARN("2");
-  std::cout << this->_req.getVersion() << std::endl;
 }
 
 std::string getHttpDate(time_t t)
@@ -109,7 +107,6 @@ std::string  Response::mergeResponseToString()
   std::map<int, std::string>::iterator sc_it = _mapStatusCodes.find(_status);
 
   // make start line
-  std::cout << _req.getVersion() << std::endl;
   ret += _req.getVersion() + " " + to_string98(sc_it->first) + " " + sc_it->second + "\r\n";
   
   // make headers
@@ -333,8 +330,6 @@ std::string Response::build()
   }
 
   initHeaders(_headers);
-  DEBUG_WARN("version");
-  std::cout << _req.getVersion() << std::endl;
   response = mergeResponseToString();
   return response;
 }
