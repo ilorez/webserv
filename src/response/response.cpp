@@ -1,7 +1,6 @@
-#include "../includes/container.hpp"
+#include "../../includes/container.hpp"
 
-Response::Response(Request &req)
-  : _req(req)
+Response::Response()
 {}
 
 Response::Response(const Response &other) : _req(other._req)
@@ -17,6 +16,12 @@ Response &Response::operator=(const Response &other)
 }
 
 Response::~Response() {};
+
+
+void Response::setReq(Request &req)
+{
+  _req = req;
+}
 
 std::string getHttpDate(time_t t)
 {

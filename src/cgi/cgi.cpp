@@ -6,15 +6,12 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/01 10:58:25 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/05 12:03:46 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/container.hpp"
-#include <csignal>
-#include <sys/epoll.h>
-#include <unistd.h>
-#include <sys/wait.h>
+
 
 CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd),
   _cgi_headers_parsed(false), _pid(-1)

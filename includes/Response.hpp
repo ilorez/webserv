@@ -1,6 +1,7 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
+#include "Request.hpp"
 class Response
 {
 private:
@@ -8,15 +9,18 @@ private:
     std::map<int, std::string>          _mapStatusCodes;
     std::map<std::string, std::string>  _headers;
     std::string     _body;
-    Request         &_req;
+    Request         _req;
     int             _status;
 
 public:
-    Response(Request &req);
+    Response();
     Response(const Response &other);
     Response &operator=(const Response &other);
     ~Response();
 
+    // setters
+    void setReq(Request &req);
+    
     void        initStatusCodes(std::map<int, std::string> &m);
     void        initMediaTypes(std::map<std::string, std::string> &m);
     void        initHeaders(std::map<std::string, std::string> &h);

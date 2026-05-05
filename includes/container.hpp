@@ -21,6 +21,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/epoll.h>
+#include <csignal>
+#include <sys/wait.h>
+
+#include <sys/types.h>
 
 //
 #include "./settings.hpp"

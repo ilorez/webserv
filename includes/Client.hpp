@@ -3,6 +3,7 @@
 
 #include "EpollHold.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
 #include <string>
 #include <ctime>
 
@@ -29,8 +30,9 @@ class Client
         ClientState  _state;
         t_epollhold  _sock;
         Request     _req;
-        bool _is_cgi;
         t_epollhold _clsock_hold;
+        int _status_error; // if 0 there is no error // send error to res.build(_status_error) to create response base on error  
+        Response _res;
     public:
         Client(int fd, int epfd);
         virtual ~Client();
@@ -43,24 +45,42 @@ class Client
         time_t              getLastActivity() const;
         ClientState         getState()       const;
         Request&            getReq();
-        bool                isCGI()          const;
-        t_epollhold&         getClSockHolder();
+        t_epollhold&        getClSockHolder();
         
         // setters
         void  setState(ClientState state);
         void  setWriteBuffer(const std::string& data);
         void  setReadBuffer(const std::string& data);
         void  updateLastActivity();
-        void  setIsCGI(bool value);
         void invalidateFd();
+        virtual void handel(int, uint32_t evs);
+
+        // on error
+        void callError(int err_code);
+
+
+        // io
+        std::string readHeaders();
+        virtual void preSetup();
+
+        void  readbody();
+        void  readFromSocket();
+        void  readFromSocket(int);
+
+        void  processing();
+        void  sendResponse();
+
+        void sendFromFile(int file_fd);
 
         // methods
+        bool createTmpFile();
         void  appendToReadBuffer(const char* data, size_t len);
         void  advanceWriteOffset(size_t bytes);
         void  clearReadBuffer();
         void  clearWriteBuffer();
         bool  isTimedOut(int timeoutSeconds) const;
         virtual void  disconnect(int epfd);
+        void switchToEpollOut();
     protected:
         Client(const Client& cl);
         Client& operator=(const Client&);
