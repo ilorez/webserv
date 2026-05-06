@@ -248,3 +248,32 @@ bool Request::isCGI()
   // any user can send a path contains cgi and everyting will be break
   return (_path.find("cgi") != std::string::npos);
 }
+
+const LocationConfig* Request::getMatchedLocation() const
+{
+    const std::string& uri = getPath();
+    const std::vector<LocationConfig>& locs = _servers.getLocations();
+
+    const LocationConfig* best = NULL;
+    size_t best_len = 0;
+
+    for (size_t i = 0; i < locs.size(); ++i)
+    {
+        const std::string& loc_path = locs[i].getPath();
+
+        if (uri.compare(0, loc_path.size(), loc_path) == 0)
+        {
+            if (loc_path.size() == uri.size() ||
+                uri[loc_path.size()] == '/' ||
+                loc_path[loc_path.size() - 1] == '/')
+            {
+                if (loc_path.size() > best_len)
+                {
+                    best = &locs[i];
+                    best_len = loc_path.size();
+                }
+            }
+        }
+    }
+    return best;
+}
