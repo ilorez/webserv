@@ -16,14 +16,14 @@ class CGIClient: public Client
 //   - bool cgi_headers_parsed
 //   - virtual disconnect() → kill child, close + unreg pipe fds, then base cleanup
   private:
-    int _pipe_in[2];
-    int _pipe_out[2];
-    size_t _read_counter;
+    int _pid; // for child
     bool _socket_done;
     bool _cgi_pipe_done;
+    size_t _read_counter;
+    int _pipe_in[2];
+    int _pipe_out[2];
     t_epollhold _pipe_in_hold;
     t_epollhold _pipe_out_hold;
-    int _pid; // for child
   public:
     CGIClient(int fd, int epfd);
     CGIClient(Client &cl);

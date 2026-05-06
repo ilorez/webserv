@@ -71,18 +71,7 @@ void Client::readbody()
 
 void  Client::readFromSocket()
 {
-  /* READING_BODY:
-  write chunk to client.tmp_file (random.tmp)
-  client.bytes_read += n
-  if bytes_read < Content-Length → stay in READING_BODY
-  if bytes_read == Content-Length →
-    close tmp_file
-    transition to PROCESSING
-  */
-  // register client as EPOLLOUT using epoll_ctl(MOD)
-  //std::cout << cl->getReq().getBytesCounter() << std::endl;
   char buf[CHUNK_SIZE];
-  // read from socket the chunk size
   int bytes = recv(_fd, buf, CHUNK_SIZE, 0);
   if (bytes <= 0)
   {
@@ -114,13 +103,6 @@ void  Client::readFromSocket(int)
 
 void Client::processing()
 {
-  /*EPOLLOUT fires on client_fd:
-  TODO: PROCESSING:
-  build response headers
-  DELETE → execute delete, transition to RESPONDING
-  GET    → find file, transition to RESPONDING
-  POST   → move tmp_file to final location, transition to RESPONDING
-  */
   DEBUG_INFO("Response");
   this->_res.setReq(this->_req);
   if (_status_error)
@@ -136,24 +118,11 @@ void Client::processing()
 
 void Client::sendResponse()
 {
-/*
-    Sending:
-      DELETE/POST → response is small, write once → transition to DONE
-      GET →
-        read next chunk from file
-        write chunk to socket
-        if more chunks → stay in RESPONDING
-        if file done   → transition to DONE
-
-    DONE:
-       disconnect()
-    TODO: read from file and send to socket
-      - build response headers and send to socket
-      - check if isResponseLarge, if it read from fd chunk by chunk and send to socket
-    */
-    
     // send data to client and close connection after done
     send(_fd, _writeBuffer.c_str(), _writeBuffer.size(), 0);
+    /*
+     * TODO: call SendFromFile but add isRequestLarge condidition to it
+    */
     _state = DONE;
 }
 
@@ -178,6 +147,7 @@ void Client::sendFromFile(int file_fd)
         if (bytes_sended <= 0)
         {
             DEBUG_WARN("sendFromFile: error/disconnect on send");
+            _state = DONE;
             return;
         }
         // NOTE:
@@ -192,6 +162,7 @@ void Client::sendFromFile(int file_fd)
     if (bytes_sended <= 0)
     {
         DEBUG_WARN("sendFromFile: error/disconnect on send");
+        _state = DONE;
         return;
     }
     this->advanceWriteOffset(bytes_sended);
