@@ -21,17 +21,17 @@ class Client
 {
     protected:
         int          _fd;
-        int _epfd;
-        int    _epoll_events;
+        int          _epfd;
+        int          _epoll_events;
         std::string  _readBuffer;
         std::string  _writeBuffer;
         size_t       _writeOffset;
         time_t       _lastActivity;
         ClientState  _state;
-        Request     _req;
-        t_epollhold _clsock_hold;
-        int _status_error; // if 0 there is no error // send error to res.build(_status_error) to create response base on error  
-        Response _res;
+        Request      _req;
+        t_epollhold  _clsock_hold;
+        int          _status_error; // if 0 there is no error // send error to res.build(_status_error) to create response base on error  
+        Response     _res;
     public:
         Client(int fd, int epfd);
         virtual ~Client();
@@ -51,6 +51,7 @@ class Client
         void  setWriteBuffer(const std::string& data);
         void  setReadBuffer(const std::string& data);
         void  updateLastActivity();
+        void  forceTimeout();
         void  invalidateFd();
         virtual void handel(int, uint32_t evs);
 
@@ -78,7 +79,6 @@ class Client
         void  clearReadBuffer();
         void  clearWriteBuffer();
         bool  isTimedOut(int timeoutSeconds) const;
-        virtual void  disconnect(int epfd);
         void  switchToEpollOut();
     protected:
         Client(const Client& cl);

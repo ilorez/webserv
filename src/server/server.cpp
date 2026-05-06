@@ -42,6 +42,7 @@ void Server::run()
 
 void Server::_handelClient(socklen_t size_socket)
 {
+  DEBUG_WARN("------------------ I have been called");
   int n = epoll_wait(_epoll_fd, _events, MAX_EVENTS, EPOLL_WAIT_TIMEOUT);
   if (n == -1)
     throw ServerException("epoll_wait: failed");
@@ -58,19 +59,23 @@ void Server::_handelClient(socklen_t size_socket)
       this->newconnection(size_socket);
     else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
     {
-      if (eh->is_cgi)
+      if (eh->cl->isTimedOut(TIMEOUT_SECONDS))
+        continue;
+      else if (eh->is_cgi)
         eh->cgi->handel(eh->fd, _events[i].events);
       else if (eh->cl->getState() == READING_HEADERS)
         this->readheaders(eh->cl);
       else
         eh->cl->handel(0, _events[i].events);
       if (eh->cl->getState() ==  DONE)
-        _clients.disconnect(eh->cl->getFd());
+        eh->cl->forceTimeout();
       else
         eh->cl->updateLastActivity();
     }
-    else if (_events[i].events & EPOLLHUP || _events[i].events & EPOLLERR)
-      _clients.disconnect(eh->cl->getFd());
+    else if (_events[i].events & ( EPOLLHUP | EPOLLERR | EPOLLRDHUP))
+      eh->cl->forceTimeout();
+    else 
+      DEBUG_ERROR("Unknown event firedon");
   }
   _clients.checkTimeout();
 }
