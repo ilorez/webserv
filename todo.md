@@ -1,3 +1,4 @@
+[ ] use the EPOLL_CTL_DELL for socket fd only on distructor, and remove the disconnect method from Client and CGI
 [x] clean code on server folder
 [x] clean code on cgi folder
 [x] remove duplicate parts from this folders

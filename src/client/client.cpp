@@ -2,12 +2,13 @@
 #include <iostream>
 #include <sys/epoll.h>
 
-Client::Client(int fd, int epfd) : _fd(fd), _epoll_events(EPOLLIN | EPOLLRDHUP), _epfd(epfd), _writeOffset(0), _lastActivity(time(NULL)),
+Client::Client(int fd, int epfd) : _fd(fd), _epfd(epfd), _epoll_events(EPOLLIN | EPOLLRDHUP), _writeOffset(0), _lastActivity(time(NULL)),
 	_state(READING_HEADERS), _status_error(0) {
-    _clsock_hold.cl = this;
     _clsock_hold.fd = fd;
     _clsock_hold.is_cgi = false;
+    _clsock_hold.cl = this;
 }
+
 Client::~Client()
 {
   DEBUG_INFO("Client disructor called");
@@ -16,16 +17,18 @@ Client::~Client()
 }
 
 // its private you can't use this 
+// TODO: add copy constructor to Response
 Client::Client(const Client &o): 
-_fd(o._fd),_epoll_events(o._epoll_events), _epfd(o._epfd), _readBuffer(o._readBuffer),
- _writeBuffer(o._writeBuffer), _writeOffset(o._writeOffset),
-  _lastActivity(o._lastActivity), _state(o._state), _req(o._req),
-    _status_error(o._status_error){
-    _clsock_hold.cl = o._clsock_hold.cl;
+  _fd(o._fd),_epfd(o._epfd), _epoll_events(o._epoll_events),  _readBuffer(o._readBuffer),
+  _writeBuffer(o._writeBuffer), _writeOffset(o._writeOffset), _lastActivity(o._lastActivity),
+  _state(o._state), _req(o._req), _status_error(o._status_error)
+{
     _clsock_hold.fd = o._clsock_hold.fd;
     _clsock_hold.is_cgi = o._clsock_hold.is_cgi;
+    _clsock_hold.cl = o._clsock_hold.cl;
+}
 
-} Client &Client::operator=(const Client &other)
+Client &Client::operator=(const Client &other)
 {
 	(void)other;
 	return (*this);

@@ -21,8 +21,8 @@ class Client
 {
     protected:
         int          _fd;
-        int    _epoll_events;
         int _epfd;
+        int    _epoll_events;
         std::string  _readBuffer;
         std::string  _writeBuffer;
         size_t       _writeOffset;
@@ -51,7 +51,7 @@ class Client
         void  setWriteBuffer(const std::string& data);
         void  setReadBuffer(const std::string& data);
         void  updateLastActivity();
-        void invalidateFd();
+        void  invalidateFd();
         virtual void handel(int, uint32_t evs);
 
         // on error
@@ -69,21 +69,20 @@ class Client
         void  processing();
         void  sendResponse();
 
-        void sendFromFile(int file_fd);
+        void  sendFromFile(int file_fd);
 
         // methods
-        bool createTmpFile();
+        bool  createTmpFile();
         void  appendToReadBuffer(const char* data, size_t len);
         void  advanceWriteOffset(size_t bytes);
         void  clearReadBuffer();
         void  clearWriteBuffer();
         bool  isTimedOut(int timeoutSeconds) const;
         virtual void  disconnect(int epfd);
-        void switchToEpollOut();
+        void  switchToEpollOut();
     protected:
         Client(const Client& cl);
         Client& operator=(const Client&);
-
 };
 
 #endif

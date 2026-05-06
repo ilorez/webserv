@@ -6,15 +6,14 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/05 14:20:51 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/06 09:37:08 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/container.hpp"
 
 
-CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd), _pid(-1)
-//,_download_switch(true), _upload_switch(false)
+CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd), _pid(-1), _socket_done(false), _cgi_pipe_done(false)
 {
   _pipe_in[0] = -1;
   _pipe_in[1] = -1;

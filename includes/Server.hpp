@@ -14,8 +14,8 @@
 
 class Server {
   private:
-    int _port;
     int _socket_fd;
+    int _port;
     int _epoll_fd;
     std::string _ip;
     struct sockaddr_in _addr;
@@ -28,8 +28,6 @@ class Server {
     // orthodox
     Server();
     ~Server();
-    Server(const Server& copy);
-    Server& operator=(const Server& copy);
     
     // getters and setters
     std::string getIp() const;
@@ -50,15 +48,14 @@ class Server {
     
     //create socket 
     void run(); // create socket and start listning
-    private:
-      void _initSocket();
-      void _handelClient(socklen_t);
-      void _addClient(int client_fd);
-      void _addSocketToEpoll(int sfd); // for only socket
-      // TODO:handelReadyClient
-      // TODO:_client_disconnected
-      void _handelClientDisconnect();
-      void _switchEpollRegisration(t_epollhold *cl, uint32_t ev);
+  private:
+    Server(const Server& copy);
+    Server& operator=(const Server& copy);
+    void _initSocket();
+    void _handelClient(socklen_t);
+    void _addClient(int client_fd);
+    void _addSocketToEpoll(int sfd); // for only socket
+    void _switchEpollRegisration(t_epollhold *cl, uint32_t ev);
 };
 
 #endif
