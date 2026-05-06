@@ -23,8 +23,12 @@
 #include <sys/epoll.h>
 #include <csignal>
 #include <sys/wait.h>
-
 #include <sys/types.h>
+
+#include <algorithm>
+#include <iostream>
+#include <dirent.h>
+#include <sys/stat.h>
 
 //
 #include "./settings.hpp"
