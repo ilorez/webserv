@@ -121,14 +121,17 @@ void Client::clearWriteBuffer()
 	_writeOffset = 0;
 }
 
+void  Client::forceTimeout()
+{
+  DEBUG_INFO("force timeout called");
+  time_t epoch = 0;
+  _lastActivity = epoch;
+}
+
+
 bool Client::isTimedOut(int timeoutSeconds) const
 {
 	return ((time(NULL) - _lastActivity) > timeoutSeconds);
-}
-
-void Client::disconnect(int epfd)
-{
-  epoll_ctl(epfd, EPOLL_CTL_DEL, _fd, NULL);
 }
 
 void Client::callError(int err_code)

@@ -1,9 +1,9 @@
-[ ] use the EPOLL_CTL_DELL for socket fd only on distructor, and remove the disconnect method from Client and CGI
+[x] use the EPOLL_CTL_DELL for socket fd only on distructor, and remove the disconnect method from Client and CGI
 [x] clean code on server folder
 [x] clean code on cgi folder
 [x] remove duplicate parts from this folders
 [x] clean code struct
-[ ] remove unused attrubutes and functions
+[x] remove unused attrubutes and functions
 [x] for handel client in server, move the part of normal clinet to another file or function, "handelRequest"
 [x] the client should have its own response attributes
 [ ] memory leeks

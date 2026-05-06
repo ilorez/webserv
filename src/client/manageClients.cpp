@@ -44,7 +44,6 @@ void    ManageClients::disconnect(int fd)
 {
   std::map<int, Client*>::iterator it = _clients.find(fd);
   if ( it != _clients.end()) {
-    it->second->disconnect(_epfd);
     delete it->second;
     _clients.erase(it);
     return ;
@@ -77,12 +76,14 @@ void ManageClients::checkTimeout()
   {
     if (it->second->isTimedOut(TIMEOUT_SECONDS))
     {
+      DEBUG_INFO("Client timedout with fd: ");
+      std::cout << it->first << std::endl;
       // delete from epoll
-      it->second->disconnect(_epfd);
       delete it->second;
-      _clients.erase(it);
+      _clients.erase(it++);
     }
-    it++;
+    else
+      ++it;
   }
 }
 

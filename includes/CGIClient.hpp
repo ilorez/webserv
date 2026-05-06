@@ -7,14 +7,6 @@
 
 class CGIClient: public Client
 {
-// CLASS DESIGN
-// ------------
-// CGIClient : public Client
-//   - int pipe_in[2]      (parent writes → CGI stdin)
-//   - int pipe_out[2]     (parent reads  ← CGI stdout)
-//   - pid_t child_pid
-//   - bool cgi_headers_parsed
-//   - virtual disconnect() → kill child, close + unreg pipe fds, then base cleanup
   private:
     int _pid; // for child
     bool _socket_done;
@@ -28,7 +20,6 @@ class CGIClient: public Client
     CGIClient(int fd, int epfd);
     CGIClient(Client &cl);
     ~CGIClient();
-    void disconnect(int epfd);
     void handel(int fd, uint32_t evs);
     // methods
     void setupPipes();
