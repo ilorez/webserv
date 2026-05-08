@@ -1,6 +1,5 @@
-#include "Lexer.hpp"
+#include "../../includes/container.hpp"
 
-using namespace std;
 
 // Constructor
 Scanner::Scanner(const std::string &raw)
@@ -113,7 +112,7 @@ void Scanner::readString()
 	if (isAtEnd())
 	{
 		_hadError = 1;
-		cerr << "Error: Unterminated string at line " << _line << endl;
+		std::cerr << "Error: Unterminated string at line " << _line << std::endl;
 		return;
 	}
 
@@ -211,7 +210,7 @@ void Scanner::addToken(const size_t len)
 		type = CGI_EXT;
 	else if (literal == "upload_store")
 		type = UPLOAD_STORE;
-	else if (literal.find_first_not_of("0123456789") == string::npos)
+	else if (literal.find_first_not_of("0123456789") == std::string::npos)
 		type = NUMBER;
 	else
 		type = STRING;

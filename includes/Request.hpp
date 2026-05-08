@@ -5,8 +5,10 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "../config/ServerConfig.hpp"
-#include "../config/locationConfig.hpp"
+
+#include "ServerConfig.hpp"
+#include "locationConfig.hpp"
+
 
 class Request
 {
@@ -55,7 +57,7 @@ public:
   void requestParser(const std::string &request);
   //TODO
   void setBody(std::string &value);
-  const LocationConfig* Request::getMatchedLocation() const;
+  const LocationConfig* getMatchedLocation() const;
   // methods
   bool isCGI();
 

@@ -52,6 +52,11 @@
 #include "./ManageClients.hpp"
 
 //
+#include "./Config.hpp"
+#include "./Lexer.hpp"
+#include "./ServerConfig.hpp"
+#include "./locationConfig.hpp"
+//
 #include "./EpollHold.hpp"
 
 

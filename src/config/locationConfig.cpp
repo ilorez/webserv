@@ -1,8 +1,5 @@
-#include "Lexer.hpp"
-#include "Config.hpp"
-#include "locationConfig.hpp"
-#include "ServerConfig.hpp"
-#include "utils.hpp"
+#include "../../includes/container.hpp"
+
 
 // constructors & destructors
 LocationConfig::LocationConfig(const ServerConfig &serverConfig)

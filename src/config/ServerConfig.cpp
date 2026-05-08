@@ -1,8 +1,4 @@
-#include "Lexer.hpp"
-#include "Config.hpp"
-#include "locationConfig.hpp"
-#include "ServerConfig.hpp"
-#include "utils.hpp"
+#include "../../includes/container.hpp"
 
 //? constructor & destructor
 ServerConfig::ServerConfig()
@@ -10,8 +6,8 @@ ServerConfig::ServerConfig()
 	this->_host = "127.0.0.1";
 	this->_port = 8080;
 	this->_serverName = "localhost";
-	this->_root = "./html";				// ./html/ . like nginx default
-	this->_clientMaxBodySize = 1048576; // 1mg, like nginx default
+	this->_root = "../../www/";	
+	this->_clientMaxBodySize = 1048576;
 	this->_autoindex = false;
 	this->_index.push_back("index.html");
 };

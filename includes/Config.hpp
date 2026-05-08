@@ -14,7 +14,6 @@
 #include <set>
 #include <vector>
 #include <cctype>
-#include <sys/stat.h>
 #include "Lexer.hpp"
 
 class ServerConfig;
