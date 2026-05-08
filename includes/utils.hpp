@@ -15,4 +15,7 @@ struct epoll_event create_ev(t_epollhold *eh, uint32_t ev);
 
 void ft_closefd(int &fd);
 
+bool isValidPath(const std::string &path);
+bool isValidStatusCode(const std::string &str);
+void errorMsg(const std::string &msg, size_t line);
 #endif

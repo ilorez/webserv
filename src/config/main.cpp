@@ -1,7 +1,4 @@
-#include "Lexer.hpp"
-#include "Config.hpp"
-#include "ServerConfig.hpp"
-#include "locationConfig.hpp"
+#include "../../includes/container.hpp"
 
 using namespace std;
 
@@ -94,7 +91,7 @@ void printServerData(const vector<ServerConfig> &servers)
 
 int main()
 {
-	std::string fileName = "default2.conf";
+	std::string fileName = "../../config/default2.conf";
 	std::ifstream readfile(fileName.c_str());
 	std::string line, all_lines;
 	std::vector<Token> allTokens;

@@ -1,8 +1,4 @@
-#include "Lexer.hpp"
-#include "Config.hpp"
-#include "locationConfig.hpp"
-#include "ServerConfig.hpp"
-#include "utils.hpp"
+#include "../../includes/container.hpp"
 
 // constuctor & destructor
 Config::Config(std::vector<Token> &Tokens)
