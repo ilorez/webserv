@@ -39,8 +39,8 @@ void printLocationData(const LocationConfig &loc)
 		cout << "\t  cgi_path:          " << loc.getCgiPath() << "\n";
 	}
 
-	// if (!loc.getUploadStore().empty())
-	// 	cout << "\t  upload_store:      " << loc.getUploadStore() << "\n";
+	if (!loc.getUploadStore().empty())
+		cout << "\t  upload_store:      " << loc.getUploadStore() << "\n";
 
 	cout << "\t  " << string(50, '-') << "\n";
 }

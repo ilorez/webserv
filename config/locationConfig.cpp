@@ -14,6 +14,7 @@ LocationConfig::LocationConfig(const ServerConfig &serverConfig)
 	  _returnCode(0),
 	  _cgiExtension(""),
 	  _cgiPath(""),
+	  _uploadStore("../../uploads/"),
 	  _clientMaxBodySize(serverConfig.getClientMaxBodySize())
 {
 	_methods.push_back("GET");
@@ -33,6 +34,7 @@ int LocationConfig::getReturnCode() const { return _returnCode; }
 unsigned long LocationConfig::getClientMaxBodySize() const { return _clientMaxBodySize; }
 const std::string &LocationConfig::getCgiExt() const { return _cgiExtension; }
 const std::string &LocationConfig::getCgiPath() const { return _cgiPath; }
+const std::string &LocationConfig::getUploadStore() const { return _uploadStore; }
 // setters
 void LocationConfig::setPath(const std::string &path, size_t line)
 {
@@ -91,7 +93,6 @@ void LocationConfig::setAutoIndex(const std::string &autoindex, size_t line)
 	else
 		errorMsg("Invalid autoIndex value.", line);
 }
-
 void LocationConfig::setReturn(const std::vector<std::string> &params, size_t line)
 {
 	if (params.size() > 2)
@@ -117,7 +118,6 @@ void LocationConfig::setReturn(const std::vector<std::string> &params, size_t li
 			errorMsg("redirect code " + params[0] + " requires a URL", line);
 	}
 }
-
 void LocationConfig::setClientMaxBodySize(const std::string &clientMaxBodySize, size_t line) // ! i might need to check for overflow
 {
 	unsigned int num = 0;
@@ -162,6 +162,13 @@ void LocationConfig::setClientMaxBodySize(const std::string &clientMaxBodySize, 
 		errorMsg("Invalid client_max_body_size", line);
 
 	this->_clientMaxBodySize = num;
+}
+void LocationConfig::setUploadStore(const std::string &path, size_t line)
+{
+	if (!isValidPath(path))
+		errorMsg("Invalid upload_store argument", line);
+
+	_uploadStore = path;
 }
 
 void LocationConfig::setCgiExt(const std::string &ext, size_t line)
