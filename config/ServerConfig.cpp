@@ -13,14 +13,14 @@ ServerConfig::ServerConfig()
 	this->_root = "./html";				// ./html/ . like nginx default
 	this->_clientMaxBodySize = 1048576; // 1mg, like nginx default
 	this->_autoindex = false;
-	this->_index = {"index.html"};
+	this->_index.push_back("index.html");
 };
 
 ServerConfig::~ServerConfig() {};
 
 //? getters
 const std::string &ServerConfig::getHost() const { return this->_host; }
-uint16_t ServerConfig::getPort() const { return this->_port; }
+unsigned int ServerConfig::getPort() const { return this->_port; }
 const std::string &ServerConfig::getServerName() const { return this->_serverName; }
 const std::string &ServerConfig::getRoot() const { return this->_root; }
 unsigned long ServerConfig::getClientMaxBodySize() const { return this->_clientMaxBodySize; }
@@ -34,7 +34,7 @@ const std::vector<LocationConfig> &ServerConfig::getLocations() const { return t
 // ? setters
 void ServerConfig::setClientMaxBodySize(const std::string &clientMaxBodySize, size_t line) // ! i might need to check for overflow
 {
-	uint64_t num = 0;
+	unsigned int num = 0;
 	size_t i = 0;
 
 	if (clientMaxBodySize.empty())
@@ -132,7 +132,7 @@ void ServerConfig::setPort(const std::string &port, size_t line)
 	if (num < 1024 || num > 65535)
 		errorMsg("Invalid Port", line);
 
-	this->_port = (uint16_t)num;
+	this->_port = (unsigned int)num;
 }
 
 void ServerConfig::setErrorPages(const std::vector<std::string> &errorPage, size_t line)

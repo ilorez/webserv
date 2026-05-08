@@ -15,7 +15,6 @@
 #include <vector>
 #include <cctype>
 #include <sys/stat.h>
-#include <cstdint>
 
 class LocationConfig;
 
@@ -23,7 +22,7 @@ class ServerConfig
 {
 private:
 	std::string _host;
-	uint16_t _port;
+	unsigned int _port;
 	std::string _serverName;
 	std::string _root;
 	unsigned long _clientMaxBodySize;
@@ -52,7 +51,7 @@ public:
 
 	// getters
 	const std::string &getHost() const;
-	uint16_t getPort() const;
+	unsigned int getPort() const;
 	const std::string &getServerName() const;
 	const std::string &getRoot() const;
 	unsigned long getClientMaxBodySize() const;

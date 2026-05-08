@@ -8,7 +8,6 @@
 LocationConfig::LocationConfig(const ServerConfig &serverConfig)
 	: _path(""),
 	  _root(serverConfig.getRoot()),
-	  _methods({"GET", "POST", "DELETE"}),
 	  _index(serverConfig.getIndex()),
 	  _autoindex(serverConfig.getAutoIndex()),
 	  _returnUrl(""),
@@ -17,6 +16,9 @@ LocationConfig::LocationConfig(const ServerConfig &serverConfig)
 	  _cgiPath(""),
 	  _clientMaxBodySize(serverConfig.getClientMaxBodySize())
 {
+	_methods.push_back("GET");
+	_methods.push_back("POST");
+	_methods.push_back("DELETE");
 }
 LocationConfig::~LocationConfig() {};
 
@@ -118,7 +120,7 @@ void LocationConfig::setReturn(const std::vector<std::string> &params, size_t li
 
 void LocationConfig::setClientMaxBodySize(const std::string &clientMaxBodySize, size_t line) // ! i might need to check for overflow
 {
-	uint64_t num = 0;
+	unsigned int num = 0;
 	size_t i = 0;
 
 	if (clientMaxBodySize.empty())
