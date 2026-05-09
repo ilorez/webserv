@@ -3,7 +3,7 @@
 #include <sys/epoll.h>
 
 // #constructors
-Server::Server(): _socket_fd(-1), _port(8080), _epoll_fd(-1), _ip("127.0.0.1")
+Server::Server(std::vector<ServerConfig> servers): _socket_fd(-1), _port(8080), _epoll_fd(-1), _ip("127.0.0.1"), _servers(servers)
 {
   _epoll_event.events = EPOLLIN;
   _srvsock_hold.is_cgi = false;

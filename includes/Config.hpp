@@ -29,7 +29,7 @@ private:
 
 public:
 	// constructors
-	Config(std::vector<Token> &Tokens);
+	Config(std::vector<Token> Tokens);
 	~Config();
 
 	// parsing
