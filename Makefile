@@ -11,9 +11,11 @@ RM = rm -rf
 BUILD_DR = ./build/
 
 HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp Templates.hpp \
-					Client.hpp ManageClients.hpp Response.hpp Server.hpp utils.hpp WebServExceptions.hpp
+					Client.hpp ManageClients.hpp Response.hpp Server.hpp utils.hpp WebServExceptions.hpp \
+					Lexer.hpp Config.hpp serverConfig.hpp locationConfig.hpp
 
-F_SRCS = request.cpp utils.cpp response.cpp exceptions.cpp
+
+F_SRCS = request.cpp utils.cpp response.cpp exceptions.cpp Lexer.cpp Config.cpp locationConfig.cpp serverConfig.cpp
 F_SERVER = server.cpp server_utils.cpp
 F_CGI = cgi.cpp cgi_oi.cpp cgi_utils.cpp
 F_CLIENT = manageClients.cpp client.cpp client_io.cpp 
