@@ -1,7 +1,7 @@
 #include "../../includes/container.hpp"
 
 // constuctor & destructor
-Config::Config(std::vector<Token> &Tokens)
+Config::Config(std::vector<Token> Tokens)
 {
 	_status = 0;
 	_index = 0;

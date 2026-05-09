@@ -23,10 +23,12 @@ class Server {
     struct epoll_event _events[MAX_EVENTS];
     struct epoll_event _epoll_event;
     t_epollhold _srvsock_hold;
+
+    std::vector<ServerConfig> _servers;
     // ...
   public:
     // orthodox
-    Server();
+    Server(std::vector<ServerConfig> servers);
     ~Server();
     
     // getters and setters
