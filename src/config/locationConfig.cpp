@@ -1,6 +1,5 @@
 #include "../../includes/container.hpp"
 
-
 // constructors & destructors
 LocationConfig::LocationConfig(const ServerConfig &serverConfig)
 	: _path(""),
@@ -9,10 +8,10 @@ LocationConfig::LocationConfig(const ServerConfig &serverConfig)
 	  _autoindex(serverConfig.getAutoIndex()),
 	  _returnUrl(""),
 	  _returnCode(0),
+	  _clientMaxBodySize(serverConfig.getClientMaxBodySize()),
 	  _cgiExtension(""),
 	  _cgiPath(""),
-	  _uploadStore("../../uploads/"),
-	  _clientMaxBodySize(serverConfig.getClientMaxBodySize())
+	  _uploadStore("../../uploads/")
 {
 	_methods.push_back("GET");
 	_methods.push_back("POST");

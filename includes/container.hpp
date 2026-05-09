@@ -54,7 +54,7 @@
 //
 #include "./Config.hpp"
 #include "./Lexer.hpp"
-#include "./ServerConfig.hpp"
+#include "./serverConfig.hpp"
 #include "./locationConfig.hpp"
 //
 #include "./EpollHold.hpp"

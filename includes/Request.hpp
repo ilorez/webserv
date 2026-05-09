@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "ServerConfig.hpp"
+#include "serverConfig.hpp"
 #include "locationConfig.hpp"
 
 
