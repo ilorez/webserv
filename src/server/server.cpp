@@ -42,7 +42,7 @@ void Server::run()
 
 void Server::_handelClient(socklen_t size_socket)
 {
-  DEBUG_WARN("------------------ I have been called");
+  DEBUG_INFO("------------------");
   int n = epoll_wait(_epoll_fd, _events, MAX_EVENTS, EPOLL_WAIT_TIMEOUT);
   if (n == -1)
     throw ServerException("epoll_wait: failed");

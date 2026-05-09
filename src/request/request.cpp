@@ -96,6 +96,11 @@ size_t Request::getBytesCounter() const
   return (_bytes_counter);
 }
 
+std::string Request::getBody() const
+{
+  return _body;
+}
+
 // ? setters
 
 void Request::setPath(const std::string &path)
