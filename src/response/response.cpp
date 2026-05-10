@@ -90,7 +90,7 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
         }
         else
         {
-            std::string root = (loc && !loc->getRoot().empty()) ? loc->getRoot() : _req.getServer().getRoot();
+            std::string root = (loc && !loc->getRoot().empty()) ? loc->getRoot() : _req.getServerConf().getRoot();
             filepath = root + _req.getPath();
         }
 
@@ -120,7 +120,7 @@ void Response::serveErrorPage(int status)
 {
     _status = status;
 
-    const std::map<int, std::string>& conf = _req.getServer().getErrorPages();
+    const std::map<int, std::string>& conf = _req.getServerConf().getErrorPages();
     std::string errorPage;
     bool isCustom = false;
 
@@ -186,7 +186,7 @@ void Response::Get()
     }
 
     std::string path = _req.getPath();
-    std::string root = (loc && !loc->getRoot().empty()) ? loc->getRoot() : _req.getServer().getRoot();
+    std::string root = (loc && !loc->getRoot().empty()) ? loc->getRoot() : _req.getServerConf().getRoot();
     std::string filepath = root + path;
 
     // existence
@@ -202,7 +202,7 @@ void Response::Get()
     if (S_ISDIR(info.st_mode))
     {
         std::vector<std::string> indexList =
-            (loc && !loc->getIndex().empty()) ? loc->getIndex() : _req.getServer().getIndex();
+            (loc && !loc->getIndex().empty()) ? loc->getIndex() : _req.getServerConf().getIndex();
 
         bool found = false;
         for (size_t i = 0; i < indexList.size(); ++i)
@@ -218,7 +218,7 @@ void Response::Get()
 
         if (!found)
         {
-            bool autoindex = (loc) ? loc->getAutoindex() : _req.getServer().getAutoIndex();
+            bool autoindex = (loc) ? loc->getAutoindex() : _req.getServerConf().getAutoIndex();
             if (!autoindex)
             {
                 serveErrorPage(403);
@@ -264,7 +264,7 @@ void Response::Post()
         return;
     }
 
-    size_t max_size = (loc) ? loc->getClientMaxBodySize() : _req.getServer().getClientMaxBodySize();
+    size_t max_size = (loc) ? loc->getClientMaxBodySize() : _req.getServerConf().getClientMaxBodySize();
     std::string contentLengthStr = _req.getHeaderValue("content-length");
 
     if (!contentLengthStr.empty() && std::atoi(contentLengthStr.c_str()) > (int)max_size)
@@ -273,7 +273,7 @@ void Response::Post()
         return;
     }
 
-    std::string filepath = _req.getServer().getRoot() + _req.getPath();
+    std::string filepath = _req.getServerConf().getRoot() + _req.getPath();
     if (_req.isRequsetLarge())
     {
         // for large files
@@ -318,7 +318,7 @@ void Response::Delete()
         return;
     }
 
-    std::string filepath = _req.getServer().getRoot() + _req.getPath();
+    std::string filepath = _req.getServerConf().getRoot() + _req.getPath();
 
     if (access(filepath.c_str(), F_OK) != 0)
     {

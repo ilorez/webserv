@@ -2,22 +2,24 @@
 #include <cstddef>
 #include <string>
 
-Request::Request():_content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0),_is_request_large(false)
-{}
+Request::Request() : _content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0), _is_request_large(false)
+{
+}
 
 Request::Request(const Request &other)
-  : _content_size(other._content_size),
-    _path(other._path),
-    _version(other._version),
-    _method(other._method),
-    _body(other._body),
-    _headers(other._headers),
-    _setCookieHeaders(other._setCookieHeaders),
-    _tmp_fd(other._tmp_fd),
-    _tmp_file_name(other._tmp_file_name),
-    _bytes_counter(other._bytes_counter),
-    _is_request_large(other._is_request_large)
-{}
+    : _content_size(other._content_size),
+      _path(other._path),
+      _version(other._version),
+      _method(other._method),
+      _body(other._body),
+      _headers(other._headers),
+      _setCookieHeaders(other._setCookieHeaders),
+      _tmp_fd(other._tmp_fd),
+      _tmp_file_name(other._tmp_file_name),
+      _bytes_counter(other._bytes_counter),
+      _is_request_large(other._is_request_large)
+{
+}
 
 Request &Request::operator=(const Request &other)
 {
@@ -38,7 +40,8 @@ Request &Request::operator=(const Request &other)
   return *this;
 }
 
-Request::~Request() {
+Request::~Request()
+{
   if (_tmp_fd >= 0)
     close(_tmp_fd);
 };
@@ -76,10 +79,9 @@ std::string Request::getHeaderValue(std::string key)
   return (it->second);
 }
 
-const std::string & Request::getTmpFileName() const
+const std::string &Request::getTmpFileName() const
 {
   return (_tmp_file_name);
-
 }
 int Request::getTmpFd() const
 {
@@ -100,6 +102,11 @@ std::string Request::getBody() const
 {
   return _body;
 }
+
+ServerConfig Request::getServerConf() const
+{
+  return _serverConf;
+};
 
 // ? setters
 
@@ -132,6 +139,10 @@ void Request::incrementBytesCounter(size_t bytes)
   _bytes_counter += bytes;
 }
 
+void Request::setBody(const std::string &value)
+{
+  _body = value;
+}
 // ? member functions
 
 static void initCommaHeaders(std::set<std::string> &commaHeaders)
@@ -238,7 +249,7 @@ void Request::requestParser(const std::string &raw)
   split(raw, lines, del);
 
   _parseFirstLine(lines);
-  _parseAllHeaders(lines); 
+  _parseAllHeaders(lines);
   // NOTE: importent to add request methods that have body here like "put" if you use it
   if (_method == "POST" && !to_integer<std::string, size_t>(getHeaderValue("Content-Length"), _content_size))
   {
@@ -249,36 +260,48 @@ void Request::requestParser(const std::string &raw)
 
 bool Request::isCGI()
 {
-  // TODO: update this function, its really important to know if this is a cgi
-  // any user can send a path contains cgi and everyting will be break
-  return (_path.find("cgi") != std::string::npos);
+  const LocationConfig *matchLoc = getMatchedLocation();
+  if (!matchLoc)
+    return false;
+
+  const std::string cgiExt = matchLoc->getCgiExt();
+  const std::string uri = getPath();
+
+  if (!matchLoc->hasCgi() || !endsWith(uri, cgiExt))
+    return false;
+
+  const std::string fullPath = matchLoc->getRoot() + uri; // if matchLoc has no root it will return an empty string
+  if (access(fullPath.c_str(), X_OK) == -1)
+    return false;
+
+  return (true);
 }
 
-const LocationConfig* Request::getMatchedLocation() const
+const LocationConfig *Request::getMatchedLocation() const
 {
-    const std::string& uri = getPath();
-    const std::vector<LocationConfig>& locs = _servers.getLocations();
+  const std::string &uri = getPath();
+  const std::vector<LocationConfig> &locs = _serverConf.getLocations();
 
-    const LocationConfig* best = NULL;
-    size_t best_len = 0;
+  const LocationConfig *best = NULL;
+  size_t best_len = 0;
 
-    for (size_t i = 0; i < locs.size(); ++i)
+  for (size_t i = 0; i < locs.size(); ++i)
+  {
+    const std::string &loc_path = locs[i].getPath();
+
+    if (uri.compare(0, loc_path.size(), loc_path) == 0)
     {
-        const std::string& loc_path = locs[i].getPath();
-
-        if (uri.compare(0, loc_path.size(), loc_path) == 0)
+      if (loc_path.size() == uri.size() ||
+          uri[loc_path.size()] == '/' ||
+          loc_path[loc_path.size() - 1] == '/')
+      {
+        if (loc_path.size() > best_len)
         {
-            if (loc_path.size() == uri.size() ||
-                uri[loc_path.size()] == '/' ||
-                loc_path[loc_path.size() - 1] == '/')
-            {
-                if (loc_path.size() > best_len)
-                {
-                    best = &locs[i];
-                    best_len = loc_path.size();
-                }
-            }
+          best = &locs[i];
+          best_len = loc_path.size();
         }
+      }
     }
-    return best;
+  }
+  return best;
 }

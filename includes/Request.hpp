@@ -25,7 +25,7 @@ private:
   size_t       _bytes_counter;
   bool         _is_request_large;
 
-  ServerConfig _servers;
+  ServerConfig _serverConf;
 public:
   Request();
   Request(const Request &other);
@@ -45,7 +45,7 @@ public:
 
   // TODO
   std::string getBody() const;
-  ServerConfig getServer() { return _servers; };
+  ServerConfig getServerConf() const ;
 
   // setters
   void  setTmpFileName(std::string name);
@@ -56,7 +56,7 @@ public:
   void setPath(const std::string &path);
   void requestParser(const std::string &request);
   //TODO
-  void setBody(std::string &value);
+  void setBody(const std::string &value);
   const LocationConfig* getMatchedLocation() const;
   // methods
   bool isCGI();
