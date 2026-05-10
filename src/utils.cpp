@@ -55,6 +55,13 @@ size_t split(const std::string &txt, std::vector<std::string> &strs, const std::
     return strs.size();
 }
 
+bool endsWith(const std::string& fullString, const std::string& ending) {
+    if (fullString.length() > ending.length()) // the requested file must be longer than the extension length 
+        return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+    else 
+        return false;
+}
+
 std::string makeTmpPath(int cl_fd)
 {
   std::ostringstream oss;
