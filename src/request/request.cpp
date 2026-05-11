@@ -7,18 +7,8 @@ Request::Request() : _content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_c
 }
 
 Request::Request(const Request &other)
-    : _content_size(other._content_size),
-      _path(other._path),
-      _version(other._version),
-      _method(other._method),
-      _body(other._body),
-      _headers(other._headers),
-      _setCookieHeaders(other._setCookieHeaders),
-      _tmp_fd(other._tmp_fd),
-      _tmp_file_name(other._tmp_file_name),
-      _bytes_counter(other._bytes_counter),
-      _is_request_large(other._is_request_large)
 {
+  *this = other;
 }
 
 Request &Request::operator=(const Request &other)
@@ -36,6 +26,7 @@ Request &Request::operator=(const Request &other)
     this->_tmp_file_name = other._tmp_file_name;
     this->_bytes_counter = other._bytes_counter;
     this->_is_request_large = other._is_request_large;
+    this->_serverConf = other._serverConf;
   }
   return *this;
 }
@@ -103,7 +94,7 @@ std::string Request::getBody() const
   return _body;
 }
 
-ServerConfig Request::getServerConf() const
+const ServerConfig& Request::getServerConf() const
 {
   return _serverConf;
 };
@@ -142,6 +133,11 @@ void Request::incrementBytesCounter(size_t bytes)
 void Request::setBody(const std::string &value)
 {
   _body = value;
+}
+
+void Request::setServerConfig(ServerConfig &sc)
+{
+  _serverConf = sc;
 }
 // ? member functions
 

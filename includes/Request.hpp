@@ -45,7 +45,7 @@ public:
 
   // TODO
   std::string getBody() const;
-  ServerConfig getServerConf() const ;
+  const ServerConfig& getServerConf() const ;
 
   // setters
   void  setTmpFileName(std::string name);
@@ -54,12 +54,13 @@ public:
   void  setBytesCounter(size_t bytes);
   void  incrementBytesCounter(size_t bytes);
   void setPath(const std::string &path);
-  void requestParser(const std::string &request);
+  void requestParser(const std::string &headers);
   //TODO
   void setBody(const std::string &value);
   const LocationConfig* getMatchedLocation() const;
   // methods
   bool isCGI();
+  void setServerConfig(ServerConfig &sc);
 
 private:
   // parse request

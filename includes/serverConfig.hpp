@@ -1,6 +1,7 @@
 #ifndef SERVERCONFIG_HPP
 #define SERVERCONFIG_HPP
 
+#include "EpollHold.hpp"
 #include <iomanip>
 #include <time.h>
 #include <cstring>
@@ -21,17 +22,17 @@ class LocationConfig;
 class ServerConfig
 {
 private:
-	std::string _host;
+  int _socket_fd;
+	std::string _host; // ip
 	unsigned int _port;
 	std::string _serverName;
 	std::string _root;
 	unsigned long _clientMaxBodySize;
 	std::vector<std::string> _index;
 	bool _autoindex;
-
 	std::map<int, std::string> _errorPage;
-
 	std::vector<LocationConfig> _locations;
+  t_epollhold _srv_hold;
 
 public:
 	// constructor & destructor
@@ -48,8 +49,10 @@ public:
 	void setAutoIndex(const std::string &index, size_t line);
 	void setIndex(const std::vector<std::string> &index, size_t line);
 	void setLocation(const LocationConfig &locationBlock);
+  void setSocketFd(const int _socket_fd);
 
 	// getters
+  int getFd() const; // get socket fd
 	const std::string &getHost() const;
 	unsigned int getPort() const;
 	const std::string &getServerName() const;
@@ -59,6 +62,7 @@ public:
 	bool getAutoIndex() const;
 	const std::map<int, std::string> &getErrorPages() const;
 	const std::vector<LocationConfig> &getLocations() const;
+  t_epollhold& getServHold();
 
 	// helpers
 };

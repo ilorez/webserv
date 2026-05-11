@@ -14,15 +14,11 @@
 
 class Server {
   private:
-    int _socket_fd;
-    int _port;
     int _epoll_fd;
-    std::string _ip;
     struct sockaddr_in _addr;
     ManageClients _clients;
     struct epoll_event _events[MAX_EVENTS];
     struct epoll_event _epoll_event;
-    t_epollhold _srvsock_hold;
 
     std::vector<ServerConfig> _servers;
     // ...
@@ -31,10 +27,6 @@ class Server {
     Server(std::vector<ServerConfig> servers);
     ~Server();
     
-    // getters and setters
-    std::string getIp() const;
-    std::string getPort() const;
-  
     // parse config file
     void parseConfig(); // parse info from config file
 
@@ -42,7 +34,7 @@ class Server {
     void readheaders(Client *cl);
 
     // new connection
-    void newconnection(socklen_t size_socket);
+    void newconnection(ServerConfig &sc);
 
     // i/o
     void sendresponse(Client *cl);
@@ -50,13 +42,15 @@ class Server {
     
     //create socket 
     void run(); // create socket and start listning
+
   private:
     Server(const Server& copy);
     Server& operator=(const Server& copy);
     void _initSocket();
-    void _handelClient(socklen_t);
-    void _addClient(int client_fd);
-    void _addSocketToEpoll(int sfd); // for only socket
+    void _initSocket(ServerConfig &sc);
+    void _handelClient();
+    void _addClient(int client_fd, ServerConfig &sc);
+    void _addSocketToEpoll(t_epollhold &_srv_hold, int sfd); // for only socket
     void _switchEpollRegisration(t_epollhold *cl, uint32_t ev);
 };
 
