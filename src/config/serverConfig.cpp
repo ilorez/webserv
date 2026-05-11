@@ -1,20 +1,22 @@
 #include "../../includes/container.hpp"
 
 //? constructor & destructor
-ServerConfig::ServerConfig()
+ServerConfig::ServerConfig():_socket_fd(-1), _host("127.0.0.1"), _port(8080), _serverName("localhost"),
+                             _root("/www/"), _clientMaxBodySize(BODY_SIZE_LIMIT), _autoindex(false)
 {
-	this->_host = "127.0.0.1";
-	this->_port = 8080;
-	this->_serverName = "localhost";
-	this->_root = "../../www/";	
-	this->_clientMaxBodySize = 1048576;
-	this->_autoindex = false;
 	this->_index.push_back("index.html");
+  _srv_hold.is_cgi = false;
+  _srv_hold.fd = -1;
+  _srv_hold.cl = NULL;
 };
 
-ServerConfig::~ServerConfig() {};
+ServerConfig::~ServerConfig() {
+  if (_socket_fd > -1)
+    close(_socket_fd);
+};
 
 //? getters
+int ServerConfig::getFd() const {return this->_socket_fd;};
 const std::string &ServerConfig::getHost() const { return this->_host; }
 unsigned int ServerConfig::getPort() const { return this->_port; }
 const std::string &ServerConfig::getServerName() const { return this->_serverName; }
@@ -24,10 +26,15 @@ const std::vector<std::string> &ServerConfig::getIndex() const { return this->_i
 bool ServerConfig::getAutoIndex() const { return this->_autoindex; }
 const std::map<int, std::string> &ServerConfig::getErrorPages() const { return this->_errorPage; }
 const std::vector<LocationConfig> &ServerConfig::getLocations() const { return this->_locations; }
+t_epollhold& ServerConfig::getServHold() {return _srv_hold; }
 
 //? helpers
 
 // ? setters
+void ServerConfig::setSocketFd(const int fd)
+{
+  this->_socket_fd = fd;
+}
 void ServerConfig::setClientMaxBodySize(const std::string &clientMaxBodySize, size_t line) // ! i might need to check for overflow
 {
 	unsigned int num = 0;
