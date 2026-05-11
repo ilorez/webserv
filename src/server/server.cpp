@@ -1,20 +1,31 @@
 
 #include "../../includes/container.hpp"
+#include <algorithm>
 #include <sys/epoll.h>
 
 // #constructors
-Server::Server(std::vector<ServerConfig> servers):_epoll_fd(-1), _servers(servers)
+Server::Server(std::vector<ServerConfig> &servers):_epoll_fd(-1), _servers(servers), _is_running(true)
 {
   _epoll_event.events = EPOLLIN;
-  
   _epoll_event.data.ptr = NULL;
 }
 
 Server::~Server() 
-{}
+{
+  DEBUG_INFO("SERVER destructor called");
+  if (_epoll_fd > -1)
+    close(_epoll_fd);
+  for (unsigned long i = 0; i < _servers.size(); i++)
+  {
+    if (_servers[i].getFd() > -1)
+      close (_servers[i].getFd());
+  }
+  
 
-Server::Server(const Server &o) {
-  (void) o;
+}
+
+Server::Server(const Server &o):_servers(o._servers) {
+  *this = o;
 }
 
 Server& Server::operator=(const Server &o) {
@@ -31,7 +42,7 @@ void Server::run()
   for (unsigned long i = 0; i < _servers.size(); i++)
     this->_initSocket(_servers[i]); 
   _clients.setEpfd(_epoll_fd);
-  while (1)
+  while (_is_running)
     this->_handelClient();
 }
 
@@ -40,7 +51,14 @@ void Server::_handelClient()
   DEBUG_INFO("------------------");
   int n = epoll_wait(_epoll_fd, _events, MAX_EVENTS, EPOLL_WAIT_TIMEOUT);
   if (n == -1)
+  {
+    if (errno == EINTR)
+    {
+        _is_running = false;
+        return;
+    }
     throw ServerException("epoll_wait: failed");
+  }
   for (int i = 0; i < n; i++)
   {
     t_epollhold *eh = static_cast<t_epollhold*>(_events[i].data.ptr);
@@ -61,7 +79,7 @@ void Server::_handelClient()
       break;
     }
   }
-  if (is_new_conx);
+  if (is_new_conx){continue;}
   else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
   {
     if (eh->cl->isTimedOut(TIMEOUT_SECONDS))

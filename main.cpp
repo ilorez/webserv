@@ -1,6 +1,11 @@
 #include "./includes/container.hpp"
+#include "includes/debug.hpp"
 
-using namespace std;
+void signalHandeler(int sig)
+{
+  (void) sig;
+  DEBUG_INFO("Got exit Signal");
+}
 
 int main(int argc, char **argv)
 {
@@ -9,6 +14,8 @@ int main(int argc, char **argv)
     std::cerr << ERROR_MSG << "usage: ./webserv <config_file>" << std::endl;
     return 1;
   }
+  signal(SIGINT, signalHandeler);
+  signal(SIGTERM, signalHandeler);
 
   std::ifstream file(argv[1]);
   if (!file.is_open())
@@ -18,15 +25,19 @@ int main(int argc, char **argv)
   }
 
   std::string content = ft_readFile(argv[1]);
-
   try
   {
     Scanner tokenizer(content);
     if (tokenizer.getHadError())
       return 1;
 
+    DEBUG_INFO("tokens complete");
     Config config(tokenizer.getTokens());
-    Server nginx(config.getServers());
+    DEBUG_INFO("config complete");
+    std::vector<ServerConfig>& servers = config.getServers();
+    DEBUG_INFO("getServers complete");
+    Server nginx(servers);
+    DEBUG_INFO("add servers to nginx server complete");
 
     nginx.run();
   }
@@ -50,4 +61,5 @@ int main(int argc, char **argv)
   {
     std::cerr << ERROR_MSG << "error: " << e.what() << std::endl;
   }
+  // TODO: free_all
 }

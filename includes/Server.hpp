@@ -20,11 +20,12 @@ class Server {
     struct epoll_event _events[MAX_EVENTS];
     struct epoll_event _epoll_event;
 
-    std::vector<ServerConfig> _servers;
+    std::vector<ServerConfig> &_servers;
+    bool _is_running;
     // ...
   public:
     // orthodox
-    Server(std::vector<ServerConfig> servers);
+    Server(std::vector<ServerConfig>& servers);
     ~Server();
     
     // parse config file

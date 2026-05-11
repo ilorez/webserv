@@ -8,6 +8,7 @@ ManageClients::ManageClients() {}
 
 ManageClients::~ManageClients()
 {
+    DEBUG_INFO("ManageClients destructor called");
     std::map<int, Client*>::iterator it = _clients.begin();
     while (it != _clients.end())
     {
@@ -17,7 +18,6 @@ ManageClients::~ManageClients()
     _clients.clear();
 }
  
-
 // its private you can't use this 
 ManageClients::ManageClients(const ManageClients &other)
 {
