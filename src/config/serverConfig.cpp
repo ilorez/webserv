@@ -11,8 +11,7 @@ ServerConfig::ServerConfig():_socket_fd(-1), _host("127.0.0.1"), _port(8080), _s
 };
 
 ServerConfig::~ServerConfig() {
-  if (_socket_fd > -1)
-    close(_socket_fd);
+  DEBUG_INFO("Server Config, destructor called");
 };
 
 //? getters

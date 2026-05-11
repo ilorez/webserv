@@ -20,7 +20,7 @@ Config::~Config() {};
 
 // Getters and Setters
 int Config::getStatus() const { return this->_status; }
-const std::vector<ServerConfig> &Config::getServers() const { return _servers; }
+std::vector<ServerConfig> &Config::getServers() { return _servers; }
 
 // helpers
 bool Config::expect(const TokenType type)

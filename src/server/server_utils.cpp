@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <exception>
 #include <fcntl.h>
+#include <sys/epoll.h>
 
 // add client
 void Server::_addClient(int client_fd, ServerConfig &sc) {
@@ -13,7 +14,6 @@ void Server::_addClient(int client_fd, ServerConfig &sc) {
   cl->getReq().setServerConfig(sc);
   t_epollhold &eh = cl->getClSockHolder();
   _switchEpollRegisration( &eh, EPOLLIN | EPOLLHUP);
-
   // adding to epoll queu
   epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &_epoll_event); 
   // NOTE:epoll ctl copy the ev into kernel
@@ -24,7 +24,7 @@ void Server::_addSocketToEpoll(t_epollhold &_srv_hold, int sfd) {
   _srv_hold.fd = sfd;
   // applying non-blocking
   fcntl(sfd, F_SETFL, O_NONBLOCK);
-  _switchEpollRegisration( &_srv_hold, EPOLLIN);
+  _switchEpollRegisration( &_srv_hold, EPOLLIN | EPOLLHUP);
   // adding to epoll queu
   epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, sfd, &_epoll_event); 
   // NOTE:epoll ctl copy the ev into kernel
@@ -39,10 +39,16 @@ void Server::_switchEpollRegisration(t_epollhold *eh, uint32_t ev)
 
 void Server::newconnection(ServerConfig &sc)
 {
+  DEBUG_INFO("");
+  std::cout << "new connection on socket: " << sc.getFd() << std::endl;
   int client_fd = accept(sc.getFd(), NULL, NULL);
   DEBUG_INFO("------------New Request-----------");
   if (client_fd < 0)
-    throw ServerException("accept() failed.");
+  {
+    DEBUG_ERROR("accept() failed.");
+    return ;
+  }
+std::cout << "accepted client_fd: " << client_fd << " from server_fd: " << sc.getFd() << std::endl;
   // adding to clinet list
   this->_addClient(client_fd, sc);
   DEBUG_INFO("New Client Added");
@@ -113,7 +119,7 @@ void Server::_initSocket()
             << std::endl;
 }*/
 
-void Server::_initSocket(ServerConfig &sc) { (void)sc;
+void Server::_initSocket(ServerConfig &sc) {
   // AF_INET: address family ipv4
   // SOCK_STREAM: socket type: stream-based (as opposed to SOCK_DGRAM for UDP)
   // IPPROTO_TCP protocol: TCP 

@@ -15,8 +15,8 @@
 #include <vector>
 #include <cctype>
 #include "Lexer.hpp"
+#include "serverConfig.hpp"
 
-class ServerConfig;
 class LocationConfig;
 
 class Config
@@ -49,7 +49,7 @@ public:
 
 	// getters and setters
 	int getStatus() const;
-	const std::vector<ServerConfig> &getServers() const;
+  std::vector<ServerConfig> &getServers();
 };
 
 #endif
