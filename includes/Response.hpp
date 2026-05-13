@@ -11,14 +11,17 @@ private:
     std::map<std::string, std::string>  _mapMediaTypes;
     std::map<int, std::string>          _mapStatusCodes;
     std::map<std::string, std::string>  _headers;
-    std::string     _body;
-    int             _status;
-    Request         _req;
-    int             _file_fd;
+    const LocationConfig*               _loc;
+    std::string                         _body;
+    Request                             _req;
+    int                                 _status;
+    int                                 _file_fd;
 
 public:
     Response();
     ~Response();
+    Response(const Response &other);
+    Response &operator=(const Response &other);
 
     // setters
     void        setReq(Request &req);
@@ -27,11 +30,17 @@ public:
     void        initMediaTypes(std::map<std::string, std::string> &m);
     void        initHeaders(std::map<std::string, std::string> &h);
     
-    std::string generateAutoIndex(const std::string& fullPath, const std::string& uriPath);
+    std::string generateAutoIndex(const std::string& fullPath);
     std::string returnMediaType(const std::string& path);
     std::string mergeResponseToString();
     std::string build(int status);
     std::string build();
+    std::string returnFileExtension(const std::string& path);
+    std::string generateUploadFileName();
+    std::string getHttpDate(time_t t);
+    bool        isMethodAllowed(const std::string& method);
+    bool        transferToNewFile(int destFd, int srcFd);
+    bool        tryApplyLocationReturn();
 
     std::string getHeaders();
     std::string getBody();
@@ -41,11 +50,6 @@ public:
     void        Delete();
     void        Post();
     void        Get();
-
-private:
-    Response(const Response &other);
-    Response &operator=(const Response &other);
-
 };
 
 #endif
