@@ -15,7 +15,7 @@ HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp 
 					Lexer.hpp Config.hpp serverConfig.hpp locationConfig.hpp
 
 
-F_SRCS = request.cpp utils.cpp response.cpp exceptions.cpp Lexer.cpp Config.cpp locationConfig.cpp serverConfig.cpp
+F_SRCS = request.cpp utils.cpp response.cpp response_utils.cpp exceptions.cpp Lexer.cpp Config.cpp locationConfig.cpp serverConfig.cpp
 F_SERVER = server.cpp server_utils.cpp
 F_CGI = cgi.cpp cgi_oi.cpp cgi_utils.cpp
 F_CLIENT = manageClients.cpp client.cpp client_io.cpp 
@@ -28,7 +28,7 @@ OBJS = $(addprefix $(BUILD_DR),$(SRCS:%.cpp=%.o))
 green = \033[32m
 reset = \033[0m
 
-all: $(NAME)
+all: $(NAME) $(CONFIG)
 	@echo "$(green)SUCCESS!!!$(reset)"
 
 $(NAME): $(OBJS)
