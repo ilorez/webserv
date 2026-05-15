@@ -218,6 +218,8 @@ std::string Response::getHttpDate(time_t t)
 
 std::string Response::generateUploadFileName()
 {
+    std::srand(std::time(NULL));
+
     const char charset[] = "abcdefghijklmnopqrstuvwxyz";
     const char numset[]  = "0123456789";
     
@@ -233,17 +235,14 @@ std::string Response::generateUploadFileName()
         random_part += numset[std::rand() % (sizeof(numset) - 1)];
     }
 
-    return "client_body_" + random_part + ".tmp";
+    return "client_body_" + random_part + returnFileExtension(_req.getPath());
 }
-
 
 bool    Response::transferToNewFile(int destFd, int srcFd)
 {
     char buffer[4096];
     ssize_t bytesRead;
     
-    lseek(srcFd, 0, SEEK_SET); // alaoui:todo i will check if lseek forbidden fun
-
     while ((bytesRead = read(srcFd, buffer, sizeof(buffer))) > 0) 
     {
         if (write(destFd, buffer, bytesRead) == -1)
@@ -265,6 +264,14 @@ std::string Response::mergeResponseToString()
     ret += getBody();
 
     return (ret);
+}
+
+std::string Response::getFileName(const std::string& path)
+{
+    size_t pos = path.find_last_of("/");
+    if (pos == std::string::npos)
+        return path;
+    return path.substr(pos);
 }
 
 // Getters
