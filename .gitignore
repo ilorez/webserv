@@ -1,2 +1,4 @@
 webserv
 build/*
+./uploads/*
+./upload/*
