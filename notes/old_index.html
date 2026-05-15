@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>webserv / dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #0a0c0f;
+      --surface: #111418;
+      --surface2:#161b22;
+      --border:  #1e2530;
+      --green:   #00ff88;
+      --green-d: #00c466;
+      --amber:   #ffb800;
+      --red:     #ff3b3b;
+      --blue:    #58a6ff;
+      --muted:   #4a5568;
+      --text:    #c9d1d9;
+      --hi:      #e6edf3;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px; line-height: 1.6; min-height: 100vh;
+    }
+    body::before {
+      content:''; position:fixed; inset:0;
+      background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);
+      pointer-events:none; z-index:999;
+    }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 13px 36px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0;
+      background: rgba(10,12,15,.95); backdrop-filter: blur(10px); z-index: 100;
+    }
+    .logo { font-family:'Space Mono',monospace; font-weight:700; font-size:16px; color:var(--green); }
+    .logo span { color:var(--muted); font-weight:400; }
+    .hright { display:flex; align-items:center; gap:20px; }
+    .status { display:flex; align-items:center; gap:7px; font-size:11px; color:var(--green); border:1px solid rgba(0,255,136,.25); padding:4px 11px; }
+    .dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 1.8s ease-in-out infinite; }
+    .port-tag { font-size:11px; color:var(--muted); }
+    .port-tag input {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--amber); font-family: inherit; font-size:11px;
+      padding: 3px 8px; width: 60px; text-align:center; outline:none;
+    }
+    .port-tag input:focus { border-color: var(--amber); }
+
+    /* ── LAYOUT ── */
+    main { max-width: 900px; margin: 0 auto; padding: 52px 36px 80px; display:flex; flex-direction:column; gap:52px; }
+
+    /* ── HERO ── */
+    .hero-tag { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+    .hero-tag b { color:var(--green); font-weight:400; }
+    h1 { font-family:'Space Mono',monospace; font-size:clamp(26px,4vw,44px); line-height:1.1; letter-spacing:-1px; color:var(--hi); margin-bottom:14px; }
+    h1 em { color:var(--green); font-style:normal; }
+    .hero-desc { color:var(--text); font-size:12px; line-height:1.9; max-width:520px; }
+
+    /* ── SECTION ── */
+    .sec { display:flex; flex-direction:column; gap:16px; }
+    .sec-head {
+      display:flex; align-items:center; gap:12px;
+      font-size:10px; letter-spacing:.15em; text-transform:uppercase;
+      color:var(--muted); padding-bottom:10px; border-bottom:1px solid var(--border);
+    }
+    .sec-head b { color:var(--green); }
+    .sec-badge { font-size:9px; letter-spacing:.08em; padding:2px 8px; border:1px solid; font-weight:600; }
+    .badge-normal { color:var(--blue);  border-color:var(--blue); }
+    .badge-cgi    { color:var(--amber); border-color:var(--amber); }
+    .sec-reset {
+      margin-left:auto; font-family:inherit; font-size:10px; letter-spacing:.06em;
+      text-transform:uppercase; background:transparent; border:1px solid var(--border);
+      color:var(--muted); padding:3px 10px; cursor:pointer; transition:all .15s;
+    }
+    .sec-reset:hover { border-color:var(--muted); color:var(--text); }
+
+    /* ── FLOW ── */
+    .flow { display:flex; flex-direction:column; border:1px solid var(--border); }
+
+    /* ── STEP ── */
+    .step {
+      display:grid; grid-template-columns:40px 1fr;
+      border-bottom:1px solid var(--border); transition:background .15s;
+    }
+    .step:last-child { border-bottom:none; }
+    .step.locked { opacity:.3; pointer-events:none; }
+    .step.done   { opacity:.55; }
+
+    .step-side {
+      border-right:1px solid var(--border);
+      display:flex; flex-direction:column; align-items:center;
+      padding:16px 0; gap:8px;
+    }
+    .step-num {
+      width:22px; height:22px; border-radius:50%;
+      border:1px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      font-size:10px; color:var(--muted);
+    }
+    .step.active .step-num { border-color:var(--green); color:var(--green); }
+    .step.done   .step-num { background:var(--green); border-color:var(--green); color:#0a0c0f; font-weight:700; }
+    .step-line { flex:1; width:1px; background:var(--border); }
+    .step:last-child .step-line { display:none; }
+
+    .step-body { padding:16px 20px; display:flex; flex-direction:column; gap:10px; }
+    .step-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .method { font-size:10px; font-weight:600; letter-spacing:.04em; padding:2px 7px; border:1px solid; }
+    .GET    { color:var(--green); border-color:var(--green); }
+    .POST   { color:var(--amber); border-color:var(--amber); }
+    .DELETE { color:var(--red);   border-color:var(--red);   }
+    .step-path { color:var(--hi); font-size:12px; }
+    .step-desc { color:var(--muted); font-size:11px; }
+
+    .result-box {
+      background:var(--bg); border:1px solid var(--border);
+      padding:9px 12px; font-size:11px; line-height:1.8;
+      white-space:pre-wrap; word-break:break-all;
+      color:var(--muted); min-height:34px;
+    }
+
+    .btn-run {
+      font-family:inherit; font-size:10px; font-weight:600;
+      letter-spacing:.07em; text-transform:uppercase;
+      padding:6px 14px; border:none; cursor:pointer; transition:all .15s;
+      display:inline-flex; align-items:center; gap:5px;
+    }
+    .btn-run.go { background:var(--green); color:#0a0c0f; }
+    .btn-run.go:hover { background:var(--green-d); }
+    .btn-run.done-st { background:transparent; border:1px solid var(--border); color:var(--muted); cursor:default; }
+
+    .step-connector {
+      display:flex; align-items:center; gap:10px;
+      padding:0 20px 0 52px; height:28px;
+      background:var(--surface2); border-bottom:1px solid var(--border);
+      font-size:10px; color:var(--muted); letter-spacing:.06em;
+    }
+    .step-connector::before { content:'↓'; color:var(--border); margin-right:4px; }
+
+    /* ── UPLOAD BLOCK ── */
+    .upload-block { background:var(--surface); border:1px solid var(--border); }
+    .upload-bar { padding:9px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:7px; }
+    .td { width:8px; height:8px; border-radius:50%; }
+    .td:nth-child(1){background:#ff5f57} .td:nth-child(2){background:#febc2e} .td:nth-child(3){background:#28c840}
+    .upload-label { margin-left:auto; font-size:10px; color:var(--muted); }
+    .upload-body { padding:20px; display:flex; flex-direction:column; gap:12px; }
+    .upload-meta { font-size:11px; color:var(--muted); }
+    .upload-meta span { color:var(--amber); }
+
+    #dropzone {
+      border:1px dashed var(--border); padding:30px 20px; text-align:center;
+      cursor:pointer; transition:border-color .2s;
+    }
+    #dropzone:hover, #dropzone.over { border-color:var(--green); }
+    #dropzone .dz-icon { font-size:20px; margin-bottom:8px; }
+    #dropzone .dz-hint { font-size:11px; color:var(--muted); }
+    #dropzone .dz-hint span { color:var(--green); }
+    #dz-fname { margin-top:8px; font-size:11px; color:var(--amber); min-height:16px; }
+
+    .btn-upload {
+      font-family:inherit; font-size:10px; font-weight:600; letter-spacing:.07em;
+      text-transform:uppercase; padding:8px 16px; background:var(--green);
+      color:#0a0c0f; border:none; cursor:pointer; transition:background .15s;
+      display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+    }
+    .btn-upload:hover { background:var(--green-d); }
+    #upload-msg { font-size:11px; min-height:16px; }
+
+    /* ── FOOTER ── */
+    footer { border-top:1px solid var(--border); padding:16px 36px; display:flex; align-items:center; justify-content:space-between; font-size:11px; color:var(--muted); flex-wrap:wrap; gap:8px; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.2} }
+    @media(max-width:600px){ header,footer{padding:12px 16px} main{padding:36px 16px 60px;gap:36px} }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">webserv<span>/42</span></div>
+  <div class="hright">
+    <div class="port-tag">port: <input id="port-input" value="8080" /></div>
+    <div class="status"><span class="dot"></span>dashboard</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <div>
+    <p class="hero-tag">42 school &nbsp;·&nbsp; C++98 &nbsp;·&nbsp; <b>epoll</b></p>
+    <h1>webserv<br><em>test dashboard.</em></h1>
+    <p class="hero-desc">
+      Two independent test flows — Normal and CGI requests.
+      Each runs in order: upload → read → post with body → delete.
+      Steps unlock after the previous one succeeds.
+    </p>
+  </div>
+
+  <!-- FLOW A: NORMAL -->
+  <div class="sec">
+    <div class="sec-head">
+      <b>#</b> normal requests
+      <span class="sec-badge badge-normal">Static Files</span>
+      <button class="sec-reset" id="reset-normal">↺ reset</button>
+    </div>
+    <div class="flow">
+      <div class="step active" id="n1">
+        <div class="step-side"><div class="step-num">1</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-meta"><span class="method POST">POST</span><span class="step-path">/upload/test.txt</span></div>
+          <div class="step-desc">Creates <code>test.txt</code> on the server. Body is sent as plain text.</div>
+          <div class="result-box" id="n1-r">waiting…</div>
+          <div class="step-actions"><button class="btn-run go" id="n1-btn">▶ Run</button></div>
+        </div>
+      </div>
+      <div class="step-connector">file created — now fetch it</div>
+      <div class="step locked" id="n2">
+        <div class="step-side"><div class="step-num">2</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-meta"><span class="method GET">GET</span><span class="step-path">/upload/test.txt</span></div>
+          <div class="step-desc">Fetches the file that was just created. Response body shown below.</div>
+          <div class="result-box" id="n2-r">waiting…</div>
+          <div class="step-actions"><button class="btn-run go" id="n2-btn">▶ Run</button></div>
+        </div>
+      </div>
+      <div class="step-connector">file confirmed — now delete it</div>
+      <div class="step locked" id="n3">
+        <div class="step-side"><div class="step-num">3</div></div>
+        <div class="step-body">
+          <div class="step-meta"><span class="method DELETE">DELETE</span><span class="step-path">/upload/test.txt</span></div>
+          <div class="step-desc">Removes <code>test.txt</code> from the server.</div>
+          <div class="result-box" id="n3-r">waiting…</div>
+          <div class="step-actions"><button class="btn-run go" id="n3-btn">▶ Run</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOW B: CGI -->
+  <div class="sec">
+    <div class="sec-head">
+      <b>#</b> cgi requests
+      <span class="sec-badge badge-cgi">CGI / Python</span>
+      <button class="sec-reset" id="reset-cgi">↺ reset</button>
+    </div>
+    <div class="flow">
+      <div class="step active" id="c1">
+        <div class="step-side"><div class="step-num">1</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-meta"><span class="method POST">POST</span><span class="step-path">/cgi-bin/upload</span></div>
+          <div class="step-desc">Uploads <code>hello.py</code> to cgi-bin. Filename via <code>Content-Disposition</code>.</div>
+          <div class="result-box" id="c1-r">waiting…</div>
+          <div class="step-actions"><button class="btn-run go" id="c1-btn">▶ Run</button></div>
+        </div>
+      </div>
+      <div class="step-connector">script uploaded — run it with GET (no stdin)</div>
+      <div class="step locked" id="c2">
+        <div class="step-side"><div class="step-num">2</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-meta"><span class="method GET">GET</span><span class="step-path">/cgi-bin/hello.py</span></div>
+          <div class="step-desc">Executes the script. No stdin. Server returns stdout as response body.</div>
+          <div class="result-box" id="c2-r">waiting…</div>
+          <div class="step-actions"><button class="btn-run go" id="c2-btn">▶ Run</button></div>
+        </div>
+      </div>
+      <div class="step-connector">GET works — now POST with body as stdin</div>
+      <div class="step locked" id="c3">
+        <div class="step-side"><div class="step-num">3</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-meta"><span class="method POST">POST</span><span class="step-path">/cgi-bin/hello.py</span></div>
+          <div class="step-desc">Executes the script. POST body is passed as <code>stdin</code> to the script.</div>
+          <div class="result-box" id="c3-r">waiting…</div>
+          <div class="step-actions"><button class="btn-run go" id="c3-btn">▶ Run</button></div>
+        </div>
+      </div>
+      <div class="step-connector">POST with stdin works — clean up</div>
+      <div class="step locked" id="c4">
+        <div class="step-side"><div class="step-num">4</div></div>
+        <div class="step-body">
+          <div class="step-meta"><span class="method DELETE">DELETE</span><span class="step-path">/cgi-bin/hello.py</span></div>
+          <div class="step-desc">Removes <code>hello.py</code> from cgi-bin.</div>
+          <div class="result-box" id="c4-r">waiting…</div>
+          <div class="step-actions"><button class="btn-run go" id="c4-btn">▶ Run</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILE UPLOAD -->
+  <div class="sec">
+    <div class="sec-head">
+      <b>#</b> file upload
+      <span class="sec-badge badge-normal">POST /upload</span>
+    </div>
+    <div class="upload-block">
+      <div class="upload-bar">
+        <span class="td"></span><span class="td"></span><span class="td"></span>
+        <span class="upload-label">multipart/form-data → /upload</span>
+      </div>
+      <div class="upload-body">
+        <div class="upload-meta">max body: <span>100 MB</span> &nbsp;·&nbsp; store: <span>./www/uploads/</span></div>
+        <div id="dropzone">
+          <div class="dz-icon">&#8679;</div>
+          <div class="dz-hint">drag &amp; drop or <span>browse</span></div>
+          <div id="dz-fname"></div>
+        </div>
+        <input type="file" id="fi" style="display:none" />
+        <button class="btn-upload" id="upload-btn">&#8679; Upload file</button>
+        <div id="upload-msg"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <span>webserv · 42 school · 2025</span>
+  <span>C++98 &nbsp;·&nbsp; <span style="color:var(--green)">epoll</span></span>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  // ── PORT ──────────────────────────────────────────────
+  var portInput = document.getElementById('port-input');
+  function base() { return 'http://127.0.0.1:' + (portInput.value.trim() || '8080'); }
+
+  // ── HELPERS ───────────────────────────────────────────
+  function setR(id, status, text) {
+    var el = document.getElementById(id);
+    el.style.color = status === 'ok' ? 'var(--green)' : status === 'err' ? 'var(--red)' : 'var(--amber)';
+    el.textContent = text;
+  }
+
+  function markDone(id) {
+    var step = document.getElementById(id);
+    step.classList.remove('active');
+    step.classList.add('done');
+    var btn = document.getElementById(id + '-btn');
+    if (btn) { btn.className = 'btn-run done-st'; btn.textContent = '✓ done'; }
+  }
+
+  function unlock(id) {
+    var step = document.getElementById(id);
+    step.classList.remove('locked');
+    step.classList.add('active');
+  }
+
+  // ── NORMAL FLOW ───────────────────────────────────────
+  document.getElementById('n1-btn').addEventListener('click', function () {
+    setR('n1-r', 'pending', 'POST /upload/test.txt …');
+    fetch(base() + '/upload/test.txt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain', 'Content-Disposition': 'attachment; filename="test.txt"' },
+      body: 'Hello from webserv!\nCreated by the test dashboard.\nTimestamp: ' + new Date().toISOString()
+    }).then(function (r) {
+      if (r.ok || r.status === 201) {
+        setR('n1-r', 'ok', '✓ ' + r.status + ' — test.txt created');
+        markDone('n1'); unlock('n2');
+      } else { setR('n1-r', 'err', '✗ ' + r.status + ' ' + r.statusText); }
+    }).catch(function (e) { setR('n1-r', 'err', '✗ ' + e.message); });
+  });
+
+  document.getElementById('n2-btn').addEventListener('click', function () {
+    setR('n2-r', 'pending', 'GET /upload/test.txt …');
+    fetch(base() + '/upload/test.txt')
+      .then(function (r) {
+        return r.text().then(function (t) {
+          if (r.ok) { setR('n2-r', 'ok', '✓ ' + r.status + ' OK\n' + t.trim()); markDone('n2'); unlock('n3'); }
+          else { setR('n2-r', 'err', '✗ ' + r.status + '\n' + t.trim()); }
+        });
+      }).catch(function (e) { setR('n2-r', 'err', '✗ ' + e.message); });
+  });
+
+  document.getElementById('n3-btn').addEventListener('click', function () {
+    setR('n3-r', 'pending', 'DELETE /upload/test.txt …');
+    fetch(base() + '/upload/test.txt', { method: 'DELETE' })
+      .then(function (r) {
+        if (r.ok || r.status === 204) { setR('n3-r', 'ok', '✓ ' + r.status + ' — test.txt deleted'); markDone('n3'); }
+        else { setR('n3-r', 'err', '✗ ' + r.status + ' ' + r.statusText); }
+      }).catch(function (e) { setR('n3-r', 'err', '✗ ' + e.message); });
+  });
+
+  document.getElementById('reset-normal').addEventListener('click', function () {
+    ['n1','n2','n3'].forEach(function (id, i) {
+      var s = document.getElementById(id);
+      s.className = 'step ' + (i === 0 ? 'active' : 'locked');
+      var r = document.getElementById(id + '-r');
+      r.textContent = 'waiting…'; r.style.color = '';
+      var btn = document.getElementById(id + '-btn');
+      btn.className = 'btn-run go'; btn.textContent = '▶ Run';
+    });
+  });
+
+  // ── CGI FLOW ──────────────────────────────────────────
+  var HELLO_PY = '#!/usr/bin/env python3\nimport sys, os\n\n'
+    + 'cl = os.environ.get("CONTENT_LENGTH", "0")\n'
+    + 'inp = sys.stdin.read(int(cl)) if cl and cl != "0" else ""\n\n'
+    + 'print("Content-Type: text/plain\\r")\n'
+    + 'print("\\r")\n'
+    + 'print("Hello from CGI!")\n'
+    + 'print("Method :", os.environ.get("REQUEST_METHOD", "?"))\n'
+    + 'if inp:\n'
+    + '    print("Stdin  :", inp.strip())\n';
+
+  document.getElementById('c1-btn').addEventListener('click', function () {
+    setR('c1-r', 'pending', 'POST /cgi-bin/upload — uploading hello.py …');
+    fetch(base() + '/cgi-bin/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/x-python', 'Content-Disposition': 'attachment; filename="hello.py"' },
+      body: HELLO_PY
+    }).then(function (r) {
+      if (r.ok || r.status === 201) { setR('c1-r', 'ok', '✓ ' + r.status + ' — hello.py uploaded'); markDone('c1'); unlock('c2'); }
+      else { setR('c1-r', 'err', '✗ ' + r.status + ' ' + r.statusText); }
+    }).catch(function (e) { setR('c1-r', 'err', '✗ ' + e.message); });
+  });
+
+  document.getElementById('c2-btn').addEventListener('click', function () {
+    setR('c2-r', 'pending', 'GET /cgi-bin/hello.py …');
+    fetch(base() + '/cgi-bin/hello.py')
+      .then(function (r) {
+        return r.text().then(function (t) {
+          if (r.ok) { setR('c2-r', 'ok', '✓ ' + r.status + ' OK\n' + t.trim()); markDone('c2'); unlock('c3'); }
+          else { setR('c2-r', 'err', '✗ ' + r.status + '\n' + t.trim()); }
+        });
+      }).catch(function (e) { setR('c2-r', 'err', '✗ ' + e.message); });
+  });
+
+  document.getElementById('c3-btn').addEventListener('click', function () {
+    setR('c3-r', 'pending', 'POST /cgi-bin/hello.py with stdin …');
+    fetch(base() + '/cgi-bin/hello.py', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: 'name=webserv&team=42'
+    }).then(function (r) {
+      return r.text().then(function (t) {
+        if (r.ok) { setR('c3-r', 'ok', '✓ ' + r.status + ' OK\n' + t.trim()); markDone('c3'); unlock('c4'); }
+        else { setR('c3-r', 'err', '✗ ' + r.status + '\n' + t.trim()); }
+      });
+    }).catch(function (e) { setR('c3-r', 'err', '✗ ' + e.message); });
+  });
+
+  document.getElementById('c4-btn').addEventListener('click', function () {
+    setR('c4-r', 'pending', 'DELETE /cgi-bin/hello.py …');
+    fetch(base() + '/cgi-bin/hello.py', { method: 'DELETE' })
+      .then(function (r) {
+        if (r.ok || r.status === 204) { setR('c4-r', 'ok', '✓ ' + r.status + ' — hello.py deleted'); markDone('c4'); }
+        else { setR('c4-r', 'err', '✗ ' + r.status + ' ' + r.statusText); }
+      }).catch(function (e) { setR('c4-r', 'err', '✗ ' + e.message); });
+  });
+
+  document.getElementById('reset-cgi').addEventListener('click', function () {
+    ['c1','c2','c3','c4'].forEach(function (id, i) {
+      var s = document.getElementById(id);
+      s.className = 'step ' + (i === 0 ? 'active' : 'locked');
+      var r = document.getElementById(id + '-r');
+      r.textContent = 'waiting…'; r.style.color = '';
+      var btn = document.getElementById(id + '-btn');
+      btn.className = 'btn-run go'; btn.textContent = '▶ Run';
+    });
+  });
+
+  // ── FILE UPLOAD ───────────────────────────────────────
+  var uploadedFile = null;
+
+  document.getElementById('dropzone').addEventListener('click', function () {
+    document.getElementById('fi').click();
+  });
+  document.getElementById('dropzone').addEventListener('dragover', function (e) {
+    e.preventDefault(); this.classList.add('over');
+  });
+  document.getElementById('dropzone').addEventListener('dragleave', function () {
+    this.classList.remove('over');
+  });
+  document.getElementById('dropzone').addEventListener('drop', function (e) {
+    e.preventDefault(); this.classList.remove('over');
+    if (e.dataTransfer.files[0]) setUFile(e.dataTransfer.files[0]);
+  });
+  document.getElementById('fi').addEventListener('change', function () {
+    if (this.files[0]) setUFile(this.files[0]);
+  });
+
+  function setUFile(f) {
+    uploadedFile = f;
+    document.getElementById('dz-fname').textContent = f.name;
+  }
+
+  document.getElementById('upload-btn').addEventListener('click', function () {
+    var msg = document.getElementById('upload-msg');
+    if (!uploadedFile) { msg.style.color = 'var(--red)'; msg.textContent = '✗ no file selected'; return; }
+    var fd = new FormData();
+    fd.append('file', uploadedFile);
+    msg.style.color = 'var(--amber)'; msg.textContent = 'uploading…';
+    fetch(base() + '/upload', { method: 'POST', body: fd })
+      .then(function (r) {
+        if (r.ok || r.status === 201) { msg.style.color = 'var(--green)'; msg.textContent = '✓ ' + uploadedFile.name + ' uploaded'; }
+        else { msg.style.color = 'var(--red)'; msg.textContent = '✗ error ' + r.status; }
+      }).catch(function () { msg.style.color = 'var(--red)'; msg.textContent = '✗ server unreachable'; });
+  });
+
+}); // end DOMContentLoaded
+</script>
+</body>
+</html>
