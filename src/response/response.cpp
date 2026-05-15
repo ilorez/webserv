@@ -6,7 +6,7 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
     clock_gettime(CLOCK_REALTIME, &ts);
 
     h.insert(std::make_pair("Date",           getHttpDate(ts.tv_sec)));
-    h.insert(std::make_pair("Server",         "MyServer"));
+    h.insert(std::make_pair("Server",         Default::SERVER_NAME));
     h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
     h.insert(std::make_pair("Connection",     "close"));
 
@@ -46,7 +46,7 @@ void Response::serveErrorPage(int status)
 
     if (_body.empty())
     {
-        errorPage = "./www/error/error.html";
+        errorPage = Default::ERROR_PAGE;
         _body = ft_readFile(errorPage);
         isCustom = false;
         if (_body.empty())
@@ -171,18 +171,18 @@ void Response::Post()
 
     std::string uploadStore = (_loc && !_loc->getUploadStore().empty()) 
                                 ? _loc->getUploadStore() 
-                                : "./uploads";
+                                : Default::UPLOAD_STORE;
 
     std::string filepath = uploadStore + "/" +  generateUploadFileName();
     if (_req.isRequsetLarge())
-    { 
+    {
         int fd = open(filepath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd < 0 || !transferToNewFile(fd, _req.getTmpFd()))
         {
-            DEBUG_ERROR("file could not copied");
             serveErrorPage(500);
             return ;
         }
+        std::remove(_req.getTmpFileName().c_str());
     }
     else
     {
@@ -207,10 +207,10 @@ void Response::Delete()
 
     std::string uploadStore = (_loc && !_loc->getUploadStore().empty()) 
                                 ? _loc->getUploadStore() 
-                                : "./uploads";
-    std::string filepath = "." + _req.getPath();
-    DEBUG_INFO("file will be in: ");
-    std::cout << filepath << std::endl;
+                                : Default::UPLOAD_STORE;
+
+    std::string filepath = uploadStore + getFileName(_req.getPath());
+
     if (access(filepath.c_str(), F_OK) != 0)
     {
         serveErrorPage(404);
@@ -224,14 +224,6 @@ void Response::Delete()
     }
 
     std::remove(filepath.c_str());
-    /*int fd = open(filepath.c_str(), O_WRONLY | O_TRUNC);
-    if (fd == -1)
-    {
-        serveErrorPage(500);
-        return;
-    }
-    close(fd);
-    */
 
     _status = 200;
     _body = "File deleted successfully\n";
