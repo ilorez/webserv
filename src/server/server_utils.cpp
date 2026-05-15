@@ -77,48 +77,6 @@ void Server::readheaders(Client *cl)
   cl->preSetup();
 }
 
-/*
-void Server::_initSocket()
-{
-  // AF_INET: address family ipv4
-  // SOCK_STREAM: socket type: stream-based (as opposed to SOCK_DGRAM for UDP)
-  // IPPROTO_TCP protocol: TCP 
-  _socket_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (_socket_fd < 0)
-    throw ServerException("socket() failed.");
-  int opt = 1;
-  // SOL_SOCKET: the "level" you're setting an option at the socket layer
-  // SO_REUSEADDR: for reusing a local address that still in TIME_WAIT
-  // so this method used to change on a setting of a socket and its require for that the
-  // socket and the level of option you want to change on that socket and the option name 
-  // or value after that the value and size you want the setsockopt to take from 
-  // that value
-  setsockopt(_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-  memset(&_addr, 0, sizeof(_addr));
-  _addr.sin_family = AF_INET;// ipv4 family
-  _addr.sin_port = htons(_port);
-  // The htons() function converts the unsigned short integer hostshort from
-  // host byte order to network byte order.
-  _addr.sin_addr.s_addr = inet_addr(_ip.c_str());
-  // convert from string to 32bit format
-  if (bind(_socket_fd, (struct sockaddr *)(&_addr), sizeof(_addr)))
-    // bind is like setsockopt its just tell the os that the socket belongs
-    // to this address and this port
-    throw ServerException("bind() failed with port" + to_string98(_port));
-  // listen()  marks  the  socket referred to by sockfd as a passive socket,
-  // that is, as a socket that will be used to  accept  incoming  connection
-  // requests using accept(2).
-  if (listen(_socket_fd, MAX_CONX_QUEUE))
-    throw ServerException("listen() failed.");
-
-  std::cout << INFO_MSG 
-            << "listen on http://" 
-            << inet_ntoa(_addr.sin_addr) 
-            << ":" 
-            << to_string98(ntohs(_addr.sin_port)) 
-            << std::endl;
-}*/
-
 void Server::_initSocket(ServerConfig &sc) {
   // AF_INET: address family ipv4
   // SOCK_STREAM: socket type: stream-based (as opposed to SOCK_DGRAM for UDP)

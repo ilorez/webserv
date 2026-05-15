@@ -107,11 +107,14 @@ void Client::processing()
   this->_res.setReq(this->_req);
   if (_status_error)
   {
-    DEBUG_INFO("send error page");
+    DEBUG_INFO("set error page");
     this->setWriteBuffer(_res.build(_status_error));
   }
   else
+  {
+    DEBUG_INFO("set return");
     this->setWriteBuffer(_res.build());
+  }
   _state = SENDING;
 }
 

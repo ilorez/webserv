@@ -93,7 +93,6 @@ void Response::Get()
                             : _req.getServerConf().getRoot();
     
     std::string filepath = root + _req.getPath();
-
     if (access(filepath.c_str(), F_OK) != 0)
     {
         serveErrorPage(404);
@@ -176,10 +175,11 @@ void Response::Post()
 
     std::string filepath = uploadStore + "/" +  generateUploadFileName();
     if (_req.isRequsetLarge())
-    {
+    { 
         int fd = open(filepath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd < 0 || !transferToNewFile(fd, _req.getTmpFd()))
         {
+            DEBUG_ERROR("file could not copied");
             serveErrorPage(500);
             return ;
         }
@@ -205,8 +205,12 @@ void Response::Delete()
     if (!isMethodAllowed("DELETE"))
         return;
 
-    std::string filepath = _req.getServerConf().getRoot() + _req.getPath();
-
+    std::string uploadStore = (_loc && !_loc->getUploadStore().empty()) 
+                                ? _loc->getUploadStore() 
+                                : "./uploads";
+    std::string filepath = "." + _req.getPath();
+    DEBUG_INFO("file will be in: ");
+    std::cout << filepath << std::endl;
     if (access(filepath.c_str(), F_OK) != 0)
     {
         serveErrorPage(404);
@@ -219,13 +223,15 @@ void Response::Delete()
         return;
     }
 
-    int fd = open(filepath.c_str(), O_WRONLY | O_TRUNC);
+    std::remove(filepath.c_str());
+    /*int fd = open(filepath.c_str(), O_WRONLY | O_TRUNC);
     if (fd == -1)
     {
         serveErrorPage(500);
         return;
     }
     close(fd);
+    */
 
     _status = 200;
     _body = "File deleted successfully\n";
