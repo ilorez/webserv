@@ -58,6 +58,8 @@ public:
   //TODO
   void setBody(const std::string &value);
   const LocationConfig* getMatchedLocation() const;
+  bool isMethodAllowed(const std::string &method);
+
   // methods
   bool isCGI();
   void setServerConfig(ServerConfig &sc);
