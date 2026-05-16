@@ -6,7 +6,7 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/06 14:03:23 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/16 10:20:18 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ void CGIClient::ft_exec()
     close (_pipe_out[0]);
     ft_change_fd(_pipe_in[0], STDIN_FILENO);
     ft_change_fd(_pipe_out[1], STDOUT_FILENO);
-    char *argv[] = { (char*)"/usr/bin/python3", (char*)"./storage/scriptsCGI/hello.py", NULL };
+    char *argv[] = { (char*)"/usr/bin/python3", (char*)"./cgi-bin/hello.py", NULL };
     char *env[]  = { (char*)"REQUEST_METHOD=GET", (char*)"QUERY_STRING=name=John", NULL };
     execve("/usr/bin/python3", argv, env);
     //execve("/usr/bin/python3", argv, buildEnv());

@@ -130,20 +130,26 @@ void Request::requestParser(const std::string &raw)
 
 bool Request::isCGI()
 {
+  DEBUG_INFO("Is CGI ruunned");
 	const LocationConfig *matchLoc = getMatchedLocation();
 	if (!matchLoc)
 		return false;
+  DEBUG_INFO("1");
 
 	const std::string cgiExt = matchLoc->getCgiExt();
 	const std::string uri = getPath();
 
+  DEBUG_INFO("2");
 	if (!matchLoc->hasCgi() || !endsWith(uri, cgiExt))
 		return false;
 
-	const std::string fullPath = matchLoc->getRoot() + uri; // if matchLoc has no root it will return an empty string
+  DEBUG_INFO("3");
+	const std::string fullPath = "." +  uri; // if matchLoc has no root it will return an empty string
+  std::cout << fullPath << std::endl;
 	if (access(fullPath.c_str(), X_OK) == -1)
 		return false;
 
+  DEBUG_INFO("This requist is a CGI");
 	return (true);
 }
 
