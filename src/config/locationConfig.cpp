@@ -170,7 +170,7 @@ void LocationConfig::setUploadStore(const std::string &path, size_t line)
 void LocationConfig::setCgiExt(const std::string &ext, size_t line)
 {
 	if (!(ext == ".py" || ext == ".sh")) // ! i will add the rest of cgi's as needed
-		errorMsg("Invalid cgi_ext, e.g. '.php'", line);
+		errorMsg("Invalid cgi_ext, e.g. '.py', '.sh'", line);
 
 	_cgiExtension = ext;
 }
