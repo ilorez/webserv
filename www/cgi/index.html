@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>webserv / cgi test</title>
+  <link rel="stylesheet" href="cgi/style.css" />
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-dot"></span>
+    WEBSERV CGI TEST
+  </div>
+  <span class="header-meta">localhost:8080</span>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav>
+    <p class="nav-label">endpoints</p>
+
+    <button class="nav-item active" data-panel="panel-upload">
+      <span class="nav-method m-post">POST</span>
+      /cgi/upload
+    </button>
+
+    <button class="nav-item" data-panel="panel-delete">
+      <span class="nav-method m-del">POST</span>
+      /cgi/delete
+    </button>
+
+    <hr class="nav-sep" />
+    <p class="nav-label">run / cgi</p>
+
+    <button class="nav-item" data-panel="panel-compress">
+      <span class="nav-method m-post">POST</span>
+      compress image
+    </button>
+
+    <button class="nav-item" data-panel="panel-filter">
+      <span class="nav-method m-post">POST</span>
+      filter words
+    </button>
+
+    <hr class="nav-sep" />
+    <p class="nav-label">raw</p>
+
+    <button class="nav-item" data-panel="panel-raw">
+      <span class="nav-method m-get">GET</span>
+      <span class="nav-method m-post">POST</span>
+      /cgi/run
+    </button>
+  </nav>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- ─── UPLOAD ─────────────────────────────────────────────────────── -->
+    <section class="panel active" id="panel-upload">
+      <div class="panel-header">
+        <span class="nav-method m-post">POST</span>
+        <span class="panel-title">upload file</span>
+        <span class="endpoint-tag">/cgi/upload</span>
+      </div>
+      <div class="panel-body">
+        <p class="desc">
+          Sends a <code>multipart/form-data</code> POST to <code>/cgi/upload</code>.
+          Drop any file — the CGI script receives it as <code>file</code> and an
+          optional <code>destination</code> path.
+        </p>
+
+        <div class="field">
+          <label>file</label>
+          <div class="drop-zone" id="drop-upload">
+            <input type="file" />
+            <div class="drop-icon">↑</div>
+            <div class="drop-label">drop file here or click to browse</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>destination path <span style="opacity:.5">(optional)</span></label>
+          <input type="text" id="upload-dest" placeholder="/uploads/filename.txt" />
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-send" id="btn-upload">
+            <span class="spinner"></span>
+            <span class="btn-text">↑ upload</span>
+          </button>
+        </div>
+
+        <div id="res-upload">
+          <div class="response-wrap">
+            <div class="res-meta"><span class="status-pill s-pending">waiting…</span></div>
+            <div class="res-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── DELETE ─────────────────────────────────────────────────────── -->
+    <section class="panel" id="panel-delete">
+      <div class="panel-header">
+        <span class="nav-method m-del">POST</span>
+        <span class="panel-title">delete file</span>
+        <span class="endpoint-tag">/cgi/delete</span>
+      </div>
+      <div class="panel-body">
+        <p class="desc">
+          Posts <code>path=</code> urlencoded to <code>/cgi/delete</code>.
+          The CGI receives the target path and removes the file server-side.
+        </p>
+
+        <div class="field">
+          <label>file path to delete</label>
+          <input type="text" id="delete-path" placeholder="/uploads/old-file.txt" />
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-danger-outline" id="btn-delete">
+            <span class="spinner"></span>
+            <span class="btn-text">✕ delete</span>
+          </button>
+        </div>
+
+        <div id="res-delete">
+          <div class="response-wrap">
+            <div class="res-meta"><span class="status-pill s-pending">waiting…</span></div>
+            <div class="res-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── COMPRESS IMAGE ─────────────────────────────────────────────── -->
+    <section class="panel" id="panel-compress">
+      <div class="panel-header">
+        <span class="nav-method m-post">POST</span>
+        <span class="panel-title">compress image</span>
+        <span class="endpoint-tag">/cgi/run</span>
+      </div>
+      <div class="panel-body">
+        <p class="desc">
+          Sends an image file + quality setting to <code>/cgi/run</code> as
+          <code>multipart/form-data</code>. The CGI receives
+          <code>file</code>, <code>quality</code> (0–100), and
+          <code>action=compress_image</code>. If the CGI replies with an image,
+          it renders inline below.
+        </p>
+
+        <div class="field">
+          <label>image file</label>
+          <div class="drop-zone" id="drop-compress">
+            <input type="file" accept="image/*" />
+            <div class="drop-icon">🖼</div>
+            <div class="drop-label">drop image here or click to browse</div>
+            <div class="drop-hint">jpeg · png · gif · webp</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>quality — <strong id="compress-quality-out">80%</strong></label>
+          <input type="range" id="compress-quality" min="1" max="100" value="80" step="1" style="width:100%; margin-top:4px;" />
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-send" id="btn-compress">
+            <span class="spinner"></span>
+            <span class="btn-text">⚙ compress</span>
+          </button>
+        </div>
+
+        <div id="res-compress">
+          <div class="response-wrap">
+            <div class="res-meta"><span class="status-pill s-pending">waiting…</span></div>
+            <div class="res-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── FILTER WORDS ────────────────────────────────────────────────── -->
+    <section class="panel" id="panel-filter">
+      <div class="panel-header">
+        <span class="nav-method m-post">POST</span>
+        <span class="panel-title">filter words from text</span>
+        <span class="endpoint-tag">/cgi/run</span>
+      </div>
+      <div class="panel-body">
+        <p class="desc">
+          Posts <code>text</code>, a comma-separated <code>words</code> list,
+          and <code>action=filter_words</code> to <code>/cgi/run</code>.
+          The CGI strips every occurrence of the listed words and returns the cleaned text.
+        </p>
+
+        <div class="field">
+          <label>text input</label>
+          <textarea id="filter-text" placeholder="paste your text here…"></textarea>
+        </div>
+
+        <div class="field">
+          <label>words to remove — press Enter or Space to add</label>
+          <div class="tags-input-wrap" id="tags-wrap">
+            <input
+              type="text"
+              class="tag-real-input"
+              id="tag-input"
+              placeholder="type a word…"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-send" id="btn-filter">
+            <span class="spinner"></span>
+            <span class="btn-text">⟳ run filter</span>
+          </button>
+        </div>
+
+        <div id="res-filter">
+          <div class="response-wrap">
+            <div class="res-meta"><span class="status-pill s-pending">waiting…</span></div>
+            <div class="res-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── RAW RUN ────────────────────────────────────────────────────── -->
+    <section class="panel" id="panel-raw">
+      <div class="panel-header">
+        <span class="nav-method m-get">GET</span>
+        <span class="nav-method m-post">POST</span>
+        <span class="panel-title">raw run</span>
+        <span class="endpoint-tag">/cgi/run</span>
+      </div>
+      <div class="panel-body">
+        <p class="desc">
+          Fire raw GET or POST requests to <code>/cgi/run</code>.
+          For POST you can attach a file and/or extra fields (one <code>key=value</code> per line).
+        </p>
+
+        <!-- GET -->
+        <p style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.04em;">GET</p>
+        <div class="field">
+          <label>query string</label>
+          <input type="text" id="run-qs" placeholder="action=ping&foo=bar" />
+        </div>
+        <div class="btn-row" style="margin-bottom:1.5rem;">
+          <button class="btn-secondary" id="btn-run-get">
+            <span class="spinner"></span>
+            <span class="btn-text">→ send GET</span>
+          </button>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin-bottom:1.5rem;" />
+
+        <!-- POST -->
+        <p style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:.04em;">POST</p>
+        <div class="field">
+          <label>query string <span style="opacity:.5">(optional)</span></label>
+          <input type="text" id="run-post-qs" placeholder="action=custom" />
+        </div>
+        <div class="field">
+          <label>file body <span style="opacity:.5">(optional)</span></label>
+          <div class="drop-zone" id="drop-custom">
+            <input type="file" />
+            <div class="drop-icon">↑</div>
+            <div class="drop-label">drop file or click to browse</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>extra fields <span style="opacity:.5">(key=value per line, appended to FormData)</span></label>
+          <textarea id="run-post-body" placeholder="quality=80&#10;format=png"></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn-send" id="btn-run-post">
+            <span class="spinner"></span>
+            <span class="btn-text">→ send POST</span>
+          </button>
+        </div>
+
+        <div id="res-run">
+          <div class="response-wrap">
+            <div class="res-meta"><span class="status-pill s-pending">waiting…</span></div>
+            <div class="res-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="cgi/cgi-test.js"></script>
+</body>
+</html>

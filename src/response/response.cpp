@@ -88,11 +88,14 @@ void Response::Get()
     if (!isMethodAllowed("GET"))
         return;
 
+    DEBUG_INFO("this request is GEEET");
     std::string root     = (_loc && !_loc->getRoot().empty()) 
                             ? _loc->getRoot() 
                             : _req.getServerConf().getRoot();
     
-    std::string filepath = root + _req.getPath();
+    std::string filepath = "./www" + _req.getPath();
+    DEBUG_INFO("Full Path is");
+    std::cout << filepath << std::endl;
     if (access(filepath.c_str(), F_OK) != 0)
     {
         serveErrorPage(404);
