@@ -17,6 +17,9 @@
     #define DEBUG_INFO(msg) \
         std::cout << INFO_MSG << msg << std::endl
 
+    #define DEBUG_INFO2(msg) \
+        std::cout << INFO2_MSG << msg << std::endl
+
     #define DEBUG_WARN(msg) \
         std::cerr << WARNING_MSG << msg << std::endl
 
@@ -26,6 +29,7 @@
 #else
 
     #define DEBUG_INFO(msg)   ((void)0)
+    #define DEBUG_INFO2(msg)   ((void)0)
     #define DEBUG_WARN(msg)   ((void)0)
     #define DEBUG_ERROR(msg)  ((void)0)
 

@@ -8,6 +8,7 @@
 namespace Default
 {
     const std::string UPLOAD_STORE  = "./uploads";
+    const std::string CGI_STORE  = "./cgi-bin/";
     const std::string ROOT          = "./www"; // alaoui:todo i don’t use that variable, so will delete it latter.
     const std::string ERROR_PAGE    = "./www/error/error.html";
     const std::string SERVER_NAME   = "MyServer";
@@ -46,7 +47,6 @@ public:
     std::string returnFileExtension(const std::string& path);
     std::string generateUploadFileName();
     std::string getHttpDate(time_t t);
-    std::string getFileName(const std::string& path);
     bool        isMethodAllowed(const std::string& method);
     bool        transferToNewFile(int destFd, int srcFd);
     bool        tryApplyLocationReturn();
