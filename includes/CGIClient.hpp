@@ -11,7 +11,6 @@ class CGIClient: public Client
     int _pid; // for child
     bool _socket_done;
     bool _cgi_pipe_done;
-    size_t _read_counter;
     int _pipe_in[2];
     int _pipe_out[2];
     t_epollhold _pipe_in_hold;

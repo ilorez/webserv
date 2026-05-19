@@ -6,7 +6,7 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/16 10:20:18 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/19 23:05:46 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,9 +131,17 @@ void CGIClient::ft_exec()
     close (_pipe_out[0]);
     ft_change_fd(_pipe_in[0], STDIN_FILENO);
     ft_change_fd(_pipe_out[1], STDOUT_FILENO);
-    char *argv[] = { (char*)"/usr/bin/python3", (char*)"./cgi-bin/hello.py", NULL };
+    std::string cgiPath = _req.getMatchLoc()->getCgiPath();
+    std::string scriptPath = _req.getFilePath();
     char *env[]  = { (char*)"REQUEST_METHOD=GET", (char*)"QUERY_STRING=name=John", NULL };
-    execve("/usr/bin/python3", argv, env);
+
+    char *argv[] = {
+      const_cast<char*>(cgiPath.c_str()),
+      const_cast<char*>(scriptPath.c_str()),
+    NULL
+    };
+    // use argv immediately — both strings still in scope
+    execve(argv[0], argv, env);
     //execve("/usr/bin/python3", argv, buildEnv());
     exit(126);
   }

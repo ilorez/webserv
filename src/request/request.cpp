@@ -1,6 +1,6 @@
 #include "../../includes/container.hpp"
 
-Request::Request() : _content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0), _is_request_large(false), _is_cgi(false)
+Request::Request() : _content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0), _is_request_large(false), _is_cgi(false), _match_loc(NULL), _file_path("")
 {
 }
 
@@ -98,8 +98,18 @@ const ServerConfig &Request::getServerConf() const
   return _serverConf;
 };
 
-// ? setters
 
+std::string Request::getFilePath() const
+{
+  return (_file_path);
+}
+
+const LocationConfig* Request::getMatchLoc() const
+{
+  return (_match_loc);
+}
+
+// ? setters
 void Request::setPath(const std::string &path)
 {
   this->_path = path;

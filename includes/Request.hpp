@@ -26,6 +26,8 @@ private:
   bool         _is_request_large;
   ServerConfig _serverConf;
   bool _is_cgi;
+  const LocationConfig* _match_loc; // request match location, TODO: Alaoui should use this
+  std::string _file_path; // this is the file path of cgi, you can use it for request too, i use it only in case of CGI run request 
 public:
   Request();
   Request(const Request &other);
@@ -42,6 +44,8 @@ public:
   int  getTmpFd() const;
   bool                isRequsetLarge() const;
   size_t getBytesCounter() const;
+  std::string getFilePath() const;
+  const LocationConfig* getMatchLoc() const;
 
   // TODO
   std::string getBody() const;

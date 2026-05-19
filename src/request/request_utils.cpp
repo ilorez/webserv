@@ -126,20 +126,19 @@ void Request::requestParser(const std::string &raw)
 		DEBUG_ERROR("request parser: invalid Content-Length");
 		throw RequestException("400 Bad Request");
 	}
+  _match_loc = getMatchedLocation();
+	if (!_match_loc)
+    throw RequestException("400 Bad Request");
 }
 
 // change name to checkCGI request 
 bool Request::isCGI()
 {
-	const LocationConfig *matchLoc = getMatchedLocation();
-	if (!matchLoc)
-		return false;
-	const std::string cgiExt = matchLoc->getCgiExt();
   const std::string uri = getPath();
-  bool hasExtAtEnd = endsWith(uri, cgiExt);
+  bool hasExtAtEnd = endsWith(uri, _match_loc->getCgiExt());
   // is not cgi at all because the match location doesn't have cgiExt and cgiPath (use matchLog->hasCGI for that)
     // return false
-  if (!matchLoc->hasCgi())
+  if (!_match_loc->hasCgi())
     return false;
   _is_cgi = true;
   // its cgi and its post method and its have no .[ext] at end of path so its for upload cgi script and this is response part 
@@ -157,13 +156,12 @@ bool Request::isCGI()
     // set is_cgi true and return true and here my cgi work should be run 
   else if (!(_method == "POST" || _method == "GET"))
     return false;
-  std::string uploadStore = (!matchLoc->getUploadStore().empty()) 
-                                ? matchLoc->getUploadStore() 
+  std::string uploadStore = (!_match_loc->getUploadStore().empty()) 
+                                ? _match_loc->getUploadStore() 
                                 : Default::CGI_STORE;
-
   // NOTE: also i should store info like the path and everything so i don't need to use look for it next time
-	const std::string fullPath =  uploadStore + getFileName(uri); // if matchLoc has no root it will return an empty string
-  if (access(fullPath.c_str(), X_OK) == -1)
+	_file_path =  uploadStore + getFileName(uri);
+  if (access(_file_path.c_str(), X_OK) == -1)
     throw RequestException("400 Bad Request");
   DEBUG_INFO2("This requist is a CGI");
 	return (true);

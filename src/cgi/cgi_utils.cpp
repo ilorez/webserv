@@ -39,7 +39,11 @@ void CGIClient::preSetup()
         this->turnToPipe();
   }
   else
+  {
     this->removeEpollinEventFromSocket();
+    _socket_done = true;
+  }
+
     
   // run setup cgi
   this->ft_exec();
