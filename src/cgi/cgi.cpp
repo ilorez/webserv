@@ -6,7 +6,7 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/19 23:05:46 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/19 23:58:22 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,6 +120,7 @@ void	ft_change_fd(int fd, int to)
 
 void CGIClient::ft_exec()
 {
+  buildEnv();
   setupPipes();
   _pid = fork();
   if (_pid == -1)
@@ -133,15 +134,12 @@ void CGIClient::ft_exec()
     ft_change_fd(_pipe_out[1], STDOUT_FILENO);
     std::string cgiPath = _req.getMatchLoc()->getCgiPath();
     std::string scriptPath = _req.getFilePath();
-    char *env[]  = { (char*)"REQUEST_METHOD=GET", (char*)"QUERY_STRING=name=John", NULL };
-
     char *argv[] = {
       const_cast<char*>(cgiPath.c_str()),
       const_cast<char*>(scriptPath.c_str()),
-    NULL
+      NULL
     };
-    // use argv immediately — both strings still in scope
-    execve(argv[0], argv, env);
+    execve(argv[0], argv, buildEnv());
     //execve("/usr/bin/python3", argv, buildEnv());
     exit(126);
   }
@@ -151,12 +149,7 @@ void CGIClient::ft_exec()
   // registed pipe out
   registerPipeOut();
   if (_req.getMethod() != "POST")
-  {
-    _epoll_events = _epoll_events & ~EPOLLIN;
-    struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
-    epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
     ft_closefd(_pipe_in[1]);
-  }
 }
 
 void CGIClient::handel(int fd, uint32_t evs)

@@ -57,6 +57,11 @@ std::string Request::getVersion() const
   return (this->_version);
 }
 
+std::map<std::string, std::string>& Request::getHeaders() 
+{
+  return (this->_headers);
+}
+
 std::string Request::getHeaderValue(std::string key)
 {
   std::transform(key.begin(), key.end(), key.begin(),
