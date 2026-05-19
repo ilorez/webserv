@@ -19,4 +19,6 @@ void ft_closefd(int &fd);
 bool isValidPath(const std::string &path);
 bool isValidStatusCode(const std::string &str);
 void errorMsg(const std::string &msg, size_t line);
+
+std::string getFileName(const std::string& path);
 #endif

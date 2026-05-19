@@ -1,6 +1,6 @@
 #include "../../includes/container.hpp"
 
-Request::Request() : _content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0), _is_request_large(false)
+Request::Request() : _content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0), _is_request_large(false), _is_cgi(false)
 {
 }
 
@@ -25,6 +25,7 @@ Request &Request::operator=(const Request &other)
     this->_bytes_counter = other._bytes_counter;
     this->_is_request_large = other._is_request_large;
     this->_serverConf = other._serverConf;
+    this->_is_cgi = other._is_cgi;
   }
   return *this;
 }

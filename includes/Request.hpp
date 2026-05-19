@@ -24,8 +24,8 @@ private:
   std::string  _tmp_file_name;
   size_t       _bytes_counter;
   bool         _is_request_large;
-
   ServerConfig _serverConf;
+  bool _is_cgi;
 public:
   Request();
   Request(const Request &other);

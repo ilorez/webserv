@@ -114,3 +114,11 @@ void errorMsg(const std::string &msg, size_t line)
 
 	throw std::runtime_error(fullMsg);
 }
+
+std::string getFileName(const std::string& path)
+{
+    size_t pos = path.find_last_of("/");
+    if (pos == std::string::npos)
+        return path;
+    return path.substr(pos);
+}

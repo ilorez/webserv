@@ -20,8 +20,6 @@ Server::~Server()
     if (_servers[i].getFd() > -1)
       close (_servers[i].getFd());
   }
-  
-
 }
 
 Server::Server(const Server &o):_servers(o._servers) {
@@ -67,8 +65,7 @@ void Server::_handelClient()
         DEBUG_ERROR("epoll data ptr is invalid");
         continue;
     }
-    DEBUG_INFO("event fired on fd: " + to_string98(eh->fd));
-    
+    //DEBUG_INFO("event fired on fd: " + to_string98(eh->fd));
   bool is_new_conx = false;
   for (unsigned long i = 0; i < _servers.size(); i++)
   {
