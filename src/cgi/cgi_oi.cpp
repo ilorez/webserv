@@ -23,6 +23,7 @@ void CGIClient::removeEpollinEventFromSocket()
   _epoll_events = _epoll_events & ~EPOLLIN;
   struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
   epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
+  _socket_done = true;
 }
 
 // register pipe in EPOLLOUT and unregistre socket EPOLLIN
@@ -93,8 +94,8 @@ void CGIClient::writeToWriteBuffer()
   // register socket EPOLLOUT 
   _epoll_events =  _epoll_events | EPOLLOUT;
   struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
-  //epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
-  epoll_ctl(_epfd, EPOLL_CTL_ADD, _fd, &ev);
+  epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
+  //epoll_ctl(_epfd, EPOLL_CTL_ADD, _fd, &ev);
   DEBUG_INFO("writeToWriteBuffer completed");
   // write buffer is
   std::cout << "write buffer: " << getWriteBuffer() << std::endl;
