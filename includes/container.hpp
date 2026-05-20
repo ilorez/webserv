@@ -1,7 +1,6 @@
 #ifndef CONTAINER_HPP
 #define CONTAINER_HPP
 
-
 #include <iomanip>
 #include <time.h>
 #include <cstring>
@@ -14,7 +13,7 @@
 #include <algorithm>
 #include <set>
 #include <vector>
-#include <cctype>   
+#include <cctype>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -57,6 +56,9 @@
 #include "./Lexer.hpp"
 #include "./serverConfig.hpp"
 #include "./locationConfig.hpp"
+#include "./Session.hpp"
+#include "./sessionManager.hpp"
+
 //
 #include "./EpollHold.hpp"
 

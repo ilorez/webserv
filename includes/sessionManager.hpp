@@ -1,0 +1,22 @@
+#pragma once
+
+class sessionManager
+{
+private:
+	std::map<std::string, Session> database;
+
+public:
+	static sessionManager &getInstance();
+	// getters
+	Session *getSession(const std::string &id);
+	// helpers
+	std::string generateSessionId();
+	Session *createSession();
+	void deleteSession(const std::string &id);
+	void refrech(Session &s);
+	bool isExpired(Session &s);
+
+private:
+	sessionManager();
+	~sessionManager();
+};
