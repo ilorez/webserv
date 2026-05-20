@@ -13,7 +13,7 @@ void Server::_addClient(int client_fd, ServerConfig &sc) {
   Client *cl = _clients.addClient(client_fd);
   cl->getReq().setServerConfig(sc);
   t_epollhold &eh = cl->getClSockHolder();
-  _switchEpollRegisration( &eh, EPOLLIN | EPOLLHUP);
+  _switchEpollRegisration( &eh, EPOLLIN | EPOLLRDHUP);
   // adding to epoll queu
   epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, client_fd, &_epoll_event); 
   // NOTE:epoll ctl copy the ev into kernel
@@ -39,8 +39,7 @@ void Server::_switchEpollRegisration(t_epollhold *eh, uint32_t ev)
 
 void Server::newconnection(ServerConfig &sc)
 {
-  DEBUG_INFO("");
-  std::cout << "new connection on socket: " << sc.getFd() << std::endl;
+  //std::cout << "new connection on socket: " << sc.getFd() << std::endl;
   int client_fd = accept(sc.getFd(), NULL, NULL);
   DEBUG_INFO("------------New Request-----------");
   if (client_fd < 0)
@@ -48,10 +47,9 @@ void Server::newconnection(ServerConfig &sc)
     DEBUG_ERROR("accept() failed.");
     return ;
   }
-std::cout << "accepted client_fd: " << client_fd << " from server_fd: " << sc.getFd() << std::endl;
+  // std::cout << "accepted client_fd: " << client_fd << " from server_fd: " << sc.getFd() << std::endl;
   // adding to clinet list
   this->_addClient(client_fd, sc);
-  DEBUG_INFO("New Client Added");
 }
 
 void Server::readheaders(Client *cl)

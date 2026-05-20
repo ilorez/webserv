@@ -134,36 +134,36 @@ void Request::requestParser(const std::string &raw)
 // change name to checkCGI request
 bool Request::isCGI()
 {
-	const std::string uri = getPath();
-	bool hasExtAtEnd = endsWith(uri, _match_loc->getCgiExt());
-	// is not cgi at all because the match location doesn't have cgiExt and cgiPath (use matchLog->hasCGI for that)
-	// return false
-	if (!_match_loc->hasCgi())
-		return false;
-	_is_cgi = true;
-	// its cgi and its post method and its have no .[ext] at end of path so its for upload cgi script and this is response part
-	// set is_cgi true and return false
-	if (_method == "POST" && !hasExtAtEnd)
-		return false;
-	// the only all methods remain which is get/post/delete for run or delete cgi is require scirpt name with ext
-	else if (!hasExtAtEnd)
-		throw RequestException("400 Bad Request");
-	// its cgi and its delete method and its have .[ext] at end of path so its for delete cgi and this is response part
-	// set is_cgi true and return false
-	else if (_method == "DELETE")
-		return false;
-	// its cgi and it get or post and its has the .[ext] at end so request for run cgi
-	// set is_cgi true and return true and here my cgi work should be run
-	else if (!(_method == "POST" || _method == "GET"))
-		return false;
-	std::string uploadStore = (!_match_loc->getUploadStore().empty())
-								  ? _match_loc->getUploadStore()
-								  : Default::CGI_STORE;
-	// NOTE: also i should store info like the path and everything so i don't need to use look for it next time
-	_file_path = uploadStore + getFileName(uri);
-	if (access(_file_path.c_str(), X_OK) == -1)
-		throw RequestException("400 Bad Request");
-	DEBUG_INFO2("This requist is a CGI");
+  const std::string uri = getPath();
+  bool hasExtAtEnd = endsWith(uri, _match_loc->getCgiExt());
+  // is not cgi at all because the match location doesn't have cgiExt and cgiPath (use matchLog->hasCGI for that)
+    // return false
+  if (!_match_loc->hasCgi())
+    return false;
+  _is_cgi = true;
+  // its cgi and its post method and its have no .[ext] at end of path so its for upload cgi script and this is response part 
+    // set is_cgi true and return false
+  if (_method == "POST" && !hasExtAtEnd)
+    return false;
+  // the only all methods remain which is get/post/delete for run or delete cgi is require scirpt name with ext
+  else if (!hasExtAtEnd)
+    throw RequestException("400 Bad Request");
+  // its cgi and its delete method and its have .[ext] at end of path so its for delete cgi and this is response part 
+    // set is_cgi true and return false
+  else if (_method == "DELETE")
+    return false;
+  // its cgi and it get or post and its has the .[ext] at end so request for run cgi
+    // set is_cgi true and return true and here my cgi work should be run 
+  else if (!(_method == "POST" || _method == "GET"))
+    return false;
+  std::string uploadStore = (!_match_loc->getUploadStore().empty()) 
+                                ? _match_loc->getUploadStore() 
+                                : Default::CGI_STORE;
+  // NOTE: also i should store info like the path and everything so i don't need to use look for it next time
+	_file_path =  uploadStore + getFileName(uri);
+  if (access(_file_path.c_str(), X_OK) == -1)
+    throw RequestException("400 Bad Request");
+  DEBUG_INFO("This requist is a CGI");
 	return (true);
 }
 

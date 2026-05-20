@@ -38,6 +38,7 @@ public:
   std::string getMethod() const;
   size_t getContentLen() const;
   std::string getPath() const;
+  std::map<std::string, std::string>& getHeaders();
   std::string getHeaderValue(std::string key);
   const std::string&  getTmpFileName()  const;
   int  getTmpFd() const;

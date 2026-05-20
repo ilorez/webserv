@@ -74,8 +74,8 @@ t_epollhold& Client::getClSockHolder()
 // setters
 void Client::setState(ClientState state)
 {
-  DEBUG_INFO("status change to");
-  std::cout << "num: " << state << std::endl;
+  //DEBUG_INFO("status change to");
+  //std::cout << "num: " << state << std::endl;
 	_state = state;
 }
 
@@ -166,7 +166,7 @@ void Client::switchToEpollOut()
 
 void Client::handel(int, uint32_t evs)
 {
-  DEBUG_INFO("handel client request called");
+  //DEBUG_INFO("handel client request called");
   if (evs & EPOLLIN)
   {
     if (_state != READING_BODY)

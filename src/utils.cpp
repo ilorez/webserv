@@ -122,3 +122,26 @@ std::string getFileName(const std::string& path)
         return path;
     return path.substr(pos);
 }
+
+void check_process_status(int status) {
+    #ifdef DEBUG
+      if (WIFEXITED(status)) {
+          std::cout << "Normal exit. Code: " << WEXITSTATUS(status) << "\n";
+      } 
+      else if (WIFSIGNALED(status)) {
+          std::cout << "Killed by signal: " << WTERMSIG(status) << "\n";
+          
+          #ifdef WCOREDUMP
+          if (WCOREDUMP(status)) {
+              std::cout << "Core dumped.\n";
+          }
+          #endif
+      } 
+      else if (WIFSTOPPED(status)) {
+          std::cout << "Stopped by signal: " << WSTOPSIG(status) << "\n";
+      } 
+      else if (WIFCONTINUED(status)) {
+          std::cout << "Continued running.\n";
+      }
+    #endif
+}

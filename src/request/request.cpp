@@ -25,6 +25,8 @@ Request &Request::operator=(const Request &other)
     this->_is_request_large = other._is_request_large;
     this->_serverConf = other._serverConf;
     this->_is_cgi = other._is_cgi;
+    this->_match_loc = other._match_loc;
+    this->_file_path = other._file_path;
   }
   return *this;
 }
@@ -54,6 +56,11 @@ std::string Request::getPath() const
 std::string Request::getVersion() const
 {
   return (this->_version);
+}
+
+std::map<std::string, std::string>& Request::getHeaders() 
+{
+  return (this->_headers);
 }
 
 std::string Request::getHeaderValue(std::string key)

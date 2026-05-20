@@ -22,7 +22,7 @@ class CGIClient: public Client
     void handel(int fd, uint32_t evs);
     // methods
     void setupPipes();
-    //char **buildEnv();
+    char **buildEnv();
     void ft_exec();
 
     virtual void preSetup();

@@ -21,4 +21,6 @@ bool isValidStatusCode(const std::string &str);
 void errorMsg(const std::string &msg, size_t line);
 
 std::string getFileName(const std::string& path);
+
+void check_process_status(int status);
 #endif

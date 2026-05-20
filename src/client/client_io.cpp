@@ -4,11 +4,13 @@
 std::string Client::readHeaders()
 {
   // read to the lines before \r\n\r\n "headers" 
-  char tmp[BUF_SIZE]; // 8kb
+  char tmp[BUF_SIZE]; // 4kb
   size_t pos = 0;
   int bytes = recv(_fd, tmp, BUF_SIZE, 0);
+  DEBUG_INFO2("TIME");
   if (bytes <= 0)
   {
+    DEBUG_INFO2("YEAH");
     DEBUG_WARN("error with recv in reading headers, or client discoonect");
     _state = DONE;
     return "";

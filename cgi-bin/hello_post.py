@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
-import os
 import sys
+import os
 
-def main():
-    content_length = int(os.environ.get("CONTENT_LENGTH", 0))
-    body = ""
-    if content_length > 0:
-        body = sys.stdin.read(content_length)
+# Required CGI header
+print("HTTP/1.1 200 OK")
+print("Content-Type: text/plain\r\n")
 
-    print("HTTP/1.1 200 OK")
-    print("Content-Type: text/html")
-    print()
-    print("<html><body>")
-    print("<h1>POST received</h1>")
-    print("<p><b>body:</b> " + body + "</p>")
-    print("<p><b>content-length:</b> " + str(content_length) + "</p>")
-    print("</body></html>")
+# Read Content-Length (important in CGI)
+content_length = os.environ.get("CONTENT_LENGTH")
+print("ENV:CONTENT_LEN IS: ", content_length);
 
-if __name__ == "__main__":
-    main()
+if content_length:
+    length = int(content_length)
+    body = sys.stdin.read(length)
+else:
+    body = sys.stdin.read()  # fallback
+
+print("Reading from stdin:\n")
+print(body)

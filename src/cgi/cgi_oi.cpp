@@ -20,9 +20,9 @@ void CGIClient::removeEpollinEventFromSocket()
   DEBUG_INFO("removeEpollinEventFromSocket called");  
   // unregister EPOLLIN event from socket 
   _epoll_events = _epoll_events & ~EPOLLIN;
+  _epoll_events = _epoll_events | EPOLLHUP;
   struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
   epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
-  _socket_done = true;
 }
 
 // register pipe in EPOLLOUT and unregistre socket EPOLLIN
@@ -45,6 +45,7 @@ void CGIClient::writeToPipe()
 {
   DEBUG_INFO("writeToPipe called");
 
+  //std::cout << _readBuffer << std::endl;
   ssize_t bytes = write(_pipe_in[1], _readBuffer.c_str(), _readBuffer.size());
   if (bytes == -1)
     throw CGIException("write: writeToPipe: failed");
@@ -63,10 +64,12 @@ void CGIClient::writeToPipe()
   {
     // register socket again with EPOLLIN
     _epoll_events |= EPOLLIN;
-   struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
-  epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
+    struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
+    epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
   }
-
+  else
+    ft_closefd(_pipe_in[1]);
+  //DEBUG_INFO("writeToPipe finish");
 }
 
 void CGIClient::writeToWriteBuffer()
@@ -77,7 +80,7 @@ void CGIClient::writeToWriteBuffer()
   // TODO: why i add this to here
   //_writeOffset = 0;
   int bytes = read(_pipe_out[0], buf, CHUNK_SIZE);
-  DEBUG_INFO("bytes read from pipe: " + to_string98(bytes));
+  //DEBUG_INFO("bytes read from pipe: " + to_string98(bytes));
   if (bytes == -1)
     throw CGIException("read: readToWriteBuffer: failed");
   // EPOLLIN will be fired everytime if its found that the pipe has been closed
@@ -90,14 +93,13 @@ void CGIClient::writeToWriteBuffer()
     return;
   }
   this->setWriteBuffer(std::string(buf, bytes));
+  //DEBUG_INFO2("writeBuffer: ");
+  //std::cout << _writeBuffer << std::endl;
   // register socket EPOLLOUT 
   _epoll_events =  _epoll_events | EPOLLOUT;
   struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
   epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
   //epoll_ctl(_epfd, EPOLL_CTL_ADD, _fd, &ev);
-  DEBUG_INFO("writeToWriteBuffer completed");
-  // write buffer is
-  std::cout << "write buffer: " << getWriteBuffer() << std::endl;
 }
 void CGIClient::writeToSocket()
 {

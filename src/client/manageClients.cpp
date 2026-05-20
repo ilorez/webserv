@@ -48,7 +48,7 @@ void    ManageClients::disconnect(int fd)
     _clients.erase(it);
     return ;
   }
-  DEBUG_INFO("manage client: removeClient: client not exists");
+  DEBUG_ERROR("manage client: removeClient: client not exists");
 }
 
 Client* ManageClients::getClient(int fd)
@@ -76,8 +76,8 @@ void ManageClients::checkTimeout()
   {
     if (it->second->isTimedOut(TIMEOUT_SECONDS))
     {
-      DEBUG_INFO("Client timedout with fd: ");
-      std::cout << it->first << std::endl;
+      //DEBUG_INFO("Client timedout with fd: ");
+      //std::cout << it->first << std::endl;
       // delete from epoll
       delete it->second;
       _clients.erase(it++);
@@ -87,7 +87,8 @@ void ManageClients::checkTimeout()
   }
 }
 
-CGIClient* ManageClients::updateToCGI(int fd) { DEBUG_INFO("update to CGI called");
+CGIClient* ManageClients::updateToCGI(int fd) { 
+  //DEBUG_INFO("update to CGI called");
   Client *oc = _clients[fd];
   CGIClient* nc = new CGIClient(*oc); 
   delete oc;

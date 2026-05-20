@@ -6,7 +6,7 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/19 23:05:46 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/20 13:48:15 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,7 @@ CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd), _pid(-1), _socket_done
   _pipe_in[1] = -1;
   _pipe_out[0] = -1;
   _pipe_out[1] = -1;
-  _clsock_hold.is_cgi = true;
-  _clsock_hold.cgi = this;
+  _clsock_hold.is_cgi = true; _clsock_hold.cgi = this;
   _pipe_in_hold.is_cgi = true;
   _pipe_in_hold.cgi = this;
   _pipe_out_hold.is_cgi = true;
@@ -29,14 +28,17 @@ CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd), _pid(-1), _socket_done
 
 CGIClient::CGIClient(Client &cl): Client(cl){
   _pipe_in[0] = -1;
-  _pipe_in[1] = -1; _pipe_out[0] = -1;
+  _pipe_in[1] = -1;
+  _pipe_out[0] = -1;
   _pipe_out[1] = -1;
   _clsock_hold.is_cgi = true;
   _clsock_hold.cgi = this;
   _pipe_in_hold.is_cgi = true;
   _pipe_in_hold.cgi = this;
+  _pipe_in_hold.fd = -1;
   _pipe_out_hold.is_cgi = true;
   _pipe_out_hold.cgi = this;
+  _pipe_out_hold.fd = -1;
   cl.invalidateFd(); // stop ~Client() closing the _fd
 }
 
@@ -54,6 +56,8 @@ CGIClient::~CGIClient()
     kill(_pid, SIGKILL);
   // waitpid
   waitpid(_pid, &status, 0);
+  //DEBUG_INFO2("status exit: " + to_string98(status));
+  check_process_status(status);
 
   // close pipes
   ft_closefd(_pipe_in[1]);
@@ -81,11 +85,13 @@ void CGIClient::setupPipes()
   }
   _pipe_in_hold.fd = _pipe_in[1];
   _pipe_out_hold.fd = _pipe_out[0];
-  DEBUG_INFO("PIPEs has been setuped");
+  //DEBUG_INFO("PIPEs has been setuped");
 }
 
 void CGIClient::registerPipeOut()
 {
+  DEBUG_INFO("registerPipeOut called");
+  //DEBUG_INFO("my fd is: " + to_string98(_pipe_out[0]));
   // applying non-blocking
   fcntl(_pipe_out[0], F_SETFL, O_NONBLOCK);
 
@@ -120,7 +126,6 @@ void	ft_change_fd(int fd, int to)
 
 void CGIClient::ft_exec()
 {
-  setupPipes();
   _pid = fork();
   if (_pid == -1)
     throw CGIException("fork failed");
@@ -131,17 +136,25 @@ void CGIClient::ft_exec()
     close (_pipe_out[0]);
     ft_change_fd(_pipe_in[0], STDIN_FILENO);
     ft_change_fd(_pipe_out[1], STDOUT_FILENO);
-    std::string cgiPath = _req.getMatchLoc()->getCgiPath();
+    //TODO use getMatchLoc instead
+    const LocationConfig* loc = _req.getMatchedLocation();
+    if (!loc)
+    {
+      DEBUG_ERROR("Could not get match loc");
+      exit(3);
+    }
+    std::string cgiPath = loc->getCgiPath();
     std::string scriptPath = _req.getFilePath();
-    char *env[]  = { (char*)"REQUEST_METHOD=GET", (char*)"QUERY_STRING=name=John", NULL };
-
+    /*char *argv[] = { (char*)"/usr/bin/python3", (char*)"./cgi-bin/hello_get.py", NULL };
+    */
+    //char *env[]  = { (char*)"REQUEST_METHOD=GET", (char*)"QUERY_STRING=name=John", NULL };
     char *argv[] = {
       const_cast<char*>(cgiPath.c_str()),
       const_cast<char*>(scriptPath.c_str()),
-    NULL
+      NULL
     };
-    // use argv immediately — both strings still in scope
-    execve(argv[0], argv, env);
+   //execve(argv[0], argv, env);
+    execve(argv[0], argv, buildEnv());
     //execve("/usr/bin/python3", argv, buildEnv());
     exit(126);
   }
@@ -151,12 +164,7 @@ void CGIClient::ft_exec()
   // registed pipe out
   registerPipeOut();
   if (_req.getMethod() != "POST")
-  {
-    _epoll_events = _epoll_events & ~EPOLLIN;
-    struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
-    epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
     ft_closefd(_pipe_in[1]);
-  }
 }
 
 void CGIClient::handel(int fd, uint32_t evs)
