@@ -48,7 +48,9 @@ void Client::preSetup()
   {
     if (_readBuffer.size() >= _req.getContentLen())
     {
+      //DEBUG_INFO2("YEAH Body already readed with headers");
       _state = PROCESSING;
+      this->switchToEpollOut();
       return;
     }
     _state = READING_BODY;
@@ -59,7 +61,6 @@ void Client::preSetup()
   }
   else
     _state = PROCESSING;
-
   this->switchToEpollOut();
 }
 
