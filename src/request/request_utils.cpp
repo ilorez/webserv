@@ -163,7 +163,7 @@ bool Request::isCGI()
 	_file_path =  uploadStore + getFileName(uri);
   if (access(_file_path.c_str(), X_OK) == -1)
     throw RequestException("400 Bad Request");
-  DEBUG_INFO2("This requist is a CGI");
+  DEBUG_INFO("This requist is a CGI");
 	return (true);
 }
 

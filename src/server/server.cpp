@@ -6,7 +6,7 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/19 22:04:59 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/20 09:20:37 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/20 13:51:55 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ void Server::_handelClient()
         continue;
     }
     
-  DEBUG_INFO2("event fired on fd: " + to_string98(eh->fd));
+  //DEBUG_INFO2("event fired on fd: " + to_string98(eh->fd));
   bool is_new_conx = false;
   for (unsigned long i = 0; i < _servers.size(); i++)
   {
@@ -106,12 +106,14 @@ void Server::_handelClient()
   }
   else if (_events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP))
   {
+    /*
     if (_events[i].events & EPOLLHUP)
       DEBUG_INFO2("EPOLLHUP");
     else if (_events[i].events & EPOLLERR)
       DEBUG_INFO2("EPOLLERR");
     else if (_events[i].events & EPOLLRDHUP)
       DEBUG_INFO2("EPOLLRDHUP");
+      */
     eh->cl->forceTimeout();
   }
   else 
