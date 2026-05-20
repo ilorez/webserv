@@ -8,7 +8,8 @@
 
 #include "serverConfig.hpp"
 #include "locationConfig.hpp"
-
+#include "Session.hpp"
+#include "sessionManager.hpp"
 
 class Request
 {
@@ -25,8 +26,11 @@ private:
   bool         _is_request_large;
   ServerConfig _serverConf;
   bool _is_cgi;
-  const LocationConfig* _match_loc; // request match location, TODO: Alaoui should use this
-  std::string _file_path; // this is the file path of cgi, you can use it for request too, i use it only in case of CGI run request 
+  const LocationConfig* _match_loc;           // request match location, TODO: Alaoui should use this
+  std::string _file_path;                     // this is the file path of cgi, you can use it for request too, i use it only in case of CGI run request 
+
+  
+  Session *cookie; // cookies
 public:
   Request();
   Request(const Request &other);
@@ -38,7 +42,6 @@ public:
   std::string getMethod() const;
   size_t getContentLen() const;
   std::string getPath() const;
-  std::map<std::string, std::string>& getHeaders();
   std::string getHeaderValue(std::string key);
   const std::string&  getTmpFileName()  const;
   int  getTmpFd() const;
@@ -46,6 +49,8 @@ public:
   size_t getBytesCounter() const;
   std::string getFilePath() const;
   const LocationConfig* getMatchLoc() const;
+  std::map<std::string, std::string>& getHeaders();
+
 
   // TODO
   std::string getBody() const;
@@ -74,6 +79,9 @@ private:
   void _parseAllHeaders(const std::vector<std::string> &lines);
   void _parseHeader(const std::string &key, const std::string &value);
   void _insertHeader(std::string &key, const std::string &value, const std::set<std::string> commaHeaders);
+
+  // parse cookies
+  void parseCookies();
 };
 
 #endif

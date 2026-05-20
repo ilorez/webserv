@@ -1,6 +1,6 @@
 #include "../../includes/container.hpp"
 
-Request::Request() : _content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0), _is_request_large(false), _is_cgi(false), _match_loc(NULL), _file_path("")
+Request::Request() : _content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0), _is_request_large(false), _is_cgi(false), _match_loc(NULL), _file_path(""), cookie(NULL)
 {
 }
 
@@ -25,8 +25,7 @@ Request &Request::operator=(const Request &other)
     this->_is_request_large = other._is_request_large;
     this->_serverConf = other._serverConf;
     this->_is_cgi = other._is_cgi;
-    this->_match_loc = other._match_loc;
-    this->_file_path = other._file_path;
+    this->cookie = other.cookie;
   }
   return *this;
 }
@@ -104,13 +103,12 @@ const ServerConfig &Request::getServerConf() const
   return _serverConf;
 };
 
-
 std::string Request::getFilePath() const
 {
   return (_file_path);
 }
 
-const LocationConfig* Request::getMatchLoc() const
+const LocationConfig *Request::getMatchLoc() const
 {
   return (_match_loc);
 }

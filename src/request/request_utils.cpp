@@ -110,6 +110,63 @@ void Request::_parseFirstLine(const std::vector<std::string> &lines)
 	else
 		throw RequestException("400 Bad Request");
 }
+static std::string getCookieValue(const std::string &cookieHeader, const std::string &name)
+{
+	std::string search = name + "=";
+	size_t start = cookieHeader.find(search);
+
+	if (start == std::string::npos)
+		return "";
+
+	start += search.length(); // skips "session_id="
+	size_t end = cookieHeader.find(';', start);
+
+	if (end == std::string::npos)
+		return cookieHeader.substr(start); // last cookie, no ";" after it
+	return cookieHeader.substr(start, end - start);
+}
+
+void Request::parseCookies()
+{
+	sessionManager &manager = sessionManager::getInstance();
+	std::string cookieHeader, sessionId;
+
+	if (getHeaderValue("cookie") == "")
+	{
+		DEBUG_INFO2("No cookies found, so creating a new one");
+		this->cookie = manager.createSession();
+		return;
+	}
+
+	cookieHeader = getHeaderValue("cookie");
+	sessionId = getCookieValue(cookieHeader, "session_id");
+	this->cookie = manager.getSession(sessionId);
+
+	if (this->cookie == NULL) // not a valid session id
+	{
+		DEBUG_INFO2("Found Cookie, but not valid");
+		this->cookie = manager.createSession(); // generate a new session
+		return;
+	}
+
+	DEBUG_INFO2("Found Cookie, and its valid");
+
+	DEBUG_INFO2("Now filling the cookie data");
+	std::istringstream ss(cookieHeader);
+	std::string token;
+
+	while (std::getline(ss, token, ';'))
+	{
+		size_t eq = token.find("=");
+		if (eq == std::string::npos)
+			continue;
+		std::string key = trim(token.substr(0, eq));
+		std::string value = token.substr(eq + 1);
+
+		if (key != "session_id")
+			this->cookie->setData(key, value);
+	}
+}
 
 void Request::requestParser(const std::string &raw)
 {
@@ -129,41 +186,42 @@ void Request::requestParser(const std::string &raw)
 	_match_loc = getMatchedLocation();
 	if (!_match_loc)
 		throw RequestException("400 Bad Request");
+	parseCookies();
 }
 
 // change name to checkCGI request
 bool Request::isCGI()
 {
-  const std::string uri = getPath();
-  bool hasExtAtEnd = endsWith(uri, _match_loc->getCgiExt());
-  // is not cgi at all because the match location doesn't have cgiExt and cgiPath (use matchLog->hasCGI for that)
-    // return false
-  if (!_match_loc->hasCgi())
-    return false;
-  _is_cgi = true;
-  // its cgi and its post method and its have no .[ext] at end of path so its for upload cgi script and this is response part 
-    // set is_cgi true and return false
-  if (_method == "POST" && !hasExtAtEnd)
-    return false;
-  // the only all methods remain which is get/post/delete for run or delete cgi is require scirpt name with ext
-  else if (!hasExtAtEnd)
-    throw RequestException("400 Bad Request");
-  // its cgi and its delete method and its have .[ext] at end of path so its for delete cgi and this is response part 
-    // set is_cgi true and return false
-  else if (_method == "DELETE")
-    return false;
-  // its cgi and it get or post and its has the .[ext] at end so request for run cgi
-    // set is_cgi true and return true and here my cgi work should be run 
-  else if (!(_method == "POST" || _method == "GET"))
-    return false;
-  std::string uploadStore = (!_match_loc->getUploadStore().empty()) 
-                                ? _match_loc->getUploadStore() 
-                                : Default::CGI_STORE;
-  // NOTE: also i should store info like the path and everything so i don't need to use look for it next time
-	_file_path =  uploadStore + getFileName(uri);
-  if (access(_file_path.c_str(), X_OK) == -1)
-    throw RequestException("400 Bad Request");
-  DEBUG_INFO("This requist is a CGI");
+	const std::string uri = getPath();
+	bool hasExtAtEnd = endsWith(uri, _match_loc->getCgiExt());
+	// is not cgi at all because the match location doesn't have cgiExt and cgiPath (use matchLog->hasCGI for that)
+	// return false
+	if (!_match_loc->hasCgi())
+		return false;
+	_is_cgi = true;
+	// its cgi and its post method and its have no .[ext] at end of path so its for upload cgi script and this is response part
+	// set is_cgi true and return false
+	if (_method == "POST" && !hasExtAtEnd)
+		return false;
+	// the only all methods remain which is get/post/delete for run or delete cgi is require scirpt name with ext
+	else if (!hasExtAtEnd)
+		throw RequestException("400 Bad Request");
+	// its cgi and its delete method and its have .[ext] at end of path so its for delete cgi and this is response part
+	// set is_cgi true and return false
+	else if (_method == "DELETE")
+		return false;
+	// its cgi and it get or post and its has the .[ext] at end so request for run cgi
+	// set is_cgi true and return true and here my cgi work should be run
+	else if (!(_method == "POST" || _method == "GET"))
+		return false;
+	std::string uploadStore = (!_match_loc->getUploadStore().empty())
+								  ? _match_loc->getUploadStore()
+								  : Default::CGI_STORE;
+	// NOTE: also i should store info like the path and everything so i don't need to use look for it next time
+	_file_path = uploadStore + getFileName(uri);
+	if (access(_file_path.c_str(), X_OK) == -1)
+		throw RequestException("400 Bad Request");
+	DEBUG_INFO2("This requist is a CGI");
 	return (true);
 }
 

@@ -1,7 +1,7 @@
 # vpaths
 vpath %.hpp includes
 vpath %.h includes
-vpath %.cpp src src/server src/request src/response src/config src/cgi src/client
+vpath %.cpp src src/server src/request src/response src/config src/cgi src/client src/cookies
 
 NAME = webserv 
 
@@ -12,10 +12,10 @@ BUILD_DR = ./build/
 
 HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp Templates.hpp \
 					Client.hpp ManageClients.hpp Response.hpp Server.hpp utils.hpp WebServExceptions.hpp \
-					Lexer.hpp Config.hpp serverConfig.hpp locationConfig.hpp
+					Lexer.hpp Config.hpp serverConfig.hpp locationConfig.hpp sessionManager.hpp Session.hpp
 
 
-F_SRCS = request.cpp request_utils.cpp utils.cpp response.cpp response_utils.cpp exceptions.cpp Lexer.cpp Config.cpp locationConfig.cpp serverConfig.cpp
+F_SRCS = request.cpp request_utils.cpp sessionManager.cpp Session.cpp utils.cpp response.cpp response_utils.cpp exceptions.cpp Lexer.cpp Config.cpp locationConfig.cpp serverConfig.cpp
 F_SERVER = server.cpp server_utils.cpp
 F_CGI = cgi.cpp cgi_oi.cpp cgi_utils.cpp
 F_CLIENT = manageClients.cpp client.cpp client_io.cpp 
