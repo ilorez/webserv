@@ -38,14 +38,13 @@ void CGIClient::turnToPipe()
   // register pipe in 1
   struct epoll_event ev = create_ev(&_pipe_in_hold, EPOLLOUT);
   epoll_ctl(_epfd, EPOLL_CTL_ADD, _pipe_in[1], &ev);
-  std::cout << "readbuffer size: "<< _read_counter << std::endl;
-  std::cout << "content len: "<< _req.getContentLen() << std::endl;
+  //std::cout << "readbuffer size: "<< _read_counter << std::endl;
+  //std::cout << "content len: "<< _req.getContentLen() << std::endl;
   if (_read_counter >= _req.getContentLen())
     _socket_done = true;
-  if (_socket_done)
-    DEBUG_INFO2("CONTENTLEN ritched");
+  //if (_socket_done)
+   // DEBUG_INFO2("CONTENTLEN ritched");
 }
-
 
 void CGIClient::writeToPipe()
 {
