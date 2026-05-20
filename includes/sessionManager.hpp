@@ -13,7 +13,6 @@ public:
 	std::string generateSessionId();
 	Session *createSession();
 	void deleteSession(const std::string &id);
-	void refrech(Session &s);
 	bool isExpired(Session &s);
 
 private:
