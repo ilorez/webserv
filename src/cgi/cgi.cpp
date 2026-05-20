@@ -6,7 +6,7 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/20 09:58:05 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/20 11:57:32 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,7 @@ CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd), _pid(-1), _socket_done
   _pipe_in[1] = -1;
   _pipe_out[0] = -1;
   _pipe_out[1] = -1;
-  _clsock_hold.is_cgi = true;
-  _clsock_hold.cgi = this;
+  _clsock_hold.is_cgi = true; _clsock_hold.cgi = this;
   _pipe_in_hold.is_cgi = true;
   _pipe_in_hold.cgi = this;
   _pipe_out_hold.is_cgi = true;
@@ -158,14 +157,24 @@ void CGIClient::ft_exec()
     close (_pipe_out[0]);
     ft_change_fd(_pipe_in[0], STDIN_FILENO);
     ft_change_fd(_pipe_out[1], STDOUT_FILENO);
-    std::string cgiPath = _req.getMatchLoc()->getCgiPath();
+    const LocationConfig* loc = _req.getMatchedLocation();
+    if (!loc)
+    {
+      DEBUG_ERROR("here is it");
+      exit(3);
+    }
+    std::string cgiPath = loc->getCgiPath();
     std::string scriptPath = _req.getFilePath();
+    /*char *argv[] = { (char*)"/usr/bin/python3", (char*)"./cgi-bin/hello_get.py", NULL };
+    */
+    char *env[]  = { (char*)"REQUEST_METHOD=GET", (char*)"QUERY_STRING=name=John", NULL };
     char *argv[] = {
       const_cast<char*>(cgiPath.c_str()),
       const_cast<char*>(scriptPath.c_str()),
       NULL
     };
-    execve(argv[0], argv, buildEnv());
+   execve(argv[0], argv, env);
+    //execve(argv[0], argv, buildEnv());
     //execve("/usr/bin/python3", argv, buildEnv());
     exit(126);
   }
