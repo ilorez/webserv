@@ -19,7 +19,6 @@ private:
   std::string _method;                         // get, post, delete
   std::string _body;
   std::map<std::string, std::string> _headers; // http headers
-  std::vector<std::pair<std::string, std::string> > _setCookieHeaders;
   int          _tmp_fd;
   std::string  _tmp_file_name;
   size_t       _bytes_counter;
