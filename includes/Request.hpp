@@ -72,7 +72,8 @@ public:
   // methods
   bool isCGI();
   void setServerConfig(ServerConfig &sc);
-
+  Session* getCookies() { return cookie; };
+  
 private:
   // parse request
   void _parseFirstLine(const std::vector<std::string> &lines);
@@ -82,6 +83,8 @@ private:
 
   // parse cookies
   void parseCookies();
+
+ 
 };
 
 #endif
