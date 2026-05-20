@@ -54,8 +54,8 @@ void Request::_insertHeader(std::string &key, const std::string &value, const st
 	std::transform(key.begin(), key.end(), key.begin(),
 				   ::toLowerCase); // convert the entire string to lowercase. as the key is case-insensitive
 
-	if (key == "set-cookie") // store it in a seperated vector, as its an exception
-		_setCookieHeaders.push_back(std::pair<std::string, std::string>(key, value));
+	if (key == "cookie" && _headers.find(key) != _headers.end())
+		_headers.find(key)->second += "; " + value;
 	else if (_headers.find(key) != _headers.end()) // concat with comma, otherwise ignore new ones
 	{
 		if (commaHeaders.find(key) != commaHeaders.end())
@@ -126,12 +126,12 @@ void Request::requestParser(const std::string &raw)
 		DEBUG_ERROR("request parser: invalid Content-Length");
 		throw RequestException("400 Bad Request");
 	}
-  _match_loc = getMatchedLocation();
+	_match_loc = getMatchedLocation();
 	if (!_match_loc)
-    throw RequestException("400 Bad Request");
+		throw RequestException("400 Bad Request");
 }
 
-// change name to checkCGI request 
+// change name to checkCGI request
 bool Request::isCGI()
 {
   const std::string uri = getPath();

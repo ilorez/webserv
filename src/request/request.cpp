@@ -19,7 +19,6 @@ Request &Request::operator=(const Request &other)
     this->_method = other._method;
     this->_body = other._body;
     this->_headers = other._headers;
-    this->_setCookieHeaders = other._setCookieHeaders;
     this->_tmp_fd = other._tmp_fd;
     this->_tmp_file_name = other._tmp_file_name;
     this->_bytes_counter = other._bytes_counter;
