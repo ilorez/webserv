@@ -6,7 +6,7 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/19 22:04:59 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/20 13:51:55 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/20 14:52:20 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,9 +91,9 @@ void Server::_handelClient()
   if (is_new_conx){continue;}
   else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
   {
-    //if (eh->cl->isTimedOut(TIMEOUT_SECONDS))
-     // continue;
-    if (eh->is_cgi)
+    if (eh->cl->isTimedOut(TIMEOUT_SECONDS))
+      continue;
+    else if (eh->is_cgi)
       eh->cgi->handel(eh->fd, _events[i].events);
     else if (eh->cl->getState() == READING_HEADERS)
       this->readheaders(eh->cl);

@@ -6,14 +6,14 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/20 13:48:15 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/20 15:21:08 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/container.hpp"
 
 
-CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd), _pid(-1), _socket_done(false), _cgi_pipe_done(false)
+CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd), _pid(-1), _socket_done(false), _cgi_pipe_done(false), _read_counter(0)
 {
   _pipe_in[0] = -1;
   _pipe_in[1] = -1;
@@ -26,7 +26,7 @@ CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd), _pid(-1), _socket_done
   _pipe_out_hold.cgi = this;
 }
 
-CGIClient::CGIClient(Client &cl): Client(cl){
+CGIClient::CGIClient(Client &cl): Client(cl),_pid(-1), _socket_done(false), _cgi_pipe_done(false), _read_counter(0) {
   _pipe_in[0] = -1;
   _pipe_in[1] = -1;
   _pipe_out[0] = -1;
@@ -169,6 +169,7 @@ void CGIClient::ft_exec()
 
 void CGIClient::handel(int fd, uint32_t evs)
 {
+  try {
   // work on switch algorithm
   // if you think its not required for everything to work
   // correctly don't use it
@@ -202,6 +203,12 @@ void CGIClient::handel(int fd, uint32_t evs)
       // if buffer is empty => remove the pipe in 1 from epoll
       // and add socket again to epoll in case of content len is not end
       writeToPipe();    
+  }
+  }
+  catch (const std::exception &e){
+    std::cerr << ERROR_MSG << e.what() << std::endl;
+    this->forceTimeout();
+    this->setState(DONE);
   }
 }
 

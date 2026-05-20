@@ -144,4 +144,5 @@ void check_process_status(int status) {
           std::cout << "Continued running.\n";
       }
     #endif
+    (void)status;
 }

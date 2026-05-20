@@ -8,9 +8,11 @@ void CGIClient::writeToReadBuffer()
   DEBUG_INFO("writeToReadBuffer called");
   char buf[CHUNK_SIZE];
   int bytes = recv(this->_fd, buf, CHUNK_SIZE, 0);
+  std::cout << bytes << std::endl;
   if (bytes <= 0)
-    throw CGIException("recv: readToReadBuffer: failed, client disconnected");
+    throw CGIException("recv: reading from socket failed!");
   // put in the readbuffer
+  _read_counter += bytes;
   this->appendToReadBuffer(buf, bytes);
   this->turnToPipe();
 }
@@ -36,8 +38,12 @@ void CGIClient::turnToPipe()
   // register pipe in 1
   struct epoll_event ev = create_ev(&_pipe_in_hold, EPOLLOUT);
   epoll_ctl(_epfd, EPOLL_CTL_ADD, _pipe_in[1], &ev);
-  if (_readBuffer.size() >= _req.getContentLen())
+  std::cout << "readbuffer size: "<< _read_counter << std::endl;
+  std::cout << "content len: "<< _req.getContentLen() << std::endl;
+  if (_read_counter >= _req.getContentLen())
     _socket_done = true;
+  if (_socket_done)
+    DEBUG_INFO2("CONTENTLEN ritched");
 }
 
 

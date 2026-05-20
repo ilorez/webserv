@@ -73,6 +73,7 @@ void CGIClient::preSetup()
   this->setupPipes();
   if (_req.getMethod() == "POST")
   {
+    _read_counter = _readBuffer.size();
     if (_readBuffer.size() >= _req.getContentLen())
         this->turnToPipe();
   }
