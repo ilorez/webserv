@@ -35,7 +35,7 @@ std::string Client::readHeaders()
     return "";
   }
   std::string headers = _readBuffer.substr(0, pos);
-  //std::cout << headers << std::endl;
+  std::cout << headers << std::endl;
   this->setReadBuffer(_readBuffer.substr(pos+4));
   return headers;
 }
