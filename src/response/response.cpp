@@ -17,6 +17,34 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
         contentType = "text/html";
     h.insert(std::make_pair("Content-Type", contentType));
 
+    if (_status == 301 || _status == 302)
+        h.insert(std::make_pair("Location", _loc->getReturnUrl()));
+
+
+    if (_req.getCookies() != NULL)
+    {
+        Session *session = _req.getCookies();
+        time_t now = time(NULL);
+
+        if (session->getExpiresAt() > now)
+        {
+            std::string cookieValue = "session_id=" + session->getId();
+
+            // Append expiry time as HTTP date
+            char timeBuf[128];
+            time_t exp = session->getExpiresAt();
+            struct tm *gmt = gmtime(&exp);
+            gmt = gmtime(&exp);
+            strftime(timeBuf, sizeof(timeBuf), "%a, %d %b %Y %H:%M:%S GMT", gmt);
+
+            cookieValue += "; Expires=" + std::string(timeBuf);
+            cookieValue += "; Path=/";
+            cookieValue += "; HttpOnly";
+
+            h.insert(std::make_pair("Set-Cookie", cookieValue));
+        }
+    }
+
     if (_req.getMethod() == "GET" && _status < 400 && _file_fd >= 0)
     {
         struct stat st;
@@ -232,6 +260,16 @@ void Response::Delete()
     _body = "File deleted successfully\n";
 }
 
+void printMap(const std::map<std::string, std::string>& h)
+{
+    std::map<std::string, std::string>::const_iterator it;
+
+    for (it = h.begin(); it != h.end(); ++it)
+    {
+        std::cout << it->first << " : " << it->second << std::endl;
+    }
+}
+
 std::string Response::build()
 {
     std::string response;
@@ -254,6 +292,9 @@ std::string Response::build()
     }
 
     initHeaders(_headers);
+    std::cout << "\n\n-----------------------!!-------------------------------------\n\n";
+    printMap(_headers);
+    std::cout << "\n\n-----------------------!!-------------------------------------\n\n";
     response = mergeResponseToString();
     return response;
 }
