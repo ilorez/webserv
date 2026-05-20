@@ -8,6 +8,7 @@ void Session::setData(const std::string &key, const std::string &value) { data[k
 std::string Session::getId() { return this->id; };
 time_t Session::getCreatedAt() { return this->createdAt; };
 time_t Session::getExpiresAt() { return this->expiresAt; };
+std::map<std::string, std::string> &Session::getData() { return this->data; };
 
 Session::Session() {};
 Session::~Session() {};

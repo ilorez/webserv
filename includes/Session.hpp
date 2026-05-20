@@ -17,7 +17,7 @@ public:
 	std::string getId();
 	time_t getCreatedAt();
 	time_t getExpiresAt();
-
+	std::map<std::string, std::string> &getData();
 	Session();
 	~Session();
 };

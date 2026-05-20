@@ -7,6 +7,8 @@ sessionManager &sessionManager::getInstance()
 	return instance;
 };
 
+std::map<std::string, Session> &sessionManager::getDatabase() { return this->database; };
+
 Session *sessionManager::createSession()
 {
 	Session s;

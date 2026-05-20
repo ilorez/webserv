@@ -8,6 +8,7 @@ private:
 public:
 	static sessionManager &getInstance();
 	// getters
+	std::map<std::string, Session> &getDatabase();
 	Session *getSession(const std::string &id);
 	// helpers
 	std::string generateSessionId();

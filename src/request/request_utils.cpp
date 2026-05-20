@@ -65,7 +65,6 @@ void Request::_insertHeader(std::string &key, const std::string &value, const st
 	}
 	else // store normal headers
 		_headers.insert(std::pair<std::string, std::string>(key, value));
-	
 }
 
 void Request::_parseAllHeaders(const std::vector<std::string> &lines)
@@ -151,7 +150,6 @@ void Request::parseCookies()
 	}
 
 	DEBUG_INFO2("Found Cookie, and its valid");
-
 	DEBUG_INFO2("Now filling the cookie data");
 	std::istringstream ss(cookieHeader);
 	std::string token;
@@ -161,8 +159,9 @@ void Request::parseCookies()
 		size_t eq = token.find("=");
 		if (eq == std::string::npos)
 			continue;
+
 		std::string key = trim(token.substr(0, eq));
-		std::string value = token.substr(eq + 1);
+		std::string value = trim(token.substr(eq + 1));
 
 		if (key != "session_id")
 			this->cookie->setData(key, value);
@@ -187,7 +186,20 @@ void Request::requestParser(const std::string &raw)
 	_match_loc = getMatchedLocation();
 	if (!_match_loc)
 		throw RequestException("400 Bad Request");
+
 	parseCookies();
+
+	DEBUG_INFO2("#######################Database Information#######################");
+	sessionManager &manager = sessionManager::getInstance();
+	std::map<std::string, Session> db = manager.getDatabase();
+	std::cout << "Database size: " << db.size() << std::endl;
+	for (std::map<std::string, Session>::iterator it = db.begin(); it != db.end(); it++)
+	{
+		std::cout << "Session id: " << it->first << std::endl;
+		// std::cout << it->second.getData()[0] << std::endl;
+		std::cout << "\n";
+	}
+	DEBUG_INFO2("##################################################################");
 }
 
 // change name to checkCGI request
