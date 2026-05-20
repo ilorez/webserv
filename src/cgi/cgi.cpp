@@ -6,7 +6,7 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/19 23:58:22 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/20 09:58:05 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,30 @@ CGIClient::CGIClient(Client &cl): Client(cl){
   _pipe_out_hold.cgi = this;
   cl.invalidateFd(); // stop ~Client() closing the _fd
 }
+void check_process_status(int status) {
+    // 1. Check if the child exited normally
+    if (WIFEXITED(status)) {
+        printf("Normal exit. Code: %d\n", WEXITSTATUS(status));
+    } 
+    // 2. Check if the child was killed by a signal (e.g., SIGKILL, SIGSEGV)
+    else if (WIFSIGNALED(status)) {
+        printf("Killed by signal: %d\n", WTERMSIG(status));
+        
+        #ifdef WCOREDUMP
+        if (WCOREDUMP(status)) {
+            printf("Core dumped.\n");
+        }
+        #endif
+    } 
+    // 3. Check if the child was stopped (requires WUNTRACED flag in waitpid)
+    else if (WIFSTOPPED(status)) {
+        printf("Stopped by signal: %d\n", WSTOPSIG(status));
+    } 
+    // 4. Check if the child continued (requires WCONTINUED flag in waitpid)
+    else if (WIFCONTINUED(status)) {
+        printf("Continued running.\n");
+    }
+}
 
 CGIClient::~CGIClient()
 {
@@ -54,7 +78,8 @@ CGIClient::~CGIClient()
     kill(_pid, SIGKILL);
   // waitpid
   waitpid(_pid, &status, 0);
-
+  DEBUG_INFO2("status exit: " + to_string98(status));
+  check_process_status(status);
   // close pipes
   ft_closefd(_pipe_in[1]);
   ft_closefd(_pipe_out[0]);
@@ -86,6 +111,8 @@ void CGIClient::setupPipes()
 
 void CGIClient::registerPipeOut()
 {
+  DEBUG_INFO("registerPipeOut called");
+  DEBUG_INFO("my fd is: " + to_string98(_pipe_out[0]));
   // applying non-blocking
   fcntl(_pipe_out[0], F_SETFL, O_NONBLOCK);
 
@@ -120,7 +147,6 @@ void	ft_change_fd(int fd, int to)
 
 void CGIClient::ft_exec()
 {
-  buildEnv();
   setupPipes();
   _pid = fork();
   if (_pid == -1)
