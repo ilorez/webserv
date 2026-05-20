@@ -13,7 +13,6 @@ Session *sessionManager::createSession()
 
 	s.setId(generateSessionId());
 	s.setCreatedAt(time(NULL));
-	s.setLastAccess(time(NULL));
 	s.setExpiresAt(time(NULL) + SESSION_TTL);
 	database[s.getId()] = s;
 
@@ -54,15 +53,8 @@ Session *sessionManager::getSession(const std::string &id)
 		return NULL;
 	}
 
-	it->second.setLastAccess(time(NULL));
 	return &it->second;
 };
-
-void sessionManager::refrech(Session &s)
-{
-	s.setLastAccess(time(NULL));
-	s.setExpiresAt(time(NULL) + SESSION_TTL);
-}
 
 void sessionManager::deleteSession(const std::string &id)
 {

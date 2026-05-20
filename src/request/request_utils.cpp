@@ -65,6 +65,7 @@ void Request::_insertHeader(std::string &key, const std::string &value, const st
 	}
 	else // store normal headers
 		_headers.insert(std::pair<std::string, std::string>(key, value));
+	
 }
 
 void Request::_parseAllHeaders(const std::vector<std::string> &lines)
