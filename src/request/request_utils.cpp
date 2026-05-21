@@ -1,3 +1,4 @@
+
 #include "../../includes/container.hpp"
 
 // ? member functions
@@ -14,7 +15,8 @@ bool Request::isMethodAllowed(const std::string &method)
 }
 
 static void initCommaHeaders(std::set<std::string> &commaHeaders)
-{ commaHeaders.insert("accept");
+{
+	commaHeaders.insert("accept");
 	commaHeaders.insert("accept-charset");
 	commaHeaders.insert("accept-encoding");
 	commaHeaders.insert("accept-language");
@@ -133,18 +135,18 @@ void Request::parseCookies()
 	if (getHeaderValue("cookie") == "")
 	{
 		DEBUG_INFO2("No cookies found, so creating a new one");
-		this->cookie = manager.createSession();
+		this->_session = manager.createSession();
 		return;
 	}
 
 	cookieHeader = getHeaderValue("cookie");
 	sessionId = getCookieValue(cookieHeader, "session_id");
-	this->cookie = manager.getSession(sessionId);
+	this->_session = manager.getSession(sessionId);
 
-	if (this->cookie == NULL) // not a valid session id
+	if (this->_session == NULL) // not a valid session id
 	{
 		DEBUG_INFO2("Found Cookie, but not valid");
-		this->cookie = manager.createSession(); // generate a new session
+		this->_session = manager.createSession(); // generate a new session
 		return;
 	}
 
@@ -163,8 +165,9 @@ void Request::parseCookies()
 		std::string value = trim(token.substr(eq + 1));
 
 		if (key != "session_id")
-			this->cookie->setData(key, value);
+			this->_session->setData(key, value);
 	}
+	this->_is_new_session = false;
 }
 
 void Request::requestParser(const std::string &raw)
@@ -177,18 +180,19 @@ void Request::requestParser(const std::string &raw)
 	_parseFirstLine(lines);
 	_parseAllHeaders(lines);
 	// NOTE: importent to add request methods that have body here like "put" if you use it
-  ;
+	;
 	if (!to_integer<std::string, size_t>(getHeaderValue("Content-Length"), _content_size) && _method == "POST")
 	{
 		DEBUG_ERROR("request parser: invalid Content-Length");
 		throw RequestException("400 Bad Request");
-	} else if (_content_size > 0 && _method != "POST")
-  {
+	}
+	else if (_content_size > 0 && _method != "POST")
+	{
 		DEBUG_ERROR("request parser: there is no meaning of sending a body with GET request");
 		throw RequestException("400 Bad Request");
-  }
-  if (getHeaderValue("transfer-encoding") != "" && getHeaderValue("transfer-encoding") != "identity")
-    throw RequestException("400 Bad Request");
+	}
+	if (getHeaderValue("transfer-encoding") != "" && getHeaderValue("transfer-encoding") != "identity")
+		throw RequestException("400 Bad Request");
 	_match_loc = getMatchedLocation();
 	if (!_match_loc)
 		throw RequestException("400 Bad Request");

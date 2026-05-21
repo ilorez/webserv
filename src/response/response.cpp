@@ -5,28 +5,24 @@ int gn = 0;
 std::string Response::cookieHeaderBuilder()
 {
     std::string cookieValue;
-    if (_req.getCookies() != NULL)
+    Session *session = _req.get_session();
+    time_t now = time(NULL);
+
+    if (session->getExpiresAt() > now)
     {
-        Session *session = _req.getCookies();
-        time_t now = time(NULL);
+        cookieValue = "session_id=" + session->getId();
 
-        if (session->getExpiresAt() > now)
+        time_t exp = session->getExpiresAt();
+        std::string time = getHttpDate(exp);
+        std::map<std::string, std::string> mapp = _req.get_session()->getData();
+        for (std::map<std::string, std::string>::iterator it = mapp.begin(); it != mapp.end(); it++)
         {
-            cookieValue = "session_id=" + session->getId();
-            
-            time_t exp = session->getExpiresAt();
-            std::string time = getHttpDate(exp);     
-            std::map<std::string, std::string> mapp = _req.getCookies()->getData();
-            for (std::map<std::string, std::string>::iterator it = mapp.begin(); it != mapp.end(); it++)
-            {
-                cookieValue += "; " + it->first + "=" + it->second;
-            }
-            
-            cookieValue += "; Expires=" + time;
-            cookieValue += "; Path=/";
-            cookieValue += "; HttpOnly";
-
+            cookieValue += "; " + it->first + "=" + it->second;
         }
+
+        cookieValue += "; Expires=" + time;
+        cookieValue += "; Path=/";
+        cookieValue += "; HttpOnly";
     }
     return cookieValue;
 }
@@ -36,9 +32,9 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
     timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
 
-    h.insert(std::make_pair("Date",           getHttpDate(ts.tv_sec)));
-    h.insert(std::make_pair("Server",         RespDefaults::SERVER_NAME));
-    h.insert(std::make_pair("Connection",     "close"));
+    h.insert(std::make_pair("Date", getHttpDate(ts.tv_sec)));
+    h.insert(std::make_pair("Server", RespDefaults::SERVER_NAME));
+    h.insert(std::make_pair("Connection", "close"));
 
     std::string contentType = "text/plain";
     if (_req.getMethod() == "GET" && _status < 400)
@@ -50,7 +46,8 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
     if (_status == 301 || _status == 302)
         h.insert(std::make_pair("Location", _loc->getReturnUrl()));
 
-    h.insert(std::make_pair("Set-Cookie", cookieHeaderBuilder()));
+    if (_req.is_new_session())
+        h.insert(std::make_pair("Set-Cookie", cookieHeaderBuilder()));
     if (_req.getMethod() == "GET" && _status < 400 && _file_fd >= 0)
     {
         struct stat st;
@@ -60,10 +57,11 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
             h.insert(std::make_pair("Content-Length", to_string98(st.st_size)));
         }
     }
-    else {
-      if (_req.getMethod() == "POST" && _status == 201)
-          h.insert(std::make_pair("Location", _req.getPath()));
-      h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
+    else
+    {
+        if (_req.getMethod() == "POST" && _status == 201)
+            h.insert(std::make_pair("Location", _req.getPath()));
+        h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
     }
 }
 
@@ -71,7 +69,7 @@ void Response::serveErrorPage(int status)
 {
     _status = status;
 
-    const std::map<int, std::string>& conf = _req.getServerConf().getErrorPages();
+    const std::map<int, std::string> &conf = _req.getServerConf().getErrorPages();
     std::string errorPage;
     bool isCustom = false;
 
@@ -126,10 +124,10 @@ void Response::Get()
     if (!isMethodAllowed("GET"))
         return;
 
-    std::string root     = (_loc && !_loc->getRoot().empty()) 
-                            ? _loc->getRoot() 
-                            : _req.getServerConf().getRoot();
-    
+    std::string root = (_loc && !_loc->getRoot().empty())
+                           ? _loc->getRoot()
+                           : _req.getServerConf().getRoot();
+
     std::string filepath = root + getFileName(_req.getPath());
     if (access(filepath.c_str(), F_OK) != 0)
     {
@@ -142,8 +140,8 @@ void Response::Get()
     if (S_ISDIR(info.st_mode))
     {
         std::vector<std::string> indexList =
-            (_loc && !_loc->getIndex().empty()) 
-                ? _loc->getIndex() 
+            (_loc && !_loc->getIndex().empty())
+                ? _loc->getIndex()
                 : _req.getServerConf().getIndex();
 
         bool found = false;
@@ -160,9 +158,9 @@ void Response::Get()
 
         if (!found)
         {
-            bool autoindex = (_loc) 
-                             ? _loc->getAutoindex() 
-                             : _req.getServerConf().getAutoIndex();
+            bool autoindex = (_loc)
+                                 ? _loc->getAutoindex()
+                                 : _req.getServerConf().getAutoIndex();
             if (!autoindex)
             {
                 serveErrorPage(403);
@@ -207,9 +205,9 @@ void Response::Post()
     if (!isMethodAllowed("POST"))
         return;
 
-    size_t max_size = (_loc) 
-                        ? _loc->getClientMaxBodySize() 
-                        : _req.getServerConf().getClientMaxBodySize();
+    size_t max_size = (_loc)
+                          ? _loc->getClientMaxBodySize()
+                          : _req.getServerConf().getClientMaxBodySize();
 
     std::string contentLengthStr = _req.getHeaderValue("content-length");
     std::string contentTypeStr = _req.getHeaderValue("content-type");
@@ -225,9 +223,9 @@ void Response::Post()
         return;
     }
 
-    std::string uploadStore = (_loc && !_loc->getUploadStore().empty()) 
-                                ? _loc->getUploadStore() 
-                                : RespDefaults::UPLOAD_STORE;
+    std::string uploadStore = (_loc && !_loc->getUploadStore().empty())
+                                  ? _loc->getUploadStore()
+                                  : RespDefaults::UPLOAD_STORE;
 
     std::string filepath = uploadStore + "/" +  generateUploadFileName(contentTypeStr);
     
@@ -255,17 +253,17 @@ void Response::Post()
     {
         size_t bytes = write(fd, _req.getBody().c_str(), _req.getBody().size());
         if (bytes != _req.getBody().size())
-          serveErrorPage(500);
+            serveErrorPage(500);
         // you can't use ostream for make file executable thats why we should use open 0755
-        //std::ofstream file(filepath.c_str());
-        //file << _req.getBody();
-        //file.close();
+        // std::ofstream file(filepath.c_str());
+        // file << _req.getBody();
+        // file.close();
     }
     close(fd); 
     if (_status != 500)
     {
-      _status = 201;
-      _body = "Created";
+        _status = 201;
+        _body = "Created";
     }
 }
 
@@ -274,9 +272,9 @@ void Response::Delete()
     if (!isMethodAllowed("DELETE"))
         return;
 
-    std::string uploadStore = (_loc && !_loc->getUploadStore().empty()) 
-                                ? _loc->getUploadStore() 
-                                : RespDefaults::UPLOAD_STORE;
+    std::string uploadStore = (_loc && !_loc->getUploadStore().empty())
+                                  ? _loc->getUploadStore()
+                                  : RespDefaults::UPLOAD_STORE;
 
     std::string filepath = uploadStore + getFileName(_req.getPath());
 
@@ -301,11 +299,11 @@ void Response::Delete()
 std::string Response::build()
 {
     std::string response;
-    
+
     initStatusCodes(_mapStatusCodes);
     initMediaTypes(_mapMediaTypes);
     _loc = _req.getMatchLoc();
-    
+
     if (!tryApplyLocationReturn())
     {
         if (_req.getMethod() == "GET")
@@ -325,7 +323,7 @@ std::string Response::build()
 
 std::string Response::build(int status)
 {
-    std::string response; 
+    std::string response;
     initStatusCodes(_mapStatusCodes);
     initMediaTypes(_mapMediaTypes);
     // NOTE: TODO: you should never use _req in this part of building page base on status
@@ -337,10 +335,10 @@ std::string Response::build(int status)
     // NOTE: server error page can't use _req
     timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    _headers.insert(std::make_pair("Date",           getHttpDate(ts.tv_sec)));
-    _headers.insert(std::make_pair("Server",         RespDefaults::SERVER_NAME));
+    _headers.insert(std::make_pair("Date", getHttpDate(ts.tv_sec)));
+    _headers.insert(std::make_pair("Server", RespDefaults::SERVER_NAME));
     _headers.insert(std::make_pair("Content-Length", to_string98(_body.size())));
-    _headers.insert(std::make_pair("Connection",     "close"));
+    _headers.insert(std::make_pair("Connection", "close"));
     _headers.insert(std::make_pair("Content-Type", "text/html"));
     // ------------
     response = mergeResponseToString();
