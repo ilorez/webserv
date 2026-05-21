@@ -16,6 +16,7 @@ class CGIClient: public Client
     int _pipe_out[2];
     t_epollhold _pipe_in_hold;
     t_epollhold _pipe_out_hold;
+    bool _got_headers_end;
   public:
     CGIClient(int fd, int epfd);
     CGIClient(Client &cl);

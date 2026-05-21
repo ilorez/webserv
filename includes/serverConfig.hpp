@@ -38,6 +38,8 @@ public:
 	// constructor & destructor
 	ServerConfig();
 	~ServerConfig();
+  ServerConfig(const ServerConfig& other);
+  ServerConfig& operator=(const ServerConfig& other);
 
 	// getters and setters
 	void setHost(const std::string &host, size_t line);

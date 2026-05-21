@@ -18,6 +18,26 @@ Config::Config(std::vector<Token> Tokens)
 
 Config::~Config() {};
 
+// Copy constructor
+Config::Config(const Config& other)
+    : _Tokens(other._Tokens),
+      _servers(other._servers),
+      _status(other._status),
+      _index(other._index)
+{}
+
+// operator=
+Config& Config::operator=(const Config& other)
+{
+    if (this == &other)
+        return *this;
+    _Tokens = other._Tokens;
+    _servers = other._servers;
+    _status = other._status;
+    _index = other._index;
+    return *this;
+}
+
 // Getters and Setters
 int Config::getStatus() const { return this->_status; }
 std::vector<ServerConfig> &Config::getServers() { return _servers; }
