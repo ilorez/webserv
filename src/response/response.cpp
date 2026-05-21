@@ -9,7 +9,6 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
 
     h.insert(std::make_pair("Date",           getHttpDate(ts.tv_sec)));
     h.insert(std::make_pair("Server",         RespDefaults::SERVER_NAME));
-    h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
     h.insert(std::make_pair("Connection",     "close"));
 
     std::string contentType = "text/plain";
@@ -58,8 +57,8 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
     }
     else {
       if (_req.getMethod() == "POST" && _status == 201)
-          h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
-      h.insert(std::make_pair("Location", _req.getPath()));
+          h.insert(std::make_pair("Location", _req.getPath()));
+      h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
     }
 }
 
@@ -123,7 +122,6 @@ void Response::Get()
     if (!isMethodAllowed("GET"))
         return;
 
-    DEBUG_INFO("this request is GEEET");
     std::string root     = (_loc && !_loc->getRoot().empty()) 
                             ? _loc->getRoot() 
                             : _req.getServerConf().getRoot();
@@ -220,7 +218,7 @@ void Response::Post()
         serveErrorPage(415);
         return;
     }
-    if (!contentLengthStr.empty() && std::atoi(contentLengthStr.c_str()) > (int)max_size)
+    if (_req.getContentLen() > max_size)
     {
         serveErrorPage(413);
         return;
@@ -285,7 +283,7 @@ void Response::Delete()
     _status = 200;
     _body = "File deleted successfully\n";
 }
-
+/*
 void printMap(const std::map<std::string, std::string>& h)
 {
     std::map<std::string, std::string>::const_iterator it;
@@ -294,7 +292,7 @@ void printMap(const std::map<std::string, std::string>& h)
     {
         std::cout << it->first << " : " << it->second << std::endl;
     }
-}
+}*/
 
 std::string Response::build()
 {
@@ -303,7 +301,8 @@ std::string Response::build()
     initStatusCodes(_mapStatusCodes);
     initMediaTypes(_mapMediaTypes);
     // std::cout << "\n\n!# BUILD IS RUN N[" << gn++ << "]\n";
-    _loc = _req.getMatchedLocation();
+    //_loc = _req.getMatchedLocation();
+    _loc = _req.getMatchLoc();
 
     if (!tryApplyLocationReturn())
     {
@@ -327,9 +326,21 @@ std::string Response::build(int status)
     std::string response; 
     initStatusCodes(_mapStatusCodes);
     initMediaTypes(_mapMediaTypes);
-    _loc = _req.getMatchedLocation();
+    // NOTE: TODO: you should never use _req in this part of building page base on status
+    // because the _req may not be builded itself
+    //_loc = _req.getMatchedLocation();
     serveErrorPage(status);
-    initHeaders(_headers);
+
+    // --- Creat Headers
+    // NOTE: server error page can't use _req
+    timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    _headers.insert(std::make_pair("Date",           getHttpDate(ts.tv_sec)));
+    _headers.insert(std::make_pair("Server",         RespDefaults::SERVER_NAME));
+    _headers.insert(std::make_pair("Content-Length", to_string98(_body.size())));
+    _headers.insert(std::make_pair("Connection",     "close"));
+    _headers.insert(std::make_pair("Content-Type", "text/html"));
+    // ------------
     response = mergeResponseToString();
     return response;
 }

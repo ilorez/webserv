@@ -7,10 +7,8 @@ std::string Client::readHeaders()
   char tmp[BUF_SIZE]; // 4kb
   size_t pos = 0;
   int bytes = recv(_fd, tmp, BUF_SIZE, 0);
-  DEBUG_INFO2("TIME");
   if (bytes <= 0)
   {
-    DEBUG_INFO2("YEAH");
     DEBUG_WARN("error with recv in reading headers, or client discoonect");
     _state = DONE;
     return "";
@@ -29,13 +27,11 @@ std::string Client::readHeaders()
   }
   if (pos < 1)
   {
-    DEBUG_ERROR("Empty request");
     // send bad request
     callError(400);
     return "";
   }
   std::string headers = _readBuffer.substr(0, pos);
-  std::cout << headers << std::endl;
   this->setReadBuffer(_readBuffer.substr(pos+4));
   return headers;
 }
@@ -48,8 +44,8 @@ void Client::preSetup()
   {
     if (_readBuffer.size() >= _req.getContentLen())
     {
-      //DEBUG_INFO2("YEAH Body already readed with headers");
       _state = PROCESSING;
+      _req.setBody(_readBuffer);
       this->switchToEpollOut();
       return;
     }
@@ -127,16 +123,13 @@ void Client::processing()
 
 void Client::sendResponse()
 {
-    DEBUG_INFO("Send response");
     if (_writeBuffer.empty())
     {
         if (_res.getBodyFd() < 0)
         {
-          DEBUG_INFO2("the reqest is not large and the headers part already sended");
           _state = DONE;
           return ;
         }
-        DEBUG_INFO2("READING FROM FILE");
         char buf[CHUNK_SIZE];
         ssize_t bytes = read(_res.getBodyFd(), buf, CHUNK_SIZE);
         if (bytes < 0)
@@ -146,7 +139,6 @@ void Client::sendResponse()
         }
         if (bytes == 0) // done sending
         {
-            DEBUG_INFO2("sending DONE");
             _state = DONE;
             return;
         }
@@ -163,7 +155,6 @@ void Client::sendResponse()
         this->setWriteBuffer(std::string(buf + bytes_sended, bytes - bytes_sended));
         return;
     }
-    DEBUG_INFO2("SENDING FROM WRITEBUF");
     ssize_t bytes_sended = send(_fd,
        _writeBuffer.c_str() + _writeOffset,
         _writeBuffer.size() - _writeOffset, 0);
