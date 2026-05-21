@@ -14,8 +14,7 @@ bool Request::isMethodAllowed(const std::string &method)
 }
 
 static void initCommaHeaders(std::set<std::string> &commaHeaders)
-{
-	commaHeaders.insert("accept");
+{ commaHeaders.insert("accept");
 	commaHeaders.insert("accept-charset");
 	commaHeaders.insert("accept-encoding");
 	commaHeaders.insert("accept-language");
@@ -178,11 +177,15 @@ void Request::requestParser(const std::string &raw)
 	_parseFirstLine(lines);
 	_parseAllHeaders(lines);
 	// NOTE: importent to add request methods that have body here like "put" if you use it
-	if (_method == "POST" && !to_integer<std::string, size_t>(getHeaderValue("Content-Length"), _content_size))
+  ;
+	if (!to_integer<std::string, size_t>(getHeaderValue("Content-Length"), _content_size) && _method == "POST")
 	{
 		DEBUG_ERROR("request parser: invalid Content-Length");
+	} else if (_content_size > 0 && _method != "POST")
+  {
+		DEBUG_ERROR("request parser: there is no meaning of sending a body with GET request");
 		throw RequestException("400 Bad Request");
-	}
+  }
 	_match_loc = getMatchedLocation();
 	if (!_match_loc)
 		throw RequestException("400 Bad Request");

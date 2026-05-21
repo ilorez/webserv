@@ -70,8 +70,6 @@ class Client
         void  processing();
         void  sendResponse();
 
-        void  sendFromFile(int file_fd);
-
         // methods
         bool  createTmpFile();
         void  appendToReadBuffer(const char* data, size_t len);
