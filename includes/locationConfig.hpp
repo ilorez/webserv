@@ -30,16 +30,15 @@ private:
 	std::string _returnUrl;
 	int _returnCode;
 	unsigned long _clientMaxBodySize;
-	std::string _cgiExtension;
-	std::string _cgiPath;
 	std::string _uploadStore;
+
+	std::map<std::string, std::string> _cgiHandlers;
 
 public:
 	LocationConfig(const ServerConfig &serverConfig);
 	~LocationConfig();
 	LocationConfig(const LocationConfig &serverConfig);
-  LocationConfig& operator=(const LocationConfig& o);
-  
+	LocationConfig &operator=(const LocationConfig &o);
 
 	// getters
 	const std::string &getPath() const;
@@ -50,9 +49,8 @@ public:
 	const std::string &getReturnUrl() const;
 	int getReturnCode() const;
 	unsigned long getClientMaxBodySize() const;
-	const std::string &getCgiExt() const;
-	const std::string &getCgiPath() const;
 	const std::string &getUploadStore() const;
+	const std::map<std::string, std::string> &getCgiHandlers() const;
 
 	// setter
 	void setPath(const std::string &path, size_t line);
@@ -62,10 +60,8 @@ public:
 	void setAutoIndex(const std::string &autoindex, size_t line);
 	void setReturn(const std::vector<std::string> &params, size_t line);
 	void setClientMaxBodySize(const std::string &clientMaxBodySize, size_t line);
-	void setCgiExt(const std::string &ext, size_t line);
-	void setCgiPath(const std::string &path, size_t line);
 	void setUploadStore(const std::string &path, size_t line);
-
+	void setCgiHandel(const std::vector<std::string> &params, size_t line);
 	// helpers
 	bool isMethodAllowed(const std::string &method) const;
 	bool hasCgi() const;

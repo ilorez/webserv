@@ -174,10 +174,8 @@ void Config::parseLocationDirective(LocationConfig &locationBlock)
 		locationBlock.setAutoIndex(TokLexeme, line);
 	else if (keyType == UPLOAD_STORE)
 		locationBlock.setUploadStore(TokLexeme, line);
-	else if (keyType == CGI_EXT)
-		locationBlock.setCgiExt(TokLexeme, line);
-	else if (keyType == CGI_PATH)
-		locationBlock.setCgiPath(TokLexeme, line);
+	else if(keyType == CGI_HANDEL)
+		locationBlock.setCgiHandel(parseParams(), line);
 	else if (keyType == INDEX)
 		locationBlock.setIndex(parseParams(), line);
 	else if (keyType == ALLOW_METHODS)
@@ -187,7 +185,7 @@ void Config::parseLocationDirective(LocationConfig &locationBlock)
 	else
 		errorMsg("Unknown identifier", line);
 
-	if (keyType == ROOT || keyType == CLIENT_MAX_BODY_SIZE || keyType == UPLOAD_STORE || keyType == AUTOINDEX || keyType == CGI_EXT || keyType == CGI_PATH)
+	if (keyType == ROOT || keyType == CLIENT_MAX_BODY_SIZE || keyType == UPLOAD_STORE || keyType == AUTOINDEX)
 		advance();
 
 	if (!expect(SEMICOLON))

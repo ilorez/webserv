@@ -9,8 +9,6 @@ LocationConfig::LocationConfig(const ServerConfig &serverConfig)
 	  _returnUrl(""),
 	  _returnCode(0),
 	  _clientMaxBodySize(serverConfig.getClientMaxBodySize()),
-	  _cgiExtension(""),
-	  _cgiPath(""),
 	  _uploadStore("../../uploads/")
 {
 	_methods.push_back("GET");
@@ -34,8 +32,7 @@ LocationConfig& LocationConfig::operator=(const LocationConfig& o)
     this->_returnUrl = o._returnUrl;
     this->_returnCode = o._returnCode;
     this->_clientMaxBodySize = o._clientMaxBodySize;
-    this->_cgiExtension = o._cgiExtension;
-    this->_cgiPath = o._cgiPath;
+	this->_cgiHandlers = o._cgiHandlers;
     this->_uploadStore = o._uploadStore;
   }
   return *this;
@@ -51,9 +48,8 @@ bool LocationConfig::getAutoindex() const { return _autoindex; }
 const std::string &LocationConfig::getReturnUrl() const { return _returnUrl; }
 int LocationConfig::getReturnCode() const { return _returnCode; }
 unsigned long LocationConfig::getClientMaxBodySize() const { return _clientMaxBodySize; }
-const std::string &LocationConfig::getCgiExt() const { return _cgiExtension; }
-const std::string &LocationConfig::getCgiPath() const { return _cgiPath; }
 const std::string &LocationConfig::getUploadStore() const { return _uploadStore; }
+const std::map<std::string, std::string> &LocationConfig::getCgiHandlers() const {return _cgiHandlers;}
 // setters
 void LocationConfig::setPath(const std::string &path, size_t line)
 {
@@ -190,30 +186,33 @@ void LocationConfig::setUploadStore(const std::string &path, size_t line)
 	_uploadStore = path;
 }
 
-void LocationConfig::setCgiExt(const std::string &ext, size_t line)
-{
-	if (!(ext == ".py" || ext == ".sh")) // ! i will add the rest of cgi's as needed
-		errorMsg("Invalid cgi_ext, e.g. '.py', '.sh'", line);
 
-	_cgiExtension = ext;
+
+void LocationConfig::setCgiHandel(const std::vector<std::string> &params, size_t line)
+{
+    if (params.size() != 2)
+        errorMsg("cgi_handler requires exactly 2 arguments: <extension> <path>", line);
+
+    const std::string &ext  = params[0];
+    const std::string &path = params[1];
+
+    if (!(ext == ".py" || ext == ".sh"))
+        errorMsg("Invalid cgi_ext, e.g. '.py', '.sh'", line);
+    if (!isValidPath(path))
+        errorMsg("Invalid cgi_path", line);
+
+    _cgiHandlers[ext] = path;
 }
 
-void LocationConfig::setCgiPath(const std::string &path, size_t line)
+bool LocationConfig::hasCgi() const
 {
-	if (!isValidPath(path))
-		errorMsg("Invalid cgi_path", line);
-	_cgiPath = path;
+    return !_cgiHandlers.empty();
 }
 
 // helpers
 bool LocationConfig::isMethodAllowed(const std::string &method) const
 {
 	return (std::find(_methods.begin(), _methods.end(), method) != _methods.end());
-}
-
-bool LocationConfig::hasCgi() const
-{
-	return (!_cgiExtension.empty() && !_cgiPath.empty());
 }
 
 bool LocationConfig::hasReturn() const
