@@ -2,91 +2,464 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>nginx-1.29.6 media upload</title>
 
 <style>
-body { background:#0d0d0d; color:#fff; font-family:monospace; padding:30px; }
-.panel { border:1px solid #333; padding:15px; margin-bottom:15px; }
-input, button { padding:10px; margin-top:10px; }
-button { cursor:pointer; }
-.green { background:#00ff88; border:none; }
-.red { background:#ff3b3b; border:none; }
-.blue { background:#4d9fff; border:none; }
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+:root{
+  --bg:#0d0d0d;
+  --panel:#141414;
+  --border:#2a2a2a;
+  --text:#e8e8e8;
+  --muted:#666;
+  --green:#00ff88;
+  --blue:#4d9fff;
+  --red:#ff3b3b;
+
+  --mono:'Space Mono', monospace;
+  --sans:'IBM Plex Sans', sans-serif;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+  padding:32px 24px;
+}
+
+/* ---------------- NAVBAR ---------------- */
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding-bottom:20px;
+  margin-bottom:40px;
+
+  border-bottom:1px solid var(--border);
+}
+
+.logo{
+  font-family:var(--mono);
+  color:var(--green);
+  font-size:1rem;
+  letter-spacing:0.05em;
+}
+
+.logo span{
+  color:var(--muted);
+}
+
+nav a{
+  text-decoration:none;
+  color:var(--text);
+
+  border:1px solid var(--border);
+
+  padding:10px 14px;
+
+  font-family:var(--mono);
+  font-size:0.75rem;
+
+  transition:0.15s;
+}
+
+nav a:hover{
+  border-color:var(--green);
+  color:var(--green);
+}
+
+/* ---------------- GRID ---------------- */
+
+.grid{
+  max-width:1000px;
+  margin:auto;
+
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+@media(max-width:700px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+}
+
+/* ---------------- PANEL ---------------- */
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+
+  padding:24px;
+
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.label{
+  font-family:var(--mono);
+  font-size:0.7rem;
+  text-transform:uppercase;
+  letter-spacing:0.15em;
+  color:var(--muted);
+
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.label::after{
+  content:'';
+  flex:1;
+  height:1px;
+  background:var(--border);
+}
+
+.dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+}
+
+.green{ background:var(--green); }
+.blue{ background:var(--blue); }
+.red{ background:var(--red); }
+
+input{
+  width:100%;
+
+  background:var(--bg);
+  color:var(--text);
+
+  border:1px solid var(--border);
+
+  padding:12px;
+
+  font-family:var(--mono);
+  outline:none;
+}
+
+input::placeholder{
+  color:var(--muted);
+}
+
+button{
+  border:none;
+  cursor:pointer;
+
+  padding:12px;
+
+  font-family:var(--mono);
+  font-size:0.75rem;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+
+  transition:0.15s;
+}
+
+button:hover{
+  opacity:0.85;
+}
+
+.btn-green{
+  background:var(--green);
+  color:#000;
+}
+
+.btn-blue{
+  background:var(--blue);
+  color:#000;
+}
+
+.btn-red{
+  background:var(--red);
+  color:#fff;
+}
+
+/* ---------------- OUTPUT ---------------- */
+
+.output{
+  grid-column:1/-1;
+
+  background:var(--panel);
+  border:1px solid var(--border);
+
+  padding:20px;
+
+  min-height:100px;
+
+  font-family:var(--mono);
+  white-space:pre-wrap;
+  overflow:auto;
+}
+
+/* ---------------- PREVIEW ---------------- */
+
+.preview{
+  margin-top:20px;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.preview img,
+.preview video{
+  max-width:100%;
+  max-height:500px;
+
+  border:1px solid var(--border);
+}
+
+.preview audio{
+  width:100%;
+}
+
 </style>
 </head>
 
 <body>
 
-<h2>nginx-1.29.6 media test</h2>
+<header>
 
-<!-- UPLOAD -->
-<div class="panel">
-  <h3>UPLOAD (RAW BODY)</h3>
-  <input type="file" id="file">
-  <button class="green" onclick="upload()">upload</button>
+  <div class="logo">
+    nginx-1.29.6 <span>/ media tester</span>
+  </div>
+
+  <nav>
+    <a href="/cgi">CGI TEST</a>
+  </nav>
+
+</header>
+
+<div class="grid">
+
+  <!-- UPLOAD -->
+  <div class="panel">
+
+    <div class="label">
+      <span class="dot green"></span>
+      upload raw body
+    </div>
+
+    <input type="file" id="file">
+
+    <button class="btn-green" onclick="upload()">
+      upload file
+    </button>
+
+  </div>
+
+  <!-- DELETE -->
+  <div class="panel">
+
+    <div class="label">
+      <span class="dot red"></span>
+      delete file
+    </div>
+
+    <input type="text" id="del" placeholder="example.png">
+
+    <button class="btn-red" onclick="del()">
+      delete file
+    </button>
+
+  </div>
+
+  <!-- GET -->
+  <div class="panel" style="grid-column:1/-1;">
+
+    <div class="label">
+      <span class="dot blue"></span>
+      get file
+    </div>
+
+    <input type="text" id="get" placeholder="example.png">
+
+    <button class="btn-blue" onclick="getFile()">
+      fetch file
+    </button>
+
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="output">
+
+    <div id="out">ready...</div>
+
+    <div class="preview" id="preview"></div>
+
+  </div>
+
 </div>
-
-<!-- DELETE -->
-<div class="panel">
-  <h3>DELETE /upload/filename</h3>
-  <input type="text" id="del" placeholder="file.png">
-  <button class="red" onclick="del()">delete</button>
-</div>
-
-<!-- GET -->
-<div class="panel">
-  <h3>GET /upload/filename</h3>
-  <input type="text" id="get" placeholder="file.png">
-  <button class="blue" onclick="getFile()">get</button>
-</div>
-
-<pre id="out">ready...</pre>
 
 <script>
 
-function log(t){ document.getElementById("out").textContent = t; }
+/* ---------------- HELPERS ---------------- */
 
-/* ---------------- UPLOAD RAW ---------------- */
+function log(text)
+{
+  document.getElementById("out").textContent = text;
+}
+
+function clearPreview()
+{
+  document.getElementById("preview").innerHTML = "";
+}
+
+/* ---------------- UPLOAD ---------------- */
+
 function upload()
 {
-  const f = document.getElementById("file").files[0];
-  if (!f) return log("no file");
+  clearPreview();
 
-  // IMPORTANT: filename must be sent in URL
-  fetch("/upload/" + f.name, {
-    method: "POST",
-    headers: {
+  const f = document.getElementById("file").files[0];
+
+  if (!f)
+    return log("no file selected");
+
+  fetch("/upload/" + f.name,
+  {
+    method:"POST",
+
+    headers:
+    {
       "Content-Type": f.type || "application/octet-stream"
     },
-    body: f   // raw binary, NOT FormData
+
+    body:f
   })
+
   .then(r => r.text())
-  .then(d => log("UPLOAD:\n" + d))
-  .catch(e => log(e));
+  .then(d => log("UPLOAD RESPONSE:\n" + d))
+  .catch(e => log("ERROR:\n" + e));
 }
 
 /* ---------------- DELETE ---------------- */
+
 function del()
 {
-  const name = document.getElementById("del").value;
-  if (!name) return log("no name");
+  clearPreview();
 
-  fetch("/upload/" + name, {
-    method: "DELETE"
+  const name = document.getElementById("del").value;
+
+  if (!name)
+    return log("no filename");
+
+  fetch("/upload/" + name,
+  {
+    method:"DELETE"
   })
+
   .then(r => r.text())
-  .then(d => log("DELETE:\n" + d));
+  .then(d => log("DELETE RESPONSE:\n" + d))
+  .catch(e => log("ERROR:\n" + e));
 }
 
-/* ---------------- GET ---------------- */
+/* ---------------- GET + PREVIEW ---------------- */
+
 function getFile()
 {
+  clearPreview();
+
   const name = document.getElementById("get").value;
-  if (!name) return log("no name");
+
+  if (!name)
+    return log("no filename");
 
   fetch("/upload/" + name)
-  .then(r => r.blob())
-  .then(b => log("SIZE: " + b.size + " bytes"));
+
+  .then(response =>
+  {
+    if (!response.ok)
+      throw new Error("request failed");
+
+    return response.blob();
+  })
+
+  .then(blob =>
+  {
+    log(
+      "GET RESPONSE:\n" +
+      "SIZE: " + blob.size + " bytes\n" +
+      "TYPE: " + blob.type
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const preview = document.getElementById("preview");
+
+    /* IMAGE */
+    if (blob.type.startsWith("image/"))
+    {
+      const img = document.createElement("img");
+      img.src = url;
+
+      preview.appendChild(img);
+    }
+
+    /* VIDEO */
+    else if (blob.type.startsWith("video/"))
+    {
+      const video = document.createElement("video");
+
+      video.src = url;
+      video.controls = true;
+
+      preview.appendChild(video);
+    }
+
+    /* AUDIO */
+    else if (blob.type.startsWith("audio/"))
+    {
+      const audio = document.createElement("audio");
+
+      audio.src = url;
+      audio.controls = true;
+
+      preview.appendChild(audio);
+    }
+
+    /* TEXT */
+    else if (
+      blob.type.startsWith("text/")
+      || blob.type.includes("json")
+      || blob.type.includes("javascript")
+    )
+    {
+      blob.text().then(text =>
+      {
+        const pre = document.createElement("pre");
+
+        pre.style.marginTop = "20px";
+        pre.style.whiteSpace = "pre-wrap";
+
+        pre.textContent = text;
+
+        preview.appendChild(pre);
+      });
+    }
+  })
+
+  .catch(e =>
+  {
+    log("ERROR:\n" + e);
+  });
 }
 
 </script>
