@@ -164,7 +164,7 @@ void Request::parseCookies()
 		std::string key = trim(token.substr(0, eq));
 		std::string value = trim(token.substr(eq + 1));
 
-		if (key != "session_id")
+		if (key != "session_id" && key != "Expires" && key != "Path" && key != "HttpOnly")
 			this->_session->setData(key, value);
 	}
 	this->_is_new_session = false;
