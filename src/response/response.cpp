@@ -51,11 +51,16 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
     {
         struct stat st;
         if (fstat(_file_fd, &st) == 0)
+        {
             h.insert(std::make_pair("Last-Modified", getHttpDate(st.st_mtim.tv_sec)));
+            h.insert(std::make_pair("Content-Length", to_string98(st.st_size)));
+        }
     }
-
-    if (_req.getMethod() == "POST" && _status == 201)
-        h.insert(std::make_pair("Location", _req.getPath()));
+    else {
+      if (_req.getMethod() == "POST" && _status == 201)
+          h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
+      h.insert(std::make_pair("Location", _req.getPath()));
+    }
 }
 
 void Response::serveErrorPage(int status)
@@ -180,7 +185,8 @@ void Response::Get()
         return;
     }
     
-    _body = ft_readFile(filepath); // alaoui::todo, i remove that line   
+    //_file_fd = -1;
+   // _body = ft_readFile(filepath); // alaoui::todo, i remove that line   
     _status = 200;
 }
 

@@ -101,7 +101,10 @@ void  Client::readFromSocket(int)
   // put in the readbuffer
   this->appendToReadBuffer(buf, bytes);
   if (_readBuffer.size() >= _req.getContentLen())
+  {
     _state = PROCESSING;
+    _req.setBody(_readBuffer);
+  }
 }
 
 void Client::processing()
@@ -124,28 +127,26 @@ void Client::processing()
 
 void Client::sendResponse()
 {
-    // send data to client and close connection after done
-    send(_fd, _writeBuffer.c_str(), _writeBuffer.size(), 0);
-    /*
-     * TODO: call SendFromFile but add isRequestLarge condidition to it
-    */
-    _state = DONE;
-}
-
-
-void Client::sendFromFile(int file_fd)
-{
+    DEBUG_INFO("Send response");
     if (_writeBuffer.empty())
     {
+        if (_res.getBodyFd() < 0)
+        {
+          DEBUG_INFO2("the reqest is not large and the headers part already sended");
+          _state = DONE;
+          return ;
+        }
+        DEBUG_INFO2("READING FROM FILE");
         char buf[CHUNK_SIZE];
-        ssize_t bytes = read(file_fd, buf, CHUNK_SIZE);
+        ssize_t bytes = read(_res.getBodyFd(), buf, CHUNK_SIZE);
         if (bytes < 0)
         {
             DEBUG_WARN("sendFromFile: error with read");
             return;
         }
-        if (bytes == 0)
+        if (bytes == 0) // done sending
         {
+            DEBUG_INFO2("sending DONE");
             _state = DONE;
             return;
         }
@@ -157,11 +158,12 @@ void Client::sendFromFile(int file_fd)
             return;
         }
         // NOTE:
-        // writeBuf holds only the unsent remainder from the last read.
+        // writeBuf holds only the not sended part remainder from the last read.
         // writeOffset tracks position within that remainder on subsequent partial sends.
         this->setWriteBuffer(std::string(buf + bytes_sended, bytes - bytes_sended));
         return;
     }
+    DEBUG_INFO2("SENDING FROM WRITEBUF");
     ssize_t bytes_sended = send(_fd,
        _writeBuffer.c_str() + _writeOffset,
         _writeBuffer.size() - _writeOffset, 0);

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <ctime>
+#include <map>
+#include <string>
+
 class Session
 {
 private:
@@ -7,7 +11,6 @@ private:
 	time_t createdAt;
 	time_t expiresAt;
 	std::map<std::string, std::string> data;
-
 public:
 	void setId(const std::string &id);
 	void setCreatedAt(const time_t &time);
