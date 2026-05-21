@@ -75,7 +75,6 @@ void Response::initMediaTypes(std::map<std::string, std::string> &m)
         // Text
         std::make_pair(".txt",  "text/plain"),
         std::make_pair(".html", "text/html"),
-        std::make_pair(".htm",  "text/html"),
         std::make_pair(".css",  "text/css"),
         std::make_pair(".csv",  "text/csv"),
         std::make_pair(".js",   "application/javascript"),
@@ -206,6 +205,20 @@ std::string Response::returnMediaType(const std::string& path)
     return "text/html";
 }
 
+std::string Response::getExtensionFromContentType(
+    const std::string &contentType,
+    const std::map<std::string, std::string> &mediaTypes)
+{
+    for (std::map<std::string, std::string>::const_iterator it = mediaTypes.begin();
+         it != mediaTypes.end(); ++it)
+    {
+        if (it->second == contentType)
+            return it->first;
+    }
+
+    return "";
+}
+
 std::string Response::getHttpDate(time_t t)
 {
     tm *gmt = gmtime(&t);
@@ -216,8 +229,9 @@ std::string Response::getHttpDate(time_t t)
     return std::string(buffer);
 }
 
-std::string Response::generateUploadFileName()
+std::string Response::generateUploadFileName(std::string contentTypeStr)
 {
+    std::string ret;
     std::srand(std::time(NULL));
 
     const char charset[] = "abcdefghijklmnopqrstuvwxyz";
@@ -235,7 +249,10 @@ std::string Response::generateUploadFileName()
         random_part += numset[std::rand() % (sizeof(numset) - 1)];
     }
 
-    return "client_body_" + random_part + returnFileExtension(_req.getPath());
+    ret += "client_body_" + random_part;
+    ret += getExtensionFromContentType(contentTypeStr, _mapMediaTypes);
+    
+    return ret;
 }
 
 bool    Response::transferToNewFile(int destFd, int srcFd)
