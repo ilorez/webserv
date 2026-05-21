@@ -1,25 +1,6 @@
 
 #include "../../includes/container.hpp"
-/*
-char **CGIClient::buildEnv()
-{
-    std::vector<std::string> envVars;
-    std::map<std::string, std::string>& map = _req.getHeaders();
-    for (std::map <std::string, std::string>::iterator it = map.begin(); it != map.end(); it++)
-    {
-      envVars.push_back(it->first + "=" +  it->second);
-      std::cout << "env back: " << envVars.back() << std::endl;
-    }
-    char **env = new char*[envVars.size() + 1];
-    for (size_t i = 0; i < envVars.size(); i++)
-    {
-        env[i] = new char[envVars[i].size() + 1];
-        std::strcpy(env[i], envVars[i].c_str());
-    }
-    env[envVars.size()] = NULL; 
-    return env;
-}
-// */
+
 char **CGIClient::buildEnv()
 {
     std::vector<std::string> envVars;
@@ -51,6 +32,16 @@ char **CGIClient::buildEnv()
             envVars.push_back(cgiKey + "=" + it->second);
         }
     }
+    
+    std::map<std::string, std::string>& cookies = _req.get_session()->getData();
+    for (std::map<std::string, std::string>::iterator it = cookies.begin(); it != cookies.end(); ++it)
+    {   
+        std::string key = "COOKIE_";
+        for (size_t i = 0; i < it->first.size(); i++)
+            key += (it->first[i] == '-') ? '_' : std::toupper(it->first[i]);
+        envVars.push_back(key + "=" + it->second);
+    }
+    envVars.push_back("COOKIE_SESSION_ID=" + _req.get_session()->getId());
 
     char **env = new char*[envVars.size() + 1];
     for (size_t i = 0; i < envVars.size(); i++)
