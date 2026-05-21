@@ -3,7 +3,6 @@ import sys
 import os
 
 # Required CGI header
-print("HTTP/1.1 200 OK")
 print("Content-Type: text/plain\r\n")
 
 # Read Content-Length (important in CGI)
