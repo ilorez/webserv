@@ -181,17 +181,18 @@ void Request::requestParser(const std::string &raw)
 	if (!to_integer<std::string, size_t>(getHeaderValue("Content-Length"), _content_size) && _method == "POST")
 	{
 		DEBUG_ERROR("request parser: invalid Content-Length");
+		throw RequestException("400 Bad Request");
 	} else if (_content_size > 0 && _method != "POST")
   {
 		DEBUG_ERROR("request parser: there is no meaning of sending a body with GET request");
 		throw RequestException("400 Bad Request");
   }
+  if (getHeaderValue("transfer-encoding") != "" && getHeaderValue("transfer-encoding") != "identity")
+    throw RequestException("400 Bad Request");
 	_match_loc = getMatchedLocation();
 	if (!_match_loc)
 		throw RequestException("400 Bad Request");
-
 	parseCookies();
-
 	DEBUG_INFO2("#######################Database Information#######################");
 	sessionManager &manager = sessionManager::getInstance();
 	std::map<std::string, Session> db = manager.getDatabase();
