@@ -119,6 +119,23 @@ void Response::serveErrorPage(int status)
     return;
 }
 
+bool isDirectory(const std::string& path) {
+    // Explicit trailing slash → directory
+    if (!path.empty() && path[path.size() - 1] == '/')
+        return true;
+
+    // No dot after last slash → treat as directory
+    size_t lastSlash = path.rfind('/');
+    size_t lastDot   = path.rfind('.');
+    
+    if (lastDot == std::string::npos)
+        return true;                    // no extension → directory
+    if (lastSlash != std::string::npos && lastDot < lastSlash)
+        return true;                    // dot is in a dir component, not filename
+
+    return false;
+}
+
 void Response::Get()
 {
     if (!isMethodAllowed("GET"))
@@ -128,15 +145,22 @@ void Response::Get()
                            ? _loc->getRoot()
                            : _req.getServerConf().getRoot();
 
-    std::string filepath = root + getFileName(_req.getPath());
+    std::string filepath = root;
+    if (!isDirectory(_req.getPath()))
+      filepath += getFileName(_req.getPath());
+    /*
     if (access(filepath.c_str(), F_OK) != 0)
     {
         serveErrorPage(404);
         return;
-    }
+    }*/
 
     struct stat info;
-    stat(filepath.c_str(), &info);
+    if (stat(filepath.c_str(), &info) != 0)
+    {
+        serveErrorPage(404);
+        return;
+    }
     if (S_ISDIR(info.st_mode))
     {
         std::vector<std::string> indexList =

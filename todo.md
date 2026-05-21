@@ -25,7 +25,7 @@ Tasks:
    - [x] update is CGI to work to be true just with run CGI requests @zobair
    - [x] handel upload/delete cgi from folder /cgi-bin @alaoui
    - [x] parse CGI header output logic @zobair
-   - [ ] add test CGI UI page, (just AI part not that hard) @zobair
+   - [x] add test CGI UI page, (just AI part not that hard) @zobair
 
    - [ ] check memory leaks and tests @allllll
    - [ ] check Subject && code line by line @all (your part of code)
