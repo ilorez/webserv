@@ -174,7 +174,7 @@ void Client::callError(int err_code)
 bool Client::createTmpFile()
 {
   _req.setTmpFileName(makeTmpPath(_fd));
-  int tfd = open(_req.getTmpFileName().c_str(), O_RDWR | O_APPEND | O_CREAT);
+  int tfd = open(_req.getTmpFileName().c_str(), O_RDWR | O_APPEND | O_CREAT, 0755);
   if (tfd < 0)
   {
     DEBUG_ERROR("readFromSocket: could not create tmp file");

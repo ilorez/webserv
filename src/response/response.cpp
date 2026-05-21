@@ -230,37 +230,43 @@ void Response::Post()
                                 : RespDefaults::UPLOAD_STORE;
 
     std::string filepath = uploadStore + "/" +  generateUploadFileName(contentTypeStr);
+    int rf = open(_req.getTmpFileName().c_str(), O_RDONLY);
+    if (rf <  0)
+    {
+      DEBUG_ERROR("yeah its less then 0");
+      serveErrorPage(500);
+      return;
+    }
     int fd = open(filepath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0755);
     if (fd < 0)
     {
         serveErrorPage(500);
+        close(rf);
         return;
     }
     if (_req.isRequsetLarge())
     {
-        if (!transferToNewFile(fd, _req.getTmpFd()))
-        {
+        if (!transferToNewFile(fd, rf))
           serveErrorPage(500);
-          return ;
-        }
         std::remove(_req.getTmpFileName().c_str());
     }
     else
     {
         size_t bytes = write(fd, _req.getBody().c_str(), _req.getBody().size());
         if (bytes != _req.getBody().size())
-        {
           serveErrorPage(500);
-          return ;
-        }
-        close(fd);
         // you can't use ostream for make file executable thats why we should use open 0755
         //std::ofstream file(filepath.c_str());
         //file << _req.getBody();
         //file.close();
     }
-    _status = 201;
-    _body = "Created";
+    close(fd); 
+    close(rf);
+    if (_status != 500)
+    {
+      _status = 201;
+      _body = "Created";
+    }
 }
 
 void Response::Delete()
