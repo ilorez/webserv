@@ -20,15 +20,14 @@
 Tasks: 
    - [ ] redirect @Alaoui
    - [ ] Support cookies and session management (provide simple examples) @ali
-   - [ ] run CGI get/post pipline @zobair
-   - [ ] add ENV vars to CGI @zobair
-   - [ ] update is CGI to work to be true just with run CGI requests @zobair
+   - [x] run CGI get/post pipline @zobair
+   - [x] add ENV vars to CGI @zobair
+   - [x] update is CGI to work to be true just with run CGI requests @zobair
    - [ ] handel upload/delete cgi from folder /cgi-bin @alaoui
    - [ ] parse CGI header output logic @ali (we can talk about that later you are right person for that because you already done it before)
    - [ ] ad test CGI UI page, (just AI part not that hard) @zobair
    - [ ] check memory leaks and tests @allllll
-   - [ ] add new method "put/patch ..."
-   - [ ] link cookies part @ali + @?
+   - [ ] link cookies part @ali + @alaoui (response) + @zobair(cgi)
    - [ ] check Subject && code line by line @all (your part of code)
    - [ ] final tests 
    - [ ] create READMEs

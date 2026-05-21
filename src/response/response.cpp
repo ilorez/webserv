@@ -7,7 +7,6 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
 
     h.insert(std::make_pair("Date",           getHttpDate(ts.tv_sec)));
     h.insert(std::make_pair("Server",         Default::SERVER_NAME));
-    h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
     h.insert(std::make_pair("Connection",     "close"));
 
     std::string contentType = "text/plain";
@@ -49,11 +48,16 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
     {
         struct stat st;
         if (fstat(_file_fd, &st) == 0)
+        {
             h.insert(std::make_pair("Last-Modified", getHttpDate(st.st_mtim.tv_sec)));
+            h.insert(std::make_pair("Content-Length", to_string98(st.st_size)));
+        }
     }
-
-    if (_req.getMethod() == "POST" && _status == 201)
-        h.insert(std::make_pair("Location", _req.getPath()));
+    else {
+      if (_req.getMethod() == "POST" && _status == 201)
+          h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
+      h.insert(std::make_pair("Location", _req.getPath()));
+    }
 }
 
 void Response::serveErrorPage(int status)
@@ -180,7 +184,8 @@ void Response::Get()
         return;
     }
     
-    _body = ft_readFile(filepath); // alaoui::todo, i remove that line   
+    //_file_fd = -1;
+   // _body = ft_readFile(filepath); // alaoui::todo, i remove that line   
     _status = 200;
 }
 
@@ -193,8 +198,7 @@ void Response::Post()
                         ? _loc->getClientMaxBodySize() 
                         : _req.getServerConf().getClientMaxBodySize();
 
-    std::string contentLengthStr = _req.getHeaderValue("content-length");
-    if (!contentLengthStr.empty() && std::atoi(contentLengthStr.c_str()) > (int)max_size)
+    if (_req.getContentLen() > max_size)
     {
         serveErrorPage(413);
         return;
@@ -292,10 +296,11 @@ std::string Response::build()
     }
 
     initHeaders(_headers);
-    std::cout << "\n\n-----------------------!!-------------------------------------\n\n";
-    printMap(_headers);
-    std::cout << "\n\n-----------------------!!-------------------------------------\n\n";
+    //printMap(_headers);
     response = mergeResponseToString();
+    std::cout << "\n\n-----------------------!!-------------------------------------\n\n";
+    std::cout << response << std::endl;
+    std::cout << "\n\n-----------------------!!-------------------------------------\n\n";
     return response;
 }
 
