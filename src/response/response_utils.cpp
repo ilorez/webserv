@@ -262,14 +262,8 @@ bool    Response::transferToNewFile(int destFd, int srcFd)
     ssize_t bytesRead;
     
     while ((bytesRead = read(srcFd, buffer, sizeof(buffer))) > 0) 
-    {
         if (write(destFd, buffer, bytesRead) == -1)
-        {
             return false;
-            close(destFd);
-        }
-    }
-    close(destFd);
     return true;
 }
 

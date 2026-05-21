@@ -1,73 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>webserv tester</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+<meta charset="UTF-8">
+<title>nginx-1.29.6 media upload</title>
+
+<style>
+body { background:#0d0d0d; color:#fff; font-family:monospace; padding:30px; }
+.panel { border:1px solid #333; padding:15px; margin-bottom:15px; }
+input, button { padding:10px; margin-top:10px; }
+button { cursor:pointer; }
+.green { background:#00ff88; border:none; }
+.red { background:#ff3b3b; border:none; }
+.blue { background:#4d9fff; border:none; }
+</style>
 </head>
+
 <body>
 
-<header>
-  <h1><span>//</span> webserv tester</h1>
-  <a class="cgi-btn" href="/cgi">▶ test cgi</a>
-</header>
+<h2>nginx-1.29.6 media test</h2>
 
-<div class="grid">
-
-  <!-- UPLOAD -->
-  <div class="panel">
-    <div class="panel-label"><span class="dot dot-green"></span>upload image</div>
-
-    <div class="drop-zone" id="dropZone">
-      <input type="file" id="fileInput" accept=".jpg,.jpeg,.png">
-      <span class="drop-icon">⬆</span>
-      <div class="drop-text">
-        <strong>choose or drop a file</strong>
-        jpg · jpeg · png
-      </div>
-    </div>
-
-    <div class="preview-wrap" id="previewWrap">
-      <img id="previewImg" src="" alt="preview">
-      <div class="file-name" id="fileName"></div>
-    </div>
-
-    <div class="result" id="uploadResult"></div>
-    <button class="btn btn-green" id="uploadBtn">upload</button>
-  </div>
-
-  <!-- GET IMAGE -->
-  <div class="panel">
-    <div class="panel-label"><span class="dot dot-blue"></span>get image</div>
-
-    <div class="field">
-      <label for="getImageName">image name</label>
-      <input type="text" id="getImageName" placeholder="photo.jpg">
-    </div>
-
-    <button class="btn btn-blue" id="getBtn">fetch</button>
-    <div class="result" id="getResult"></div>
-  </div>
-
-  <!-- DELETE -->
-  <div class="panel delete-panel">
-    <div class="panel-label"><span class="dot dot-orange"></span>delete image</div>
-
-    <div class="field">
-      <label for="deleteImageName">image name</label>
-      <input type="text" id="deleteImageName" placeholder="photo.jpg">
-    </div>
-
-    <button class="btn btn-red" id="deleteBtn">delete</button>
-    <div class="result" id="deleteResult"></div>
-  </div>
-
+<!-- UPLOAD -->
+<div class="panel">
+  <h3>UPLOAD (RAW BODY)</h3>
+  <input type="file" id="file">
+  <button class="green" onclick="upload()">upload</button>
 </div>
 
-<div class="status-bar">http/1.0 · no keep-alive · epoll</div>
+<!-- DELETE -->
+<div class="panel">
+  <h3>DELETE /upload/filename</h3>
+  <input type="text" id="del" placeholder="file.png">
+  <button class="red" onclick="del()">delete</button>
+</div>
 
-<script src="app.js"></script>
+<!-- GET -->
+<div class="panel">
+  <h3>GET /upload/filename</h3>
+  <input type="text" id="get" placeholder="file.png">
+  <button class="blue" onclick="getFile()">get</button>
+</div>
+
+<pre id="out">ready...</pre>
+
+<script>
+
+function log(t){ document.getElementById("out").textContent = t; }
+
+/* ---------------- UPLOAD RAW ---------------- */
+function upload()
+{
+  const f = document.getElementById("file").files[0];
+  if (!f) return log("no file");
+
+  // IMPORTANT: filename must be sent in URL
+  fetch("/upload/" + f.name, {
+    method: "POST",
+    headers: {
+      "Content-Type": f.type || "application/octet-stream"
+    },
+    body: f   // raw binary, NOT FormData
+  })
+  .then(r => r.text())
+  .then(d => log("UPLOAD:\n" + d))
+  .catch(e => log(e));
+}
+
+/* ---------------- DELETE ---------------- */
+function del()
+{
+  const name = document.getElementById("del").value;
+  if (!name) return log("no name");
+
+  fetch("/upload/" + name, {
+    method: "DELETE"
+  })
+  .then(r => r.text())
+  .then(d => log("DELETE:\n" + d));
+}
+
+/* ---------------- GET ---------------- */
+function getFile()
+{
+  const name = document.getElementById("get").value;
+  if (!name) return log("no name");
+
+  fetch("/upload/" + name)
+  .then(r => r.blob())
+  .then(b => log("SIZE: " + b.size + " bytes"));
+}
+
+</script>
+
 </body>
 </html>

@@ -32,3 +32,7 @@ Tasks:
    - [ ] final tests 
    - [ ] create READMEs
    - [ ] upload project
+
+
+
+   [ ] checking why the always large created file empty why read return 0
