@@ -2,6 +2,35 @@
 
 int gn = 0;
 
+std::string Response::cookieHeaderBuilder()
+{
+    std::string cookieValue;
+    if (_req.getCookies() != NULL)
+    {
+        Session *session = _req.getCookies();
+        time_t now = time(NULL);
+
+        if (session->getExpiresAt() > now)
+        {
+            cookieValue = "session_id=" + session->getId();
+            
+            time_t exp = session->getExpiresAt();
+            std::string time = getHttpDate(exp);     
+            std::map<std::string, std::string> mapp = _req.getCookies()->getData();
+            for (std::map<std::string, std::string>::iterator it = mapp.begin(); it != mapp.end(); it++)
+            {
+                cookieValue += "; " + it->first + "=" + it->second;
+            }
+            
+            cookieValue += "; Expires=" + time;
+            cookieValue += "; Path=/";
+            cookieValue += "; HttpOnly";
+
+        }
+    }
+    return cookieValue;
+}
+
 void Response::initHeaders(std::map<std::string, std::string> &h)
 {
     timespec ts;
@@ -21,31 +50,7 @@ void Response::initHeaders(std::map<std::string, std::string> &h)
     if (_status == 301 || _status == 302)
         h.insert(std::make_pair("Location", _loc->getReturnUrl()));
 
-
-    if (_req.getCookies() != NULL)
-    {
-        Session *session = _req.getCookies();
-        time_t now = time(NULL);
-
-        if (session->getExpiresAt() > now)
-        {
-            std::string cookieValue = "session_id=" + session->getId();
-
-            // Append expiry time as HTTP date
-            char timeBuf[128];
-            time_t exp = session->getExpiresAt();
-            struct tm *gmt = gmtime(&exp);
-            gmt = gmtime(&exp);
-            strftime(timeBuf, sizeof(timeBuf), "%a, %d %b %Y %H:%M:%S GMT", gmt);
-
-            cookieValue += "; Expires=" + std::string(timeBuf);
-            cookieValue += "; Path=/";
-            cookieValue += "; HttpOnly";
-
-            h.insert(std::make_pair("Set-Cookie", cookieValue));
-        }
-    }
-
+    h.insert(std::make_pair("Set-Cookie", cookieHeaderBuilder()));
     if (_req.getMethod() == "GET" && _status < 400 && _file_fd >= 0)
     {
         struct stat st;
@@ -91,30 +96,29 @@ void Response::serveErrorPage(int status)
         }
     }
 
-    // custom page
-    if (isCustom)
-        return;
-
-    // default page: replace {{CODE}} and {{MESSAGE}}
-    std::string codeStr = to_string98(status);
-    std::string msgStr = "Unknown Error";
-
-    std::map<int, std::string>::iterator it2 = _mapStatusCodes.find(status);
-    if (it2 != _mapStatusCodes.end())
-        msgStr = it2->second;
-
-    size_t pos = 0;
-    while ((pos = _body.find(RespDefaults::CODE_TAG, pos)) != std::string::npos)
+    if (!isCustom)
     {
-        _body.replace(pos, 8, codeStr);
-        pos += codeStr.length();
+        std::string codeStr = to_string98(status);
+        std::string msgStr = "Unknown Error";
+
+        std::map<int, std::string>::iterator it2 = _mapStatusCodes.find(status);
+        if (it2 != _mapStatusCodes.end())
+            msgStr = it2->second;
+
+        size_t pos = 0;
+        while ((pos = _body.find(RespDefaults::CODE_TAG, pos)) != std::string::npos)
+        {
+            _body.replace(pos, 8, codeStr);
+            pos += codeStr.length();
+        }
+        pos = 0;
+        while ((pos = _body.find(RespDefaults::MESSAGE_TAG, pos)) != std::string::npos)
+        {
+            _body.replace(pos, 11, msgStr);
+            pos += msgStr.length();
+        }
     }
-    pos = 0;
-    while ((pos = _body.find(RespDefaults::MESSAGE_TAG, pos)) != std::string::npos)
-    {
-        _body.replace(pos, 11, msgStr);
-        pos += msgStr.length();
-    }
+    return;
 }
 
 void Response::Get()
@@ -182,9 +186,6 @@ void Response::Get()
         serveErrorPage(404);
         return;
     }
-    
-    //_file_fd = -1;
-   // _body = ft_readFile(filepath); // alaoui::todo, i remove that line   
     _status = 200;
 }
 
@@ -283,16 +284,6 @@ void Response::Delete()
     _status = 200;
     _body = "File deleted successfully\n";
 }
-/*
-void printMap(const std::map<std::string, std::string>& h)
-{
-    std::map<std::string, std::string>::const_iterator it;
-
-    for (it = h.begin(); it != h.end(); ++it)
-    {
-        std::cout << it->first << " : " << it->second << std::endl;
-    }
-}*/
 
 std::string Response::build()
 {
@@ -300,10 +291,8 @@ std::string Response::build()
     
     initStatusCodes(_mapStatusCodes);
     initMediaTypes(_mapMediaTypes);
-    // std::cout << "\n\n!# BUILD IS RUN N[" << gn++ << "]\n";
-    //_loc = _req.getMatchedLocation();
     _loc = _req.getMatchLoc();
-
+    
     if (!tryApplyLocationReturn())
     {
         if (_req.getMethod() == "GET")
