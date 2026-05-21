@@ -26,6 +26,7 @@ Request &Request::operator=(const Request &other)
     this->_serverConf = other._serverConf;
     this->_is_cgi = other._is_cgi;
     this->cookie = other.cookie;
+    this->_match_loc = other._match_loc;
   }
   return *this;
 }
