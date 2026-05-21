@@ -11,6 +11,7 @@
 #include "Session.hpp"
 #include "sessionManager.hpp"
 
+
 class Request
 {
 private:
@@ -30,7 +31,8 @@ private:
   std::string _file_path;                     // this is the file path of cgi, you can use it for request too, i use it only in case of CGI run request 
 
   
-  Session *cookie; // cookies
+  Session *_session; // cookies
+  bool _is_new_session;
 public:
   Request();
   Request(const Request &other);
@@ -50,6 +52,8 @@ public:
   std::string getFilePath() const;
   const LocationConfig* getMatchLoc() const;
   std::map<std::string, std::string>& getHeaders();
+  Session* get_session();
+  bool is_new_session();
 
 
   // TODO
@@ -72,7 +76,6 @@ public:
   // methods
   bool isCGI();
   void setServerConfig(ServerConfig &sc);
-  Session* getCookies() { return cookie; };
   
 private:
   // parse request
