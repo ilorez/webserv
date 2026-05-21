@@ -36,8 +36,10 @@ private:
 
 public:
 	LocationConfig(const ServerConfig &serverConfig);
-
 	~LocationConfig();
+	LocationConfig(const LocationConfig &serverConfig);
+  LocationConfig& operator=(const LocationConfig& o);
+  
 
 	// getters
 	const std::string &getPath() const;

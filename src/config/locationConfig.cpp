@@ -17,6 +17,29 @@ LocationConfig::LocationConfig(const ServerConfig &serverConfig)
 	_methods.push_back("POST");
 	_methods.push_back("DELETE");
 }
+LocationConfig::LocationConfig(const LocationConfig& copy)
+{
+  *this = copy;
+}
+
+LocationConfig& LocationConfig::operator=(const LocationConfig& o)
+{
+  if (this != &o)
+  {
+    this->_path  = o._path;
+    this->_root = o._root;
+    this->_methods = o._methods;
+    this->_index = o._index;
+    this->_autoindex = o._autoindex;
+    this->_returnUrl = o._returnUrl;
+    this->_returnCode = o._returnCode;
+    this->_clientMaxBodySize = o._clientMaxBodySize;
+    this->_cgiExtension = o._cgiExtension;
+    this->_cgiPath = o._cgiPath;
+    this->_uploadStore = o._uploadStore;
+  }
+  return *this;
+}
 LocationConfig::~LocationConfig() {};
 
 // getters

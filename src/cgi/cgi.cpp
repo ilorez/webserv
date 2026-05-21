@@ -6,40 +6,59 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/30 15:08:51 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/20 15:21:08 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/21 17:48:00 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/container.hpp"
 
-
-CGIClient::CGIClient(int fd, int epfd): Client(fd, epfd), _pid(-1), _socket_done(false), _cgi_pipe_done(false), _read_counter(0)
+// Constructor
+CGIClient::CGIClient(int fd, int epfd)
+    : Client(fd, epfd),
+      _pid(-1),
+      _socket_done(false),
+      _cgi_pipe_done(false),
+      _read_counter(0),
+      _pipe_in_hold(),
+      _pipe_out_hold(),
+      _got_headers_end(false)
 {
-  _pipe_in[0] = -1;
-  _pipe_in[1] = -1;
-  _pipe_out[0] = -1;
-  _pipe_out[1] = -1;
-  _clsock_hold.is_cgi = true; _clsock_hold.cgi = this;
-  _pipe_in_hold.is_cgi = true;
-  _pipe_in_hold.cgi = this;
-  _pipe_out_hold.is_cgi = true;
-  _pipe_out_hold.cgi = this;
+    _pipe_in[0] = -1;
+    _pipe_in[1] = -1;
+    _pipe_out[0] = -1;
+    _pipe_out[1] = -1;
+    _clsock_hold.is_cgi = true;
+    _clsock_hold.cgi = this;
+    _pipe_in_hold.is_cgi = true;
+    _pipe_in_hold.cgi = this;
+    _pipe_out_hold.is_cgi = true;
+    _pipe_out_hold.cgi = this;
 }
 
-CGIClient::CGIClient(Client &cl): Client(cl),_pid(-1), _socket_done(false), _cgi_pipe_done(false), _read_counter(0) {
-  _pipe_in[0] = -1;
-  _pipe_in[1] = -1;
-  _pipe_out[0] = -1;
-  _pipe_out[1] = -1;
-  _clsock_hold.is_cgi = true;
-  _clsock_hold.cgi = this;
-  _pipe_in_hold.is_cgi = true;
-  _pipe_in_hold.cgi = this;
-  _pipe_in_hold.fd = -1;
-  _pipe_out_hold.is_cgi = true;
-  _pipe_out_hold.cgi = this;
-  _pipe_out_hold.fd = -1;
-  cl.invalidateFd(); // stop ~Client() closing the _fd
+// Steal constructor
+CGIClient::CGIClient(Client& cl)
+    : Client(cl),
+      _pid(-1),
+      _socket_done(false),
+      _cgi_pipe_done(false),
+      _read_counter(0),
+      _pipe_in_hold(),
+      _pipe_out_hold(),
+      _got_headers_end(false)
+{
+    _pipe_in[0] = -1;
+    _pipe_in[1] = -1;
+    _pipe_out[0] = -1;
+    _pipe_out[1] = -1;
+    _clsock_hold.is_cgi = true;
+    _clsock_hold.cgi = this;
+    _pipe_in_hold.is_cgi = true;
+    _pipe_in_hold.cgi = this;
+    _pipe_in_hold.fd = -1;
+    _pipe_out_hold.is_cgi = true;
+    _pipe_out_hold.cgi = this;
+    _pipe_out_hold.fd = -1;
+    cl.invalidateFd(); // stop ~Client() closing the _fd
 }
 
 CGIClient::~CGIClient()
@@ -64,15 +83,46 @@ CGIClient::~CGIClient()
   ft_closefd(_pipe_out[0]);
 }
 
-// its private you can't use this 
-CGIClient::CGIClient(const CGIClient &other): Client(other)
+// operator=
+CGIClient& CGIClient::operator=(const CGIClient& other)
 {
-	(void)other;
+    if (this == &other)
+        return *this;
+    Client::operator=(other);
+    _pid           = other._pid;
+    _socket_done   = other._socket_done;
+    _cgi_pipe_done = other._cgi_pipe_done;
+    _read_counter  = other._read_counter;
+    _pipe_in[0]    = other._pipe_in[0];
+    _pipe_in[1]    = other._pipe_in[1];
+    _pipe_out[0]   = other._pipe_out[0];
+    _pipe_out[1]   = other._pipe_out[1];
+    _clsock_hold.is_cgi  = true;
+    _clsock_hold.cgi     = this;
+    _pipe_in_hold.is_cgi = true;
+    _pipe_in_hold.cgi    = this;
+    _pipe_in_hold.fd     = other._pipe_in_hold.fd;
+    _pipe_out_hold.is_cgi = true;
+    _pipe_out_hold.cgi    = this;
+    _pipe_out_hold.fd     = other._pipe_out_hold.fd;
+    _got_headers_end = other._got_headers_end;
+    return *this;
 }
-CGIClient &CGIClient::operator=(const CGIClient &other)
+
+// Copy constructor logic in operator= constructor
+CGIClient::CGIClient(const CGIClient& other)
+    : Client(other),
+      _pid(-1),
+      _socket_done(false),
+      _cgi_pipe_done(false),
+      _read_counter(0),
+      _pipe_in_hold(),
+      _pipe_out_hold(),
+      _got_headers_end(false)
 {
-	(void)other;
-	return (*this);
+    _pipe_in[0] = -1;  _pipe_in[1] = -1;
+    _pipe_out[0] = -1; _pipe_out[1] = -1;
+    *this = other;
 }
 
 void CGIClient::setupPipes()
@@ -143,8 +193,13 @@ void CGIClient::ft_exec()
       DEBUG_ERROR("Could not get match loc");
       exit(3);
     }
+
+    //DEBUG_ERROR("I'm here");
     std::string cgiPath = loc->getCgiPath();
+    //DEBUG_ERROR("I'm not");
     std::string scriptPath = _req.getFilePath();
+    //DEBUG_ERROR(cgiPath);
+    //DEBUG_ERROR(scriptPath);
     /*char *argv[] = { (char*)"/usr/bin/python3", (char*)"./cgi-bin/hello_get.py", NULL };
     */
     //char *env[]  = { (char*)"REQUEST_METHOD=GET", (char*)"QUERY_STRING=name=John", NULL };

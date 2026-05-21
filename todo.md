@@ -8,7 +8,11 @@
     [ ] CGI output should i parse its headers ?
 [x] hande GET request with body included
 
-
+[ ] for every request there is on match location, i should just copy it one time into a attribute inside reqeust and use it when need, and for that i need:
+        [ ] update getMatchLocaiton to return referenece to the Location, and after that copy by value that Location
+        [ ] remove getMatchLocation or put in private
+        [ ] update code to use getMatchLoc instead which is getter to the _match_loc
+        [ ] Important: the logic now is working but imagine that you are using a pointer of variable in stack that can be gone at anytime !!!!!! SEGV !!!!! 
 Tasks: 
    - [x] redirect @Alaoui
    - [ ] Support cookies and session management (provide simple examples) @ali
