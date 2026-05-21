@@ -23,4 +23,6 @@ void errorMsg(const std::string &msg, size_t line);
 std::string getFileName(const std::string& path);
 
 void check_process_status(int status);
+
+void replace_all(std::string &str, const std::string &from, const std::string &to);
 #endif

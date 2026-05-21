@@ -1,4 +1,4 @@
 webserv
 build/*
-uploads/*
-upload/*
+uploads/client_*
+cgi-bin/client_*
