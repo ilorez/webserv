@@ -227,26 +227,27 @@ void Response::Post()
                                   ? _loc->getUploadStore()
                                   : RespDefaults::UPLOAD_STORE;
 
-    std::string filepath = uploadStore + "/" + generateUploadFileName(contentTypeStr);
-    int rf = open(_req.getTmpFileName().c_str(), O_RDONLY);
-    if (rf < 0)
-    {
-        DEBUG_ERROR("yeah its less then 0");
-        serveErrorPage(500);
-        return;
-    }
+    std::string filepath = uploadStore + "/" +  generateUploadFileName(contentTypeStr);
+    
     int fd = open(filepath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0755);
     if (fd < 0)
     {
         serveErrorPage(500);
-        close(rf);
         return;
     }
     if (_req.isRequsetLarge())
     {
-        if (!transferToNewFile(fd, rf))
-            serveErrorPage(500);
+        int rf = open(_req.getTmpFileName().c_str(), O_RDONLY);
+        if (rf <  0)
+        {
+          DEBUG_ERROR("yeah its less then 0");
+          serveErrorPage(500);
+          return;
+        }
+        else if (!transferToNewFile(fd, rf))
+          serveErrorPage(500);
         std::remove(_req.getTmpFileName().c_str());
+        close(rf);
     }
     else
     {
@@ -258,8 +259,7 @@ void Response::Post()
         // file << _req.getBody();
         // file.close();
     }
-    close(fd);
-    close(rf);
+    close(fd); 
     if (_status != 500)
     {
         _status = 201;
