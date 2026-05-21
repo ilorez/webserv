@@ -5,13 +5,15 @@
 
 #define BUFFER_SIZE_LIMIT 65536
 
-namespace Default
+namespace RespDefaults
 {
     const std::string UPLOAD_STORE  = "./uploads";
-    const std::string CGI_STORE  = "./cgi-bin/";
-    const std::string ROOT          = "./www"; // alaoui:todo i don’t use that variable, so will delete it latter.
+    const std::string CGI_STORE     = "./cgi-bin/";
+    const std::string ROOT          = "./www/";
     const std::string ERROR_PAGE    = "./www/error/error.html";
     const std::string SERVER_NAME   = "MyServer";
+    const std::string CODE_TAG      = "{{CODE}}";
+    const std::string MESSAGE_TAG   = "{{MESSAGE}}";
 }
 
 class Response
@@ -25,6 +27,7 @@ private:
     Request                             _req;
     int                                 _status;
     int                                 _file_fd;
+    std::string                         _contentTypeStr;
 
 public:
     Response();
@@ -45,11 +48,15 @@ public:
     std::string build(int status);
     std::string build();
     std::string returnFileExtension(const std::string& path);
-    std::string generateUploadFileName();
+    std::string generateUploadFileName(std::string contentTypeStr);
     std::string getHttpDate(time_t t);
     bool        isMethodAllowed(const std::string& method);
     bool        transferToNewFile(int destFd, int srcFd);
     bool        tryApplyLocationReturn();
+    std::string getExtensionFromContentType(const std::string &contentType,
+        const std::map<std::string, std::string> &mediaTypes);
+    bool  isSupportedContentType(const std::string &contentType, 
+        const std::map<std::string, std::string> &mediaTypes);
 
     std::string getHeaders();
     std::string getBody();

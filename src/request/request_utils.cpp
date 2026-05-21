@@ -229,7 +229,7 @@ bool Request::isCGI()
 		return false;
 	std::string uploadStore = (!_match_loc->getUploadStore().empty())
 								  ? _match_loc->getUploadStore()
-								  : Default::CGI_STORE;
+								  : RespDefaults::CGI_STORE;
 	// NOTE: also i should store info like the path and everything so i don't need to use look for it next time
 	_file_path = uploadStore + getFileName(uri);
 	if (access(_file_path.c_str(), X_OK) == -1)

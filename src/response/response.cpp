@@ -1,12 +1,14 @@
 #include "../../includes/container.hpp"
 
+int gn = 0;
+
 void Response::initHeaders(std::map<std::string, std::string> &h)
 {
     timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
 
     h.insert(std::make_pair("Date",           getHttpDate(ts.tv_sec)));
-    h.insert(std::make_pair("Server",         Default::SERVER_NAME));
+    h.insert(std::make_pair("Server",         RespDefaults::SERVER_NAME));
     h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
     h.insert(std::make_pair("Connection",     "close"));
 
@@ -67,14 +69,14 @@ void Response::serveErrorPage(int status)
     std::map<int, std::string>::const_iterator it = conf.find(status);
     if (it != conf.end())
     {
-        errorPage = "./www/" + it->second;
+        errorPage = RespDefaults::ROOT + it->second;
         isCustom = true;
         _body = ft_readFile(errorPage);
     }
 
     if (_body.empty())
     {
-        errorPage = Default::ERROR_PAGE;
+        errorPage = RespDefaults::ERROR_PAGE;
         _body = ft_readFile(errorPage);
         isCustom = false;
         if (_body.empty())
@@ -98,13 +100,13 @@ void Response::serveErrorPage(int status)
         msgStr = it2->second;
 
     size_t pos = 0;
-    while ((pos = _body.find("{{CODE}}", pos)) != std::string::npos)
+    while ((pos = _body.find(RespDefaults::CODE_TAG, pos)) != std::string::npos)
     {
         _body.replace(pos, 8, codeStr);
         pos += codeStr.length();
     }
     pos = 0;
-    while ((pos = _body.find("{{MESSAGE}}", pos)) != std::string::npos)
+    while ((pos = _body.find(RespDefaults::MESSAGE_TAG, pos)) != std::string::npos)
     {
         _body.replace(pos, 11, msgStr);
         pos += msgStr.length();
@@ -121,9 +123,7 @@ void Response::Get()
                             ? _loc->getRoot() 
                             : _req.getServerConf().getRoot();
     
-    std::string filepath = "./www" + _req.getPath();
-    DEBUG_INFO("Full Path is");
-    std::cout << filepath << std::endl;
+    std::string filepath = root + getFileName(_req.getPath());
     if (access(filepath.c_str(), F_OK) != 0)
     {
         serveErrorPage(404);
@@ -184,6 +184,19 @@ void Response::Get()
     _status = 200;
 }
 
+bool Response::isSupportedContentType(
+    const std::string &contentType,
+    const std::map<std::string, std::string> &mediaTypes)
+{
+    for (std::map<std::string, std::string>::const_iterator it = mediaTypes.begin();
+         it != mediaTypes.end(); ++it)
+    {
+        if (it->second == contentType)
+            return true;
+    }
+    return false;
+}
+
 void Response::Post()
 {
     if (!isMethodAllowed("POST"))
@@ -194,6 +207,13 @@ void Response::Post()
                         : _req.getServerConf().getClientMaxBodySize();
 
     std::string contentLengthStr = _req.getHeaderValue("content-length");
+    std::string contentTypeStr = _req.getHeaderValue("content-type");
+
+    if (!isSupportedContentType(contentTypeStr, _mapMediaTypes))
+    {
+        serveErrorPage(415);
+        return;
+    }
     if (!contentLengthStr.empty() && std::atoi(contentLengthStr.c_str()) > (int)max_size)
     {
         serveErrorPage(413);
@@ -202,9 +222,9 @@ void Response::Post()
 
     std::string uploadStore = (_loc && !_loc->getUploadStore().empty()) 
                                 ? _loc->getUploadStore() 
-                                : Default::UPLOAD_STORE;
+                                : RespDefaults::UPLOAD_STORE;
 
-    std::string filepath = uploadStore + "/" +  generateUploadFileName();
+    std::string filepath = uploadStore + "/" +  generateUploadFileName(contentTypeStr);
     if (_req.isRequsetLarge())
     {
         int fd = open(filepath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -238,7 +258,7 @@ void Response::Delete()
 
     std::string uploadStore = (_loc && !_loc->getUploadStore().empty()) 
                                 ? _loc->getUploadStore() 
-                                : Default::UPLOAD_STORE;
+                                : RespDefaults::UPLOAD_STORE;
 
     std::string filepath = uploadStore + getFileName(_req.getPath());
 
@@ -276,7 +296,7 @@ std::string Response::build()
     
     initStatusCodes(_mapStatusCodes);
     initMediaTypes(_mapMediaTypes);
-
+    // std::cout << "\n\n!# BUILD IS RUN N[" << gn++ << "]\n";
     _loc = _req.getMatchedLocation();
 
     if (!tryApplyLocationReturn())
@@ -292,9 +312,6 @@ std::string Response::build()
     }
 
     initHeaders(_headers);
-    std::cout << "\n\n-----------------------!!-------------------------------------\n\n";
-    printMap(_headers);
-    std::cout << "\n\n-----------------------!!-------------------------------------\n\n";
     response = mergeResponseToString();
     return response;
 }
