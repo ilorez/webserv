@@ -79,7 +79,7 @@ void Response::initMediaTypes(std::map<std::string, std::string> &m)
         std::make_pair(".csv",  "text/csv"),
         std::make_pair(".py",  "text/x-python"),
         std::make_pair(".js",   "application/javascript"),
-
+        std::make_pair(".php",   "application/x-httpd-php"),
         // Application
         std::make_pair(".json", "application/json"),
         std::make_pair(".xml",  "application/xml"),
