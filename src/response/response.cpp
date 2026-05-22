@@ -2,10 +2,10 @@
 
 std::string Response::cookieHeaderBuilder()
 {
-    if (_req.getCookies() == NULL)
+    if (!_req.get_is_new_session())
         return "";
 
-    Session* session  = _req.getCookies();
+    Session* session  = _req.get_session();
     time_t   now      = time(NULL);
 
     if (session->getExpiresAt() <= now)

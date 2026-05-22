@@ -74,6 +74,7 @@ public:
   void setBody(const std::string &value);
   const LocationConfig* getMatchedLocation() const;
   bool isMethodAllowed(const std::string &method);
+  bool get_is_new_session();
 
   // methods
   bool isCGI();
