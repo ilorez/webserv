@@ -1,8 +1,8 @@
 #include "../../includes/container.hpp"
 
 //? constructor & destructor
-ServerConfig::ServerConfig():_socket_fd(-1), _host("127.0.0.1"), _port(8080), _serverName("localhost"),
-                             _root("/www/"), _clientMaxBodySize(BODY_SIZE_LIMIT), _autoindex(false)
+ServerConfig::ServerConfig():_socket_fd(-1), _host(), _port(DEF_PORT), _serverName(DEF_SERVER_NAME),
+                             _root(DEF_ROOT), _clientMaxBodySize(BODY_SIZE_LIMIT), _autoindex(false)
 {
 	this->_index.push_back("index.html");
   _srv_hold.is_cgi = false;

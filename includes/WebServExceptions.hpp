@@ -18,10 +18,12 @@ class RequestException : public std::exception
 {
 private:
     std::string _msg;
+    int _status;
 public:
-    RequestException(const std::string& msg);
+    RequestException(const std::string& msg, int status);
     ~RequestException() throw();
     const char* what() const throw();
+    int status() const throw();
 };
 
 class ResponseException : public std::exception

@@ -9,7 +9,7 @@ LocationConfig::LocationConfig(const ServerConfig &serverConfig)
 	  _returnUrl(""),
 	  _returnCode(0),
 	  _clientMaxBodySize(serverConfig.getClientMaxBodySize()),
-	  _uploadStore("../../uploads/")
+	  _uploadStore(DEF_UPLOAD_STORE)
 {
 	_methods.push_back("GET");
 	_methods.push_back("POST");

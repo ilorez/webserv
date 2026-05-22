@@ -33,7 +33,7 @@ void Response::initHeaders(std::map<std::string, std::string>& headers)
     clock_gettime(CLOCK_REALTIME, &ts);
 
     headers.insert(std::make_pair("Date",       getHttpDate(ts.tv_sec)));
-    headers.insert(std::make_pair("Server",     RespDefaults::SERVER_NAME));
+    headers.insert(std::make_pair("Server",     DEF_SERVER_NAME));
     headers.insert(std::make_pair("Connection", "close"));
 
     // Content-Type
@@ -80,14 +80,14 @@ void Response::serveErrorPage(int status)
 
     if (confIt != conf.end())
     {
-        std::string customPath = RespDefaults::ROOT + confIt->second;
+        std::string customPath = DEF_ROOT + confIt->second;
         _body = ft_readFile(customPath);
     }
 
     bool isCustom = !_body.empty();
     if (!isCustom)
     {
-        _body = ft_readFile(RespDefaults::ERROR_PAGE);
+        _body = ft_readFile(DEF_ERROR_PAGE);
         if (_body.empty())
         {
             _body = codeStr + " Error";
@@ -103,15 +103,15 @@ void Response::serveErrorPage(int status)
             msgStr = statusIt->second;
 
         for (size_t pos = 0;
-             (pos = _body.find(RespDefaults::CODE_TAG, pos)) != std::string::npos; )
+             (pos = _body.find(DEF_CODE_TAG, pos)) != std::string::npos; )
         {
-            _body.replace(pos, RespDefaults::CODE_TAG.size(), codeStr);
+            _body.replace(pos, sizeof(DEF_CODE_TAG) - 1, codeStr);
             pos += codeStr.length();
         }
         for (size_t pos = 0;
-             (pos = _body.find(RespDefaults::MESSAGE_TAG, pos)) != std::string::npos; )
+             (pos = _body.find(DEF_MESSAGE_TAG, pos)) != std::string::npos; )
         {
-            _body.replace(pos, RespDefaults::MESSAGE_TAG.size(), msgStr);
+            _body.replace(pos, sizeof(DEF_MESSAGE_TAG) -1, msgStr);
             pos += msgStr.length();
         }
     }
@@ -138,16 +138,15 @@ void Response::Get()
 {
     if (!isMethodAllowed("GET"))
         return;
-
-    const std::string root = (_loc && !_loc->getRoot().empty())
-                           ? _loc->getRoot()
-                           : _req.getServerConf().getRoot();
-
-    // TODO:
-    // should update this to work for all /cgi and /cgi/ and /cgi/index.html for example
-    std::string filepath = root;
+    std::string root =  _loc->getRoot().empty() ? _req.getServerConf().getRoot(): _loc->getRoot();
+    std::string filepath = root + _req.getPath().substr(_loc->getPath().size());
+    //std::cout << "server root: " << _req.getServerConf().getRoot() << std::endl;
+    //std::cout << "location root: " << _loc->getRoot() << std::endl;
+    //std::cout << "location root: " << _loc->getPath() << std::endl;
+    //std::cout << "path: " << _req.getPath() << std::endl;
+    //std::cout << "file path: " << filepath  << std::endl;
     //if (!isDirectory(_req.getPath()))
-    filepath += getFileName(_req.getPath());
+    //filepath += getFileName(_req.getPath());
     /*
     if (access(filepath.c_str(), F_OK) != 0)
     {
@@ -158,7 +157,7 @@ void Response::Get()
     struct stat info;
     if (stat(filepath.c_str(), &info) != 0)
     {
-        serveErrorPage(500);
+        serveErrorPage(404);
         return;
     }
 
@@ -237,7 +236,7 @@ void Response::Post()
 
     const std::string uploadStore = (_loc && !_loc->getUploadStore().empty())
                                      ? _loc->getUploadStore()
-                                     : RespDefaults::UPLOAD_STORE;
+                                     : DEF_UPLOAD_STORE;
 
     const std::string filepath = uploadStore + "/" + generateUploadFileName(contentType);
 
@@ -287,7 +286,7 @@ void Response::Delete()
 
     std::string uploadStore = (_loc && !_loc->getUploadStore().empty())
                                   ? _loc->getUploadStore()
-                                  : RespDefaults::UPLOAD_STORE;
+                                  : DEF_UPLOAD_STORE;
 
     std::string filepath = uploadStore + getFileName(_req.getPath());
 
@@ -337,13 +336,15 @@ std::string Response::build(int status)
     initStatusCodes(_mapStatusCodes);
     initMediaTypes(_mapMediaTypes);
 
-    serveErrorPage(status);
+    _status = status;
+    _body = to_string98(status) + _mapStatusCodes[status];
+    std::cout << _body << std::endl;
 
     timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
 
     _headers.insert(std::make_pair("Date",           getHttpDate(ts.tv_sec)));
-    _headers.insert(std::make_pair("Server",         RespDefaults::SERVER_NAME));
+    _headers.insert(std::make_pair("Server",         DEF_SERVER_NAME));
     _headers.insert(std::make_pair("Content-Length", to_string98(_body.size())));
     _headers.insert(std::make_pair("Connection",     "close"));
     _headers.insert(std::make_pair("Content-Type",   "text/html"));

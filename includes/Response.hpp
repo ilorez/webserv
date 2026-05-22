@@ -3,18 +3,8 @@
 
 #include "./Request.hpp"
 
-#define BUFFER_SIZE_LIMIT 65536
 
-namespace RespDefaults
-{
-    const std::string UPLOAD_STORE  = "./uploads";
-    const std::string CGI_STORE     = "./cgi-bin/";
-    const std::string ROOT          = "./www/";
-    const std::string ERROR_PAGE    = "./www/error/error.html";
-    const std::string SERVER_NAME   = "MyServer";
-    const std::string CODE_TAG      = "{{CODE}}";
-    const std::string MESSAGE_TAG   = "{{MESSAGE}}";
-}
+
 
 class Response
 {
