@@ -40,8 +40,7 @@ enum TokenType
 	AUTOINDEX,
 	INDEX,
 	UPLOAD_STORE,
-	CGI_EXT,
-	CGI_PATH,
+	CGI_HANDEL,
 
 	// values
 	STRING,

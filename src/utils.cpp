@@ -6,6 +6,18 @@ char toLowerCase(unsigned char c)
   return std::tolower(c);
 }
 
+std::string getFileExtension(const std::string &path)
+{
+    size_t dotPos = path.rfind('.');
+    if (dotPos == std::string::npos)
+        return "";
+
+    size_t slashPos = path.rfind('/');// making sure that the dot is inside a filename, not inside a directory name
+    if (slashPos != std::string::npos && dotPos < slashPos)
+        return "";
+    return path.substr(dotPos);
+}
+
 std::string ft_readFile(std::string src)
 {
   std::ifstream readfile(src.c_str());
@@ -145,4 +157,17 @@ void check_process_status(int status) {
       }
     #endif
     (void)status;
+}
+
+void replace_all(std::string &str, const std::string &from, const std::string &to)
+{
+    if (from.empty())
+        return;
+
+    size_t pos = 0;
+    while ((pos = str.find(from, pos)) != std::string::npos)
+    {
+        str.replace(pos, from.length(), to);
+        pos += to.length();
+    }
 }

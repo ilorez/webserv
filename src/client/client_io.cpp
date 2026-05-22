@@ -81,7 +81,11 @@ void  Client::readFromSocket()
   _req.incrementBytesCounter(bytes);
   write(_req.getTmpFd(), buf, bytes);
   if (_req.getBytesCounter() >= _req.getContentLen())
+  {
+    close(_req.getTmpFd());
+    _req.setTmpFd(-1);
     _state = PROCESSING;
+  }
 }
 
 void  Client::readFromSocket(int)

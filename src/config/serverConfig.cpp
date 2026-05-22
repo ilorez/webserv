@@ -14,6 +14,40 @@ ServerConfig::~ServerConfig() {
   DEBUG_INFO("Server Config, destructor called");
 };
 
+// Copy constructor
+ServerConfig::ServerConfig(const ServerConfig& other)
+    : _socket_fd(other._socket_fd),
+      _host(other._host),
+      _port(other._port),
+      _serverName(other._serverName),
+      _root(other._root),
+      _clientMaxBodySize(other._clientMaxBodySize),
+      _index(other._index),
+      _autoindex(other._autoindex),
+      _errorPage(other._errorPage),
+      _locations(other._locations),
+      _srv_hold(other._srv_hold)
+{}
+
+// operator=
+ServerConfig& ServerConfig::operator=(const ServerConfig& other)
+{
+    if (this == &other)
+        return *this;
+    _socket_fd = other._socket_fd;
+    _host = other._host;
+    _port = other._port;
+    _serverName = other._serverName;
+    _root = other._root;
+    _clientMaxBodySize = other._clientMaxBodySize;
+    _index = other._index;
+    _autoindex = other._autoindex;
+    _errorPage = other._errorPage;
+    _locations = other._locations;
+    _srv_hold = other._srv_hold;
+    return *this;
+}
+
 //? getters
 int ServerConfig::getFd() const {return this->_socket_fd;};
 const std::string &ServerConfig::getHost() const { return this->_host; }

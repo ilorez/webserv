@@ -1,5 +1,6 @@
 
 #include "../../includes/container.hpp"
+#include <algorithm>
 #include <sys/epoll.h>
 #include <sys/types.h>
 
@@ -90,14 +91,62 @@ void CGIClient::writeToWriteBuffer()
     throw CGIException("read: readToWriteBuffer: failed");
   // EPOLLIN will be fired everytime if its found that the pipe has been closed
   // unregister pipe out 0
-  epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_out[0], NULL);
+  DEBUG_INFO2("1");
   if (bytes == 0)
   {
     // done
     _cgi_pipe_done = true;
+    epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_out[0], NULL);
     return;
   }
-  this->setWriteBuffer(std::string(buf, bytes));
+  std::string chunk(buf, bytes);
+  _writeBuffer +=  chunk;
+  std::cout << _writeBuffer << std::endl;
+  if (!_got_headers_end)
+  {
+      size_t pos = chunk.find("\r\n\r\n");
+      if (pos == std::string::npos)
+      {
+          pos = chunk.find("\n\n");
+          if (pos == std::string::npos)
+            return;
+          replace_all(_writeBuffer, "\r\n", "\n");
+      }
+      _got_headers_end = true;
+      std::string status = "200 OK";
+      size_t status_pos = _writeBuffer.find("Status:");
+      if (status_pos != std::string::npos && status_pos < pos)
+      {
+          size_t end = _writeBuffer.find("\n", status_pos);
+          status = _writeBuffer.substr(status_pos + 7, end - (status_pos + 7));
+  
+          size_t start = status.find_first_not_of(" \t");
+          if (start != std::string::npos)
+              status = status.substr(start);
+      }
+  
+      size_t loc_pos = _writeBuffer.find("Location:");
+      if (loc_pos != std::string::npos && loc_pos < pos)
+      {
+          size_t loc_end = _writeBuffer.find("\n", loc_pos);
+          std::string loc_val = _writeBuffer.substr(loc_pos + 9,
+                                                    loc_end - (loc_pos + 9));
+  
+          size_t start = loc_val.find_first_not_of(" \t");
+          if (start != std::string::npos)
+              loc_val = loc_val.substr(start);
+  
+          if (!loc_val.empty() && status == "200 OK")
+              status = "302 Found";
+      }
+  
+      _writeBuffer =
+          "HTTP/1.0 " + status + "\r\n" +
+          _writeBuffer;
+  }
+
+  DEBUG_INFO2("4");
+  epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_out[0], NULL);
   //DEBUG_INFO2("writeBuffer: ");
   //std::cout << _writeBuffer << std::endl;
   // register socket EPOLLOUT 
@@ -106,6 +155,7 @@ void CGIClient::writeToWriteBuffer()
   epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
   //epoll_ctl(_epfd, EPOLL_CTL_ADD, _fd, &ev);
 }
+
 void CGIClient::writeToSocket()
 {
     DEBUG_INFO("writeToSocket called");

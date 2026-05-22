@@ -31,6 +31,8 @@ public:
 	// constructors
 	Config(std::vector<Token> Tokens);
 	~Config();
+  Config(const Config& other);
+  Config& operator=(const Config& other);
 
 	// parsing
 	void Parser();

@@ -117,22 +117,43 @@ void Response::serveErrorPage(int status)
     }
 }
 
+bool isDirectory(const std::string& path) {
+    // Explicit trailing slash → directory
+    if (!path.empty() && path[path.size() - 1] == '/')
+        return true;
+
+    // No dot after last slash → treat as directory
+    size_t lastSlash = path.rfind('/');
+    size_t lastDot   = path.rfind('.');
+    
+    if (lastDot == std::string::npos)
+        return true;                    // no extension → directory
+    if (lastSlash != std::string::npos && lastDot < lastSlash)
+        return true;                    // dot is in a dir component, not filename
+
+    return false;
+}
+
 void Response::Get()
 {
     if (!isMethodAllowed("GET"))
         return;
 
     const std::string root = (_loc && !_loc->getRoot().empty())
-                              ? _loc->getRoot()
-                              : _req.getServerConf().getRoot();
+                           ? _loc->getRoot()
+                           : _req.getServerConf().getRoot();
 
-    std::string filepath = root + getFileName(_req.getPath());
-    
+    // TODO:
+    // should update this to work for all /cgi and /cgi/ and /cgi/index.html for example
+    std::string filepath = root;
+    //if (!isDirectory(_req.getPath()))
+    filepath += getFileName(_req.getPath());
+    /*
     if (access(filepath.c_str(), F_OK) != 0)
     {
         serveErrorPage(404);
         return;
-    }
+    }*/
 
     struct stat info;
     if (stat(filepath.c_str(), &info) != 0)
@@ -222,29 +243,34 @@ void Response::Post()
 
     if (_req.isRequsetLarge())
     {
-        int fd = open(filepath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-        if (fd < 0 || !transferToNewFile(fd, _req.getTmpFd()))
+        int rf = open(_req.getTmpFileName().c_str(), O_RDONLY);
+        if (rf <  0)
         {
-            serveErrorPage(500);
-            return;
+          DEBUG_ERROR("yeah its less then 0");
+          serveErrorPage(500);
+          return;
         }
-        // alaoui:todo, I need to close this file descriptor later.
+        else if (!transferToNewFile(fd, rf))
+          serveErrorPage(500);
         std::remove(_req.getTmpFileName().c_str());
+        close(rf);
     }
     else
     {
-        std::ofstream file(filepath.c_str());
-        if (!file)
-        {
+        size_t bytes = write(fd, _req.getBody().c_str(), _req.getBody().size());
+        if (bytes != _req.getBody().size())
             serveErrorPage(500);
-            return;
-        }
-        file << _req.getBody();
-        file.close();
+        // you can't use ostream for make file executable thats why we should use open 0755
+        // std::ofstream file(filepath.c_str());
+        // file << _req.getBody();
+        // file.close();
     }
-
-    _status = 201;
-    _body   = "Created";
+    close(fd); 
+    if (_status != 500)
+    {
+        _status = 201;
+        _body = "Created";
+    }
 }
 
 void Response::Delete()
@@ -252,9 +278,9 @@ void Response::Delete()
     if (!isMethodAllowed("DELETE"))
         return;
 
-    std::string uploadStore = (_loc && !_loc->getUploadStore().empty()) 
-                                ? _loc->getUploadStore() 
-                                : RespDefaults::UPLOAD_STORE;
+    std::string uploadStore = (_loc && !_loc->getUploadStore().empty())
+                                  ? _loc->getUploadStore()
+                                  : RespDefaults::UPLOAD_STORE;
 
     std::string filepath = uploadStore + getFileName(_req.getPath());
 

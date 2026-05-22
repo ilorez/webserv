@@ -1,6 +1,5 @@
 #include "../../includes/container.hpp"
 
-
 // Constructor
 Scanner::Scanner(const std::string &raw)
 {
@@ -204,10 +203,8 @@ void Scanner::addToken(const size_t len)
 		type = ALLOW_METHODS;
 	else if (literal == "return")
 		type = RETURN;
-	else if (literal == "cgi_path")
-		type = CGI_PATH;
-	else if (literal == "cgi_ext")
-		type = CGI_EXT;
+	else if (literal == "cgi_handler")
+		type = CGI_HANDEL;
 	else if (literal == "upload_store")
 		type = UPLOAD_STORE;
 	else if (literal.find_first_not_of("0123456789") == std::string::npos)

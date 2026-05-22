@@ -77,8 +77,9 @@ void Response::initMediaTypes(std::map<std::string, std::string> &m)
         std::make_pair(".html", "text/html"),
         std::make_pair(".css",  "text/css"),
         std::make_pair(".csv",  "text/csv"),
+        std::make_pair(".py",  "text/x-python"),
         std::make_pair(".js",   "application/javascript"),
-
+        std::make_pair(".php",   "application/x-httpd-php"),
         // Application
         std::make_pair(".json", "application/json"),
         std::make_pair(".xml",  "application/xml"),
@@ -261,14 +262,8 @@ bool    Response::transferToNewFile(int destFd, int srcFd)
     ssize_t bytesRead;
     
     while ((bytesRead = read(srcFd, buffer, sizeof(buffer))) > 0) 
-    {
         if (write(destFd, buffer, bytesRead) == -1)
-        {
             return false;
-            close(destFd);
-        }
-    }
-    close(destFd);
     return true;
 }
 

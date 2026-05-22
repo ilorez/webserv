@@ -2,11 +2,60 @@
 #include <iostream>
 #include <sys/epoll.h>
 
-Client::Client(int fd, int epfd) : _fd(fd), _epfd(epfd), _epoll_events(EPOLLIN | EPOLLRDHUP), _writeOffset(0), _lastActivity(time(NULL)),
-	_state(READING_HEADERS), _status_error(0) {
+// Constructor
+Client::Client(int fd, int epfd)
+    : _fd(fd),
+      _epfd(epfd),
+      _epoll_events(EPOLLIN | EPOLLRDHUP),
+      _readBuffer(""),
+      _writeBuffer(""),
+      _writeOffset(0),
+      _lastActivity(time(NULL)),
+      _state(READING_HEADERS),
+      _req(),
+      _clsock_hold(),
+      _status_error(0),
+      _res()
+{
     _clsock_hold.fd = fd;
     _clsock_hold.is_cgi = false;
     _clsock_hold.cl = this;
+}
+
+Client::Client(const Client& other)
+    : _fd(other._fd),
+      _epfd(other._epfd),
+      _epoll_events(other._epoll_events),
+      _readBuffer(other._readBuffer),
+      _writeBuffer(other._writeBuffer),
+      _writeOffset(other._writeOffset),
+      _lastActivity(other._lastActivity),
+      _state(other._state),
+      _req(other._req),
+      _clsock_hold(other._clsock_hold),
+      _status_error(other._status_error),
+      _res(other._res)
+{
+    *this = other; // still fine, self-assignment guard handles it
+}
+
+Client& Client::operator=(const Client& other)
+{
+    if (this == &other)
+        return *this;
+    _fd           = other._fd;
+    _epfd         = other._epfd;
+    _epoll_events = other._epoll_events;
+    _readBuffer   = other._readBuffer;
+    _writeBuffer  = other._writeBuffer;
+    _writeOffset  = other._writeOffset;
+    _lastActivity = other._lastActivity;
+    _state        = other._state;
+    _req          = other._req;
+    _clsock_hold  = other._clsock_hold; // covers .fd, .is_cgi, .cl
+    _status_error = other._status_error;
+    _res          = other._res;
+    return *this;
 }
 
 Client::~Client()
@@ -14,24 +63,6 @@ Client::~Client()
   DEBUG_INFO("Client disructor called");
   if (_fd >= 0)
     close(_fd);
-}
-
-// its private you can't use this 
-// TODO: add copy constructor to Response
-Client::Client(const Client &o): 
-  _fd(o._fd),_epfd(o._epfd), _epoll_events(o._epoll_events),  _readBuffer(o._readBuffer),
-  _writeBuffer(o._writeBuffer), _writeOffset(o._writeOffset), _lastActivity(o._lastActivity),
-  _state(o._state), _req(o._req), _status_error(o._status_error)
-{
-    _clsock_hold.fd = o._clsock_hold.fd;
-    _clsock_hold.is_cgi = o._clsock_hold.is_cgi;
-    _clsock_hold.cl = o._clsock_hold.cl;
-}
-
-Client &Client::operator=(const Client &other)
-{
-	(void)other;
-	return (*this);
 }
 
 // getters
@@ -143,7 +174,7 @@ void Client::callError(int err_code)
 bool Client::createTmpFile()
 {
   _req.setTmpFileName(makeTmpPath(_fd));
-  int tfd = open(_req.getTmpFileName().c_str(), O_RDWR | O_APPEND | O_CREAT);
+  int tfd = open(_req.getTmpFileName().c_str(), O_RDWR | O_APPEND | O_CREAT, 0755);
   if (tfd < 0)
   {
     DEBUG_ERROR("readFromSocket: could not create tmp file");

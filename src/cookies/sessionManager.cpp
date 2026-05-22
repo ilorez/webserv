@@ -28,9 +28,10 @@ std::string sessionManager::generateSessionId()
 	int d1 = std::rand() % 10;
 	int d2 = std::rand() % 10;
 	int d3 = std::rand() % 10;
-
+	int d4 = std::rand() % 10;
+	
 	std::stringstream ss;
-	ss << d1 << d2 << d3;
+	ss << d1 << d2 << d3 << d4;
 	std::string randomString = ss.str();
 
 	return (randomString);
