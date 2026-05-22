@@ -241,6 +241,12 @@ void Response::Post()
 
     const std::string filepath = uploadStore + "/" + generateUploadFileName(contentType);
 
+    int fd = open(filepath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0755);
+    if (fd < 0)
+    {
+        serveErrorPage(500);
+        return;
+    }
     if (_req.isRequsetLarge())
     {
         int rf = open(_req.getTmpFileName().c_str(), O_RDONLY);
@@ -248,6 +254,7 @@ void Response::Post()
         {
           DEBUG_ERROR("yeah its less then 0");
           serveErrorPage(500);
+          close(fd);
           return;
         }
         else if (!transferToNewFile(fd, rf))
