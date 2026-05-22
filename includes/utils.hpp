@@ -25,4 +25,5 @@ std::string getFileName(const std::string& path);
 void check_process_status(int status);
 
 void replace_all(std::string &str, const std::string &from, const std::string &to);
+std::string getFileExtension(const std::string &path);
 #endif

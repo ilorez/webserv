@@ -183,7 +183,7 @@ void CGIClient::ft_exec()
     }
 
     //DEBUG_ERROR("I'm here");
-    std::string cgiPath = loc->getCgiPath();
+    std::string cgiPath = _req.get_cgi_path();
     //DEBUG_ERROR("I'm not");
     std::string scriptPath = _req.getFilePath();
     //DEBUG_ERROR(cgiPath);

@@ -29,8 +29,8 @@ private:
   bool _is_cgi;
   const LocationConfig* _match_loc;           // request match location, TODO: Alaoui should use this
   std::string _file_path;                     // this is the file path of cgi, you can use it for request too, i use it only in case of CGI run request 
+  std::string _cgi_path;
 
-  
   Session *_session; // cookies
   bool _is_new_session;
 public:
@@ -54,6 +54,7 @@ public:
   std::map<std::string, std::string>& getHeaders();
   Session* get_session();
   bool is_new_session();
+  std::string get_cgi_path() const;
 
 
   // TODO
@@ -68,6 +69,7 @@ public:
   void  incrementBytesCounter(size_t bytes);
   void setPath(const std::string &path);
   void requestParser(const std::string &headers);
+  void set_cgi_path(const std::string &path);
   //TODO
   void setBody(const std::string &value);
   const LocationConfig* getMatchedLocation() const;
