@@ -27,7 +27,7 @@ Tasks:
    - [x] parse CGI header output logic @zobair
    - [x] add test CGI UI page, (just AI part not that hard) @zobair
 
-   - [ ] check memory leaks and tests @allllll
+   - [x] check memory leaks and tests @allllll
    - [ ] check Subject && code line by line @all (your part of code)
    - [ ] final tests 
    - [ ] create READMEs

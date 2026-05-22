@@ -6,7 +6,7 @@ vpath %.cpp src src/server src/request src/response src/config src/cgi src/clien
 NAME = webserv 
 
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -I./includes  -DDEBUG -g
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -I./includes # -DDEBUG -g
 RM = rm -rf
 BUILD_DR = ./build/
 

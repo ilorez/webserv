@@ -180,7 +180,6 @@ void Request::requestParser(const std::string &raw)
 	_parseFirstLine(lines);
 	_parseAllHeaders(lines);
 	// NOTE: importent to add request methods that have body here like "put" if you use it
-	;
 	if (!to_integer<std::string, size_t>(getHeaderValue("Content-Length"), _content_size) && _method == "POST")
 	{
 		DEBUG_ERROR("request parser: invalid Content-Length");

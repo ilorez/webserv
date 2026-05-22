@@ -118,6 +118,7 @@ bool isValidStatusCode(const std::string &str)
 
 void errorMsg(const std::string &msg, size_t line)
 {
+  #ifdef DEBUG
 	std::ostringstream oss;
 	std::string fullMsg;
 
@@ -125,6 +126,9 @@ void errorMsg(const std::string &msg, size_t line)
 	fullMsg = oss.str();
 
 	throw std::runtime_error(fullMsg);
+  #endif
+  (void)msg;
+  (void)line;
 }
 
 std::string getFileName(const std::string& path)
