@@ -11,6 +11,49 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ---------------- NAVBAR ---------------- */
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding-bottom:20px;
+  margin-bottom:40px;
+
+  border-bottom:1px solid var(--border);
+}
+
+.logo{
+  font-family:var(--mono);
+  color:var(--green);
+  font-size:1rem;
+  letter-spacing:0.05em;
+}
+
+.logo span{
+  color:var(--muted);
+}
+
+nav a{
+  text-decoration:none;
+  color:var(--text);
+
+  border:1px solid var(--border);
+
+  padding:10px 14px;
+
+  font-family:var(--mono);
+  font-size:0.75rem;
+
+  transition:0.15s;
+}
+
+nav a:hover{
+  border-color:var(--green);
+  color:var(--green);
+}
+
 :root {
   --bg:      #0d0d0d;
   --panel:   #141414;
@@ -22,6 +65,9 @@
   --muted:   #555;
   --mono:    'Space Mono', monospace;
   --sans:    'IBM Plex Sans', sans-serif;
+  --green:#00ff88;
+  --blue:#4d9fff;
+  --red:#ff3b3b;
 }
 
 body {
@@ -32,6 +78,7 @@ body {
   padding: 40px 24px;
   transition: background 0.2s, color 0.2s;
 }
+
 
 body.light {
   --bg: #f2f2f2;
@@ -183,7 +230,16 @@ select {
 <body>
 
 <header>
-  <h1>webserv <span>/ cookie test</span></h1>
+
+  <div class="logo">
+    nginx-1.29.6 <span>/ media tester</span>
+  </div>
+
+  <nav>
+    <a href="/">Home</a>
+    <a href="/cgi/">CGI TEST</a>
+  </nav>
+
 </header>
 
 <div class="grid">

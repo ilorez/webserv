@@ -6,12 +6,77 @@
 <title>CGI Tester</title>
 
 <style>
-body {
-    background: #0d0d0d;
-    color: #ffffff;
-    font-family: monospace;
-    padding: 30px;
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
 }
+
+:root{
+  --bg:#0d0d0d;
+  --panel:#141414;
+  --border:#2a2a2a;
+  --text:#e8e8e8;
+  --muted:#666;
+  --green:#00ff88;
+  --blue:#4d9fff;
+  --red:#ff3b3b;
+
+  --mono:'Space Mono', monospace;
+  --sans:'IBM Plex Sans', sans-serif;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+  padding:32px 24px;
+}
+
+/* ---------------- NAVBAR ---------------- */
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding-bottom:20px;
+  margin-bottom:40px;
+
+  border-bottom:1px solid var(--border);
+}
+
+.logo{
+  font-family:var(--mono);
+  color:var(--green);
+  font-size:1rem;
+  letter-spacing:0.05em;
+}
+
+.logo span{
+  color:var(--muted);
+}
+
+nav a{
+  text-decoration:none;
+  color:var(--text);
+
+  border:1px solid var(--border);
+
+  padding:10px 14px;
+
+  font-family:var(--mono);
+  font-size:0.75rem;
+
+  transition:0.15s;
+}
+
+nav a:hover{
+  border-color:var(--green);
+  color:var(--green);
+}
+
 
 h1 {
     margin-bottom: 20px;
@@ -74,6 +139,20 @@ button:hover {
 </head>
 
 <body>
+
+<header>
+
+  <div class="logo">
+    nginx-1.29.6 <span>/ media tester</span>
+  </div>
+
+  <nav>
+    <a href="/">Home</a>
+    <a href="/cookies/">COOKIES TEST</a>
+  </nav>
+
+</header>
+
 
 <h1>CGI Tester</h1>
 
