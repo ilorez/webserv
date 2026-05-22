@@ -145,9 +145,11 @@ void Response::Get()
                            ? _loc->getRoot()
                            : _req.getServerConf().getRoot();
 
+    // TODO:
+    // should update this to work for all /cgi and /cgi/ and /cgi/index.html for example
     std::string filepath = root;
-    if (!isDirectory(_req.getPath()))
-      filepath += getFileName(_req.getPath());
+    //if (!isDirectory(_req.getPath()))
+    filepath += getFileName(_req.getPath());
     /*
     if (access(filepath.c_str(), F_OK) != 0)
     {
