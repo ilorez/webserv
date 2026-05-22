@@ -1,69 +1,71 @@
 #include "../../includes/container.hpp"
 
-int gn = 0;
-
 std::string Response::cookieHeaderBuilder()
 {
-    std::string cookieValue;
-    if (_req.getCookies() != NULL)
+    if (_req.getCookies() == NULL)
+        return "";
+
+    Session* session  = _req.getCookies();
+    time_t   now      = time(NULL);
+
+    if (session->getExpiresAt() <= now)
+        return "";
+
+    std::string cookieValue = "session_id=" + session->getId();
+
+    const std::map<std::string, std::string>& data = session->getData();
+    for (std::map<std::string, std::string>::const_iterator it = data.begin();
+         it != data.end(); ++it)
     {
-        Session *session = _req.getCookies();
-        time_t now = time(NULL);
-
-        if (session->getExpiresAt() > now)
-        {
-            cookieValue = "session_id=" + session->getId();
-            
-            time_t exp = session->getExpiresAt();
-            std::string time = getHttpDate(exp);     
-            std::map<std::string, std::string> mapp = _req.getCookies()->getData();
-            for (std::map<std::string, std::string>::iterator it = mapp.begin(); it != mapp.end(); it++)
-            {
-                cookieValue += "; " + it->first + "=" + it->second;
-            }
-            
-            cookieValue += "; Expires=" + time;
-            cookieValue += "; Path=/";
-            cookieValue += "; HttpOnly";
-
-        }
+        cookieValue += "; " + it->first + "=" + it->second;
     }
+
+    cookieValue += "; Expires=" + getHttpDate(session->getExpiresAt());
+    cookieValue += "; Path=/";
+    cookieValue += "; HttpOnly";
+
     return cookieValue;
 }
 
-void Response::initHeaders(std::map<std::string, std::string> &h)
+void Response::initHeaders(std::map<std::string, std::string>& headers)
 {
     timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
 
-    h.insert(std::make_pair("Date",           getHttpDate(ts.tv_sec)));
-    h.insert(std::make_pair("Server",         RespDefaults::SERVER_NAME));
-    h.insert(std::make_pair("Connection",     "close"));
+    headers.insert(std::make_pair("Date",       getHttpDate(ts.tv_sec)));
+    headers.insert(std::make_pair("Server",     RespDefaults::SERVER_NAME));
+    headers.insert(std::make_pair("Connection", "close"));
 
+    // Content-Type
     std::string contentType = "text/plain";
     if (_req.getMethod() == "GET" && _status < 400)
         contentType = returnMediaType(_req.getPath());
     else if (_status >= 400 && !_body.empty())
         contentType = "text/html";
-    h.insert(std::make_pair("Content-Type", contentType));
+    headers.insert(std::make_pair("Content-Type", contentType));
 
+    // Redirect Location
     if (_status == 301 || _status == 302)
-        h.insert(std::make_pair("Location", _loc->getReturnUrl()));
+        headers.insert(std::make_pair("Location", _loc->getReturnUrl()));
 
-    h.insert(std::make_pair("Set-Cookie", cookieHeaderBuilder()));
+    // Cookie
+    headers.insert(std::make_pair("Set-Cookie", cookieHeaderBuilder()));
+
+    // Body / File headers
     if (_req.getMethod() == "GET" && _status < 400 && _file_fd >= 0)
     {
         struct stat st;
         if (fstat(_file_fd, &st) == 0)
         {
-            h.insert(std::make_pair("Last-Modified", getHttpDate(st.st_mtim.tv_sec)));
-            h.insert(std::make_pair("Content-Length", to_string98(st.st_size)));
+            headers.insert(std::make_pair("Last-Modified",  getHttpDate(st.st_mtim.tv_sec)));
+            headers.insert(std::make_pair("Content-Length", to_string98(st.st_size)));
         }
     }
-    else {
-      if (_req.getMethod() == "POST" && _status == 201)
-          h.insert(std::make_pair("Location", _req.getPath()));
-      h.insert(std::make_pair("Content-Length", to_string98(_body.size())));
+    else
+    {
+        if (_req.getMethod() == "POST" && _status == 201)
+            headers.insert(std::make_pair("Location", _req.getPath()));
+        headers.insert(std::make_pair("Content-Length", to_string98(_body.size())));
     }
 }
 
@@ -71,26 +73,23 @@ void Response::serveErrorPage(int status)
 {
     _status = status;
 
-    const std::map<int, std::string>& conf = _req.getServerConf().getErrorPages();
-    std::string errorPage;
-    bool isCustom = false;
+    const std::string codeStr = to_string98(status);
 
-    std::map<int, std::string>::const_iterator it = conf.find(status);
-    if (it != conf.end())
+    const std::map<int, std::string>& conf = _req.getServerConf().getErrorPages();
+    std::map<int, std::string>::const_iterator confIt = conf.find(status);
+
+    if (confIt != conf.end())
     {
-        errorPage = RespDefaults::ROOT + it->second;
-        isCustom = true;
-        _body = ft_readFile(errorPage);
+        std::string customPath = RespDefaults::ROOT + confIt->second;
+        _body = ft_readFile(customPath);
     }
 
-    if (_body.empty())
+    bool isCustom = !_body.empty();
+    if (!isCustom)
     {
-        errorPage = RespDefaults::ERROR_PAGE;
-        _body = ft_readFile(errorPage);
-        isCustom = false;
+        _body = ft_readFile(RespDefaults::ERROR_PAGE);
         if (_body.empty())
         {
-            std::string codeStr = to_string98(status);
             _body = codeStr + " Error";
             return;
         }
@@ -98,27 +97,24 @@ void Response::serveErrorPage(int status)
 
     if (!isCustom)
     {
-        std::string codeStr = to_string98(status);
         std::string msgStr = "Unknown Error";
+        std::map<int, std::string>::iterator statusIt = _mapStatusCodes.find(status);
+        if (statusIt != _mapStatusCodes.end())
+            msgStr = statusIt->second;
 
-        std::map<int, std::string>::iterator it2 = _mapStatusCodes.find(status);
-        if (it2 != _mapStatusCodes.end())
-            msgStr = it2->second;
-
-        size_t pos = 0;
-        while ((pos = _body.find(RespDefaults::CODE_TAG, pos)) != std::string::npos)
+        for (size_t pos = 0;
+             (pos = _body.find(RespDefaults::CODE_TAG, pos)) != std::string::npos; )
         {
-            _body.replace(pos, 8, codeStr);
+            _body.replace(pos, RespDefaults::CODE_TAG.size(), codeStr);
             pos += codeStr.length();
         }
-        pos = 0;
-        while ((pos = _body.find(RespDefaults::MESSAGE_TAG, pos)) != std::string::npos)
+        for (size_t pos = 0;
+             (pos = _body.find(RespDefaults::MESSAGE_TAG, pos)) != std::string::npos; )
         {
-            _body.replace(pos, 11, msgStr);
+            _body.replace(pos, RespDefaults::MESSAGE_TAG.size(), msgStr);
             pos += msgStr.length();
         }
     }
-    return;
 }
 
 void Response::Get()
@@ -126,11 +122,12 @@ void Response::Get()
     if (!isMethodAllowed("GET"))
         return;
 
-    std::string root     = (_loc && !_loc->getRoot().empty()) 
-                            ? _loc->getRoot() 
-                            : _req.getServerConf().getRoot();
-    
+    const std::string root = (_loc && !_loc->getRoot().empty())
+                              ? _loc->getRoot()
+                              : _req.getServerConf().getRoot();
+
     std::string filepath = root + getFileName(_req.getPath());
+    
     if (access(filepath.c_str(), F_OK) != 0)
     {
         serveErrorPage(404);
@@ -138,38 +135,43 @@ void Response::Get()
     }
 
     struct stat info;
-    stat(filepath.c_str(), &info);
+    if (stat(filepath.c_str(), &info) != 0)
+    {
+        serveErrorPage(500);
+        return;
+    }
+
     if (S_ISDIR(info.st_mode))
     {
-        std::vector<std::string> indexList =
-            (_loc && !_loc->getIndex().empty()) 
-                ? _loc->getIndex() 
+        const std::vector<std::string>& indexList =
+            (_loc && !_loc->getIndex().empty())
+                ? _loc->getIndex()
                 : _req.getServerConf().getIndex();
 
-        bool found = false;
+        bool indexFound = false;
         for (size_t i = 0; i < indexList.size(); ++i)
         {
             std::string indexPath = filepath + "/" + indexList[i];
             if (access(indexPath.c_str(), F_OK) == 0)
             {
-                filepath = indexPath;
-                found = true;
+                filepath    = indexPath;
+                indexFound  = true;
                 break;
             }
         }
 
-        if (!found)
+        if (!indexFound)
         {
-            bool autoindex = (_loc) 
-                             ? _loc->getAutoindex() 
-                             : _req.getServerConf().getAutoIndex();
+            const bool autoindex = (_loc)
+                                    ? _loc->getAutoindex()
+                                    : _req.getServerConf().getAutoIndex();
             if (!autoindex)
             {
                 serveErrorPage(403);
                 return;
             }
             _status = 200;
-            _body = generateAutoIndex(filepath);
+            _body   = generateAutoIndex(filepath);
             return;
         }
     }
@@ -186,20 +188,8 @@ void Response::Get()
         serveErrorPage(404);
         return;
     }
-    _status = 200;
-}
 
-bool Response::isSupportedContentType(
-    const std::string &contentType,
-    const std::map<std::string, std::string> &mediaTypes)
-{
-    for (std::map<std::string, std::string>::const_iterator it = mediaTypes.begin();
-         it != mediaTypes.end(); ++it)
-    {
-        if (it->second == contentType)
-            return true;
-    }
-    return false;
+    _status = 200;
 }
 
 void Response::Post()
@@ -207,37 +197,38 @@ void Response::Post()
     if (!isMethodAllowed("POST"))
         return;
 
-    size_t max_size = (_loc) 
-                        ? _loc->getClientMaxBodySize() 
-                        : _req.getServerConf().getClientMaxBodySize();
+    const size_t maxSize = (_loc)
+                            ? _loc->getClientMaxBodySize()
+                            : _req.getServerConf().getClientMaxBodySize();
 
-    std::string contentLengthStr = _req.getHeaderValue("content-length");
-    std::string contentTypeStr = _req.getHeaderValue("content-type");
+    const std::string contentType   = _req.getHeaderValue("content-type");
 
-    if (!isSupportedContentType(contentTypeStr, _mapMediaTypes))
+    if (!isSupportedContentType(contentType, _mapMediaTypes))
     {
         serveErrorPage(415);
         return;
     }
-    if (_req.getContentLen() > max_size)
+    if (_req.getContentLen() > maxSize)
     {
         serveErrorPage(413);
         return;
     }
 
-    std::string uploadStore = (_loc && !_loc->getUploadStore().empty()) 
-                                ? _loc->getUploadStore() 
-                                : RespDefaults::UPLOAD_STORE;
+    const std::string uploadStore = (_loc && !_loc->getUploadStore().empty())
+                                     ? _loc->getUploadStore()
+                                     : RespDefaults::UPLOAD_STORE;
 
-    std::string filepath = uploadStore + "/" +  generateUploadFileName(contentTypeStr);
+    const std::string filepath = uploadStore + "/" + generateUploadFileName(contentType);
+
     if (_req.isRequsetLarge())
     {
         int fd = open(filepath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd < 0 || !transferToNewFile(fd, _req.getTmpFd()))
         {
             serveErrorPage(500);
-            return ;
+            return;
         }
+        // alaoui:todo, I need to close this file descriptor later.
         std::remove(_req.getTmpFileName().c_str());
     }
     else
@@ -251,9 +242,9 @@ void Response::Post()
         file << _req.getBody();
         file.close();
     }
-    
+
     _status = 201;
-    _body = "Created";
+    _body   = "Created";
 }
 
 void Response::Delete()
@@ -279,7 +270,11 @@ void Response::Delete()
         return;
     }
 
-    std::remove(filepath.c_str());
+    if (std::remove(filepath.c_str()) != 0)
+    {
+        serveErrorPage(500);
+        return;
+    }
 
     _status = 200;
     _body = "File deleted successfully\n";
@@ -287,49 +282,38 @@ void Response::Delete()
 
 std::string Response::build()
 {
-    std::string response;
-    
     initStatusCodes(_mapStatusCodes);
     initMediaTypes(_mapMediaTypes);
     _loc = _req.getMatchLoc();
-    
+
     if (!tryApplyLocationReturn())
     {
-        if (_req.getMethod() == "GET")
-            Get();
-        else if (_req.getMethod() == "POST")
-            Post();
-        else if (_req.getMethod() == "DELETE")
-            Delete();
-        else
-            serveErrorPage(405);
+        const std::string method = _req.getMethod();
+        if      (method == "GET")    Get();
+        else if (method == "POST")   Post();
+        else if (method == "DELETE") Delete();
+        else                         serveErrorPage(405);
     }
 
     initHeaders(_headers);
-    response = mergeResponseToString();
-    return response;
+    return mergeResponseToString();
 }
 
 std::string Response::build(int status)
 {
-    std::string response; 
     initStatusCodes(_mapStatusCodes);
     initMediaTypes(_mapMediaTypes);
-    // NOTE: TODO: you should never use _req in this part of building page base on status
-    // because the _req may not be builded itself
-    //_loc = _req.getMatchedLocation();
+
     serveErrorPage(status);
 
-    // --- Creat Headers
-    // NOTE: server error page can't use _req
     timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
+
     _headers.insert(std::make_pair("Date",           getHttpDate(ts.tv_sec)));
     _headers.insert(std::make_pair("Server",         RespDefaults::SERVER_NAME));
     _headers.insert(std::make_pair("Content-Length", to_string98(_body.size())));
     _headers.insert(std::make_pair("Connection",     "close"));
-    _headers.insert(std::make_pair("Content-Type", "text/html"));
-    // ------------
-    response = mergeResponseToString();
-    return response;
+    _headers.insert(std::make_pair("Content-Type",   "text/html"));
+
+    return mergeResponseToString();
 }

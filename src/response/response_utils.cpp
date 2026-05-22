@@ -283,6 +283,18 @@ std::string Response::mergeResponseToString()
     return (ret);
 }
 
+bool Response::isSupportedContentType(
+    const std::string&                        contentType,
+    const std::map<std::string, std::string>& mediaTypes)
+{
+    for (std::map<std::string, std::string>::const_iterator it = mediaTypes.begin();
+         it != mediaTypes.end(); ++it)
+    {
+        if (it->second == contentType)
+            return true;
+    }
+    return false;
+}
 
 // Getters
 std::string Response::getBody()
