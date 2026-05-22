@@ -21,7 +21,11 @@ Response &Response::operator=(const Response &other)
 }
 
 Response::~Response() 
-{}
+{
+  DEBUG_INFO2("Response Destructor called");
+  if(_file_fd > -1)
+    close(_file_fd);
+}
 
 // Helper function
 void Response::initStatusCodes(std::map<int, std::string> &m)

@@ -211,6 +211,7 @@ void Request::requestParser(const std::string &raw)
 }
 
 // change name to checkCGI request
+// return true just in case of this request for run cgi, if its for upload or delete cgi its will set is_cgi true return false
 bool Request::isCGI()
 {
 	const std::string uri = getPath();

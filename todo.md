@@ -15,11 +15,11 @@
         [ ] Important: the logic now is working but imagine that you are using a pointer of variable in stack that can be gone at anytime !!!!!! SEGV !!!!! 
 Tasks: 
    - [x] redirect @Alaoui
-   - [ ] Support cookies and session management (provide simple examples) @ali
+   - [x] Support cookies and session management (provide simple examples) @ali
         [x] created session management system
         [x] create UI page
-        [ ] link cookies part @ali + @alaoui (response) + @zobair(cgi)
-        [ ] test
+        [x] link cookies part @ali + @alaoui (response) + @zobair(cgi)
+        [x] test
    - [x] run CGI get/post pipline @zobair
    - [x] add ENV vars to CGI @zobair
    - [x] update is CGI to work to be true just with run CGI requests @zobair
