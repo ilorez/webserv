@@ -162,6 +162,11 @@ Session *Request::get_session()
   return _session;
 };
 
+bool Request::get_is_new_session()
+{
+  return _is_new_session;
+}
+
 std::string Request::get_cgi_path() const
 {
   return _cgi_path;
