@@ -194,8 +194,6 @@ void LocationConfig::setCgiHandel(const std::vector<std::string> &params, size_t
     const std::string &ext  = params[0];
     const std::string &path = params[1];
 
-    if (!(ext == ".py" || ext == ".sh"))
-        errorMsg("Invalid cgi_ext, e.g. '.py', '.sh'", line);
     if (!isValidPath(path))
         errorMsg("Invalid cgi_path", line);
 
