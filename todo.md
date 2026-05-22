@@ -26,6 +26,7 @@ Tasks:
    - [x] handel upload/delete cgi from folder /cgi-bin @alaoui
    - [x] parse CGI header output logic @zobair
    - [x] add test CGI UI page, (just AI part not that hard) @zobair
+   - [ ] test if upload_store and root exist and if not exit, move default system to CONFIG from RESPONSE 
 
    - [x] check memory leaks and tests @allllll
    - [ ] check Subject && code line by line @all (your part of code)

@@ -2,8 +2,9 @@
 #include "../includes/WebServExceptions.hpp"
     
 // request
-RequestException::RequestException(const std::string& msg) : _msg(msg) {}
+RequestException::RequestException(const std::string& msg, int status) : _msg(msg), _status(status) {}
 const char* RequestException::what() const throw() { return _msg.c_str(); }
+int RequestException::status() const throw() { return _status; }
 RequestException::~RequestException() throw(){}
 
 //server

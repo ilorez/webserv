@@ -43,11 +43,11 @@ void Request::_parseHeader(const std::string &key, const std::string &value)
 	std::string forbiddenChars = " \"(),/:;<=>?@[]{}\\";
 
 	if (key.empty() || value.empty())
-		throw RequestException("400 Bad Request");
+		throw RequestException("400 Bad Request", 400);
 
 	// ? key grammar check
 	if (key.find_first_of(forbiddenChars) != std::string::npos)
-		throw RequestException("400 Bad Request");
+		throw RequestException("400 Bad Request", 400);
 }
 
 void Request::_insertHeader(std::string &key, const std::string &value, const std::set<std::string> commaHeaders)
@@ -77,7 +77,7 @@ void Request::_parseAllHeaders(const std::vector<std::string> &lines)
 	for (size_t i = 1; i < lines.size(); i++)
 	{
 		if (lines[i].empty())
-			throw RequestException("400 Bad Request");
+			throw RequestException("400 Bad Request", 400);
 
 		key = lines[i].substr(0, lines[i].find_first_of(":"));
 		value = trim(lines[i].substr(lines[i].find_first_of(":") + 1));
@@ -95,21 +95,21 @@ void Request::_parseFirstLine(const std::vector<std::string> &lines)
 	first_line = lines.front();
 	split(first_line, fields, " ");
 	if (fields.size() != 3)
-		throw RequestException("400 Bad Request");
+		throw RequestException("400 Bad Request", 400);
 
 	method = fields[0];
 	path = fields[1]; // ? i could check for the length of the uri, if its too long, throw 414 URI Too Long
 	version = fields[2];
-	if (!path.empty() && (method == "GET" || method == "POST" || method == "DELETE") && version == "HTTP/1.1") // todo : i will add the rest of the methods later
+  if (path.empty() || !(version == "HTTP/1.1" || version == "HTTP/1.0"))
+		  throw RequestException("400 Bad Request", 400);
+	if ((method == "GET" || method == "POST" || method == "DELETE") && isMethodAllowed(method)) // todo : i will add the rest of the methods later
 	{
 		_path = path;
 		_method = method;
 		_version = version;
-		if (!isMethodAllowed(method))
-			throw RequestException("405 Method Not Allowed");
 	}
 	else
-		throw RequestException("400 Bad Request");
+			throw RequestException("405 Method Not Allowed", 405);
 }
 static std::string getCookieValue(const std::string &cookieHeader, const std::string &name)
 {
@@ -183,18 +183,18 @@ void Request::requestParser(const std::string &raw)
 	if (!to_integer<std::string, size_t>(getHeaderValue("Content-Length"), _content_size) && _method == "POST")
 	{
 		DEBUG_ERROR("request parser: invalid Content-Length");
-		throw RequestException("400 Bad Request");
+		throw RequestException("400 Bad Request", 400);
 	}
 	else if (_content_size > 0 && _method != "POST")
 	{
 		DEBUG_ERROR("request parser: there is no meaning of sending a body with GET request");
-		throw RequestException("400 Bad Request");
+		throw RequestException("400 Bad Request", 400);
 	}
 	if (getHeaderValue("transfer-encoding") != "" && getHeaderValue("transfer-encoding") != "identity")
-		throw RequestException("400 Bad Request");
+		throw RequestException("400 Bad Request", 400);
 	_match_loc = getMatchedLocation();
 	if (!_match_loc)
-		throw RequestException("400 Bad Request");
+		throw RequestException("400 Bad Request", 400);
 	parseCookies();
 	DEBUG_INFO2("#######################Database Information#######################");
 	sessionManager &manager = sessionManager::getInstance();
@@ -227,7 +227,7 @@ bool Request::isCGI()
 		return false;
 	// the only all methods remain which is get/post/delete for run or delete cgi is require scirpt name with ext
 	else if (!hasExtAtEnd)
-		throw RequestException("400 Bad Request");
+		throw RequestException("400 Bad Request", 400);
 	// its cgi and its delete method and its have .[ext] at end of path so its for delete cgi and this is response part
 	// set is_cgi true and return false
 	else if (_method == "DELETE")
@@ -238,13 +238,13 @@ bool Request::isCGI()
 		return false;
 	std::string uploadStore = (!_match_loc->getUploadStore().empty())
 								  ? _match_loc->getUploadStore()
-								  : RespDefaults::CGI_STORE;
+								  : DEF_CGI_STORE;
 	// NOTE: also i should store info like the path and everything so i don't need to use look for it next time
 	_file_path = uploadStore + getFileName(uri);
 	_cgi_path = _match_loc->getCgiPathForExt(ext); // storing the interpreter path
 
 	if (access(_file_path.c_str(), X_OK) == -1)
-		throw RequestException("400 Bad Request");
+		throw RequestException("400 Bad Request", 400);
 	DEBUG_INFO2("This requist is a CGI");
 	return (true);
 }

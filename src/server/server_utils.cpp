@@ -67,7 +67,13 @@ void Server::readheaders(Client *cl)
       cgi->preSetup();
       return;
     }
-  } catch (const std::exception &e){
+  } 
+  catch (const RequestException &e){
+    std::cerr << ERROR_MSG << "parsing headers: "<< e.what() << std::endl;
+    // send bad request
+    cl->callError(e.status());
+  }
+  catch (const std::exception &e){
     std::cerr << ERROR_MSG << "parsing headers: "<< e.what() << std::endl;
     // send bad request
     cl->callError(400);

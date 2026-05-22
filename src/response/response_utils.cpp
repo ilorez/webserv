@@ -310,7 +310,7 @@ std::string Response::getHeaders()
 {
     std::string ret;
     std::map<int, std::string>::iterator sc_it = _mapStatusCodes.find(_status);
-    ret = _req.getVersion() + " " + to_string98(sc_it->first) + " " + sc_it->second + "\r\n";
+    ret = "HTTP/1.0 " + to_string98(sc_it->first) + " " + sc_it->second + "\r\n";
 
     for (std::map<std::string, std::string>::const_iterator it = _headers.begin();
         it != _headers.end(); ++it) 
