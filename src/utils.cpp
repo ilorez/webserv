@@ -6,6 +6,18 @@ char toLowerCase(unsigned char c)
   return std::tolower(c);
 }
 
+std::string getFileExtension(const std::string &path)
+{
+    size_t dotPos = path.rfind('.');
+    if (dotPos == std::string::npos)
+        return "";
+
+    size_t slashPos = path.rfind('/');// making sure that the dot is inside a filename, not inside a directory name
+    if (slashPos != std::string::npos && dotPos < slashPos)
+        return "";
+    return path.substr(dotPos);
+}
+
 std::string ft_readFile(std::string src)
 {
   std::ifstream readfile(src.c_str());

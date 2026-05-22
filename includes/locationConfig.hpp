@@ -51,6 +51,7 @@ public:
 	unsigned long getClientMaxBodySize() const;
 	const std::string &getUploadStore() const;
 	const std::map<std::string, std::string> &getCgiHandlers() const;
+	std::string getCgiPathForExt(const std::string &ext) const;
 
 	// setter
 	void setPath(const std::string &path, size_t line);
@@ -63,6 +64,7 @@ public:
 	void setUploadStore(const std::string &path, size_t line);
 	void setCgiHandel(const std::vector<std::string> &params, size_t line);
 	// helpers
+	bool hasCgiForExt(const std::string &ext) const;
 	bool isMethodAllowed(const std::string &method) const;
 	bool hasCgi() const;
 	bool hasReturn() const;

@@ -214,7 +214,8 @@ void Request::requestParser(const std::string &raw)
 bool Request::isCGI()
 {
 	const std::string uri = getPath();
-	bool hasExtAtEnd = endsWith(uri, _match_loc->getCgiExt());
+	const std::string ext = getFileExtension(uri);
+	bool hasExtAtEnd = !ext.empty() && _match_loc->hasCgiForExt(ext);
 	// is not cgi at all because the match location doesn't have cgiExt and cgiPath (use matchLog->hasCGI for that)
 	// return false
 	if (!_match_loc->hasCgi())
@@ -240,6 +241,8 @@ bool Request::isCGI()
 								  : RespDefaults::CGI_STORE;
 	// NOTE: also i should store info like the path and everything so i don't need to use look for it next time
 	_file_path = uploadStore + getFileName(uri);
+	_cgi_path = _match_loc->getCgiPathForExt(ext); // storing the interpreter path
+
 	if (access(_file_path.c_str(), X_OK) == -1)
 		throw RequestException("400 Bad Request");
 	DEBUG_INFO2("This requist is a CGI");

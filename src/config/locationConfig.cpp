@@ -186,8 +186,6 @@ void LocationConfig::setUploadStore(const std::string &path, size_t line)
 	_uploadStore = path;
 }
 
-
-
 void LocationConfig::setCgiHandel(const std::vector<std::string> &params, size_t line)
 {
     if (params.size() != 2)
@@ -204,12 +202,26 @@ void LocationConfig::setCgiHandel(const std::vector<std::string> &params, size_t
     _cgiHandlers[ext] = path;
 }
 
+std::string LocationConfig::getCgiPathForExt(const std::string &ext) const
+{
+    std::map<std::string, std::string>::const_iterator it = _cgiHandlers.find(ext);
+    if (it == _cgiHandlers.end())
+        return "";
+    return it->second;
+}
+
 bool LocationConfig::hasCgi() const
 {
     return !_cgiHandlers.empty();
 }
 
 // helpers
+
+bool LocationConfig::hasCgiForExt(const std::string &ext) const
+{
+    return _cgiHandlers.count(ext) > 0;
+}
+
 bool LocationConfig::isMethodAllowed(const std::string &method) const
 {
 	return (std::find(_methods.begin(), _methods.end(), method) != _methods.end());

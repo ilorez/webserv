@@ -1,6 +1,6 @@
 #include "../../includes/container.hpp"
 
-Request::Request() : _content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0), _is_request_large(false), _is_cgi(false), _match_loc(NULL), _file_path(""), _session(NULL), _is_new_session(true)
+Request::Request() : _content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0), _is_request_large(false), _is_cgi(false), _match_loc(NULL), _file_path(""), _cgi_path(""), _session(NULL), _is_new_session(true)
 {
 }
 
@@ -28,6 +28,7 @@ Request &Request::operator=(const Request &other)
     this->_session = other._session;
     this->_match_loc = other._match_loc;
     this->_file_path = other._file_path;
+    this->_cgi_path = other._cgi_path;
     this->_is_new_session = other._is_new_session;
   }
   return *this;
@@ -161,7 +162,17 @@ Session *Request::get_session()
   return _session;
 };
 
+std::string Request::get_cgi_path() const
+{
+  return _cgi_path;
+};
+
 bool Request::is_new_session()
 {
   return _is_new_session;
 }
+
+void Request::set_cgi_path(const std::string &path)
+{
+  this->_cgi_path = path;
+};
