@@ -2,22 +2,22 @@
 
 ---
 
-# Webserv — HTTP/1.1 Web Server in C++98
+# Webserv — HTTP/1.0 Web Server in C++98
 
 ## Description
 
-Webserv is a fully functional HTTP/1.1 web server written entirely in C++98, built from the ground up without any external networking libraries or frameworks. The goal of this project is to gain a deep, hands-on understanding of how web servers work at every layer — from raw TCP socket management to HTTP protocol semantics and CGI script execution.
+Webserv is a fully functional HTTP/1.0 web server written entirely in C++98, built from the ground up without any external networking libraries or frameworks. The goal of this project is to gain a deep, hands-on understanding of how web servers work at every layer — from raw TCP socket management to HTTP protocol semantics and CGI script execution.
 
 Every time a client sends a request, the server:
 1. Receives raw bytes over a TCP socket
 2. Parses the HTTP request line, headers, and body from scratch
 3. Applies routing rules from an Nginx-style configuration file
 4. Executes external CGI scripts asynchronously if needed
-5. Constructs and delivers a fully compliant HTTP/1.1 response
+5. Constructs and delivers a fully compliant HTTP/1.0 response
 
 ### Key Features
 
-- **Non-blocking I/O multiplexing** with `poll()` — a single thread manages up to 900 simultaneous connections
+- **Non-blocking I/O multiplexing** with `epoll()` — a single thread manages up to 900 simultaneous connections
 - **Virtual hosting** — multiple named servers sharing a single port, selected by the `Host:` header
 - **HTTP methods**: GET, POST, DELETE
 - **Asynchronous CGI execution** via `fork()` + `execve()` + dual non-blocking pipes
@@ -139,9 +139,8 @@ Key directives: `listen`, `server_name`, `client_max_body_size`, `error_page`, `
 
 | Resource | URL |
 |----------|-----|
-| RFC 7230 — HTTP/1.1 Message Syntax | https://tools.ietf.org/html/rfc7230 |
-| RFC 7231 — HTTP/1.1 Semantics | https://tools.ietf.org/html/rfc7231 |
-| RFC 3875 — CGI/1.1 | https://tools.ietf.org/html/rfc3875 |
+| RFC 1945 — HTTP/1.0 | https://www.rfc-editor.org/info/rfc1945/ |
+| RFC 3875 — CGI/1.1  | https://www.rfc-editor.org/info/rfc3875/ |
 
 ### Books
 
@@ -159,7 +158,7 @@ Key directives: `listen`, `server_name`, `client_max_body_size`, `error_page`, `
 
 | Syscall | URL |
 |---------|-----|
-| `poll(2)` | https://man7.org/linux/man-pages/man2/poll.2.html |
+| `epoll(2)` | https://man7.org/linux/man-pages/man7/epoll.7.html |
 | `socket(2)` | https://man7.org/linux/man-pages/man2/socket.2.html |
 | `fcntl(2)` | https://man7.org/linux/man-pages/man2/fcntl.2.html |
 | `fork(2)` | https://man7.org/linux/man-pages/man2/fork.2.html |
