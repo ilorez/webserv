@@ -15,14 +15,13 @@
 class Server {
   private:
     int _epoll_fd;
+    bool _is_running;
     struct sockaddr_in _addr;
     ManageClients _clients;
+    std::vector<ServerConfig> &_servers;
     struct epoll_event _events[MAX_EVENTS];
     struct epoll_event _epoll_event;
 
-    std::vector<ServerConfig> &_servers;
-    bool _is_running;
-    // ...
   public:
     // orthodox
     Server(std::vector<ServerConfig>& servers);
