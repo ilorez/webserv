@@ -7,7 +7,7 @@ bool Request::isMethodAllowed(const std::string &method)
 {
 	const LocationConfig *loc = getMatchedLocation();
 
-	if (loc && !loc->isMethodAllowed(method))
+	if (!loc || !loc->isMethodAllowed(method))
 	{
 		return false;
 	}
@@ -102,12 +102,10 @@ void Request::_parseFirstLine(const std::vector<std::string> &lines)
 	version = fields[2];
 	if (path.empty() || !(version == "HTTP/1.1" || version == "HTTP/1.0"))
 		throw RequestException("400 Bad Request", 400);
-	if ((method == "GET" || method == "POST" || method == "DELETE") && isMethodAllowed(method)) // todo : i will add the rest of the methods later
-	{
-		_path = path;
+	_path = path;
+	_version = version;
+	if ((method == "GET" || method == "POST" || method == "DELETE") && isMethodAllowed(method))
 		_method = method;
-		_version = version;
-	}
 	else
 		throw RequestException("405 Method Not Allowed", 405);
 }
