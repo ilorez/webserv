@@ -50,11 +50,12 @@ int LocationConfig::getReturnCode() const { return _returnCode; }
 unsigned long LocationConfig::getClientMaxBodySize() const { return _clientMaxBodySize; }
 const std::string &LocationConfig::getUploadStore() const { return _uploadStore; }
 const std::map<std::string, std::string> &LocationConfig::getCgiHandlers() const {return _cgiHandlers;}
+
 // setters
 void LocationConfig::setPath(const std::string &path, size_t line)
 {
 	if (!isValidPath(path))
-		errorMsg("Expect a valid path after 'location'", line); // !
+		errorMsg("Expect a valid path after 'location'", line);
 
 	this->_path = path;
 }
@@ -62,7 +63,7 @@ void LocationConfig::setRoot(const std::string &root, size_t line)
 {
 
 	if (!isValidPath(root))
-		errorMsg("Invalid root path", line); // !
+		errorMsg("Invalid root path", line);
 
 	this->_root = root;
 }
@@ -178,11 +179,12 @@ void LocationConfig::setClientMaxBodySize(const std::string &clientMaxBodySize, 
 
 	this->_clientMaxBodySize = num;
 }
+
 void LocationConfig::setUploadStore(const std::string &path, size_t line)
 {
 	if (!isValidPath(path))
 		errorMsg("Invalid upload_store argument", line);
-
+    
 	_uploadStore = path;
 }
 
@@ -228,5 +230,18 @@ bool LocationConfig::isMethodAllowed(const std::string &method) const
 bool LocationConfig::hasReturn() const
 {
 	return (_returnCode != 0);
+}
+
+void LocationConfig::validate(size_t line)
+{
+    struct stat st;
+
+    // check root exists
+    if (stat(_root.c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+        errorMsg("root directory does not exist: " + _root, line);
+
+    // check upload_store exists
+    if (stat(_uploadStore.c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+        errorMsg("upload_store directory does not exist: " + _uploadStore, line);
 }
 // parsing

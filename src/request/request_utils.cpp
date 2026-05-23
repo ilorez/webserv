@@ -196,17 +196,6 @@ void Request::requestParser(const std::string &raw)
 	if (!_match_loc)
 		throw RequestException("400 Bad Request", 400);
 	parseCookies();
-	DEBUG_INFO2("#######################Database Information#######################");
-	sessionManager &manager = sessionManager::getInstance();
-	std::map<std::string, Session> db = manager.getDatabase();
-	std::cout << "Database size: " << db.size() << std::endl;
-	for (std::map<std::string, Session>::iterator it = db.begin(); it != db.end(); it++)
-	{
-		std::cout << "Session id: " << it->first << std::endl;
-		// std::cout << it->second.getData()[0] << std::endl;
-		std::cout << "\n";
-	}
-	DEBUG_INFO2("##################################################################");
 }
 
 // change name to checkCGI request
