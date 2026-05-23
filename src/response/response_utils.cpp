@@ -84,6 +84,7 @@ void Response::initMediaTypes(std::map<std::string, std::string> &m)
         std::make_pair(".py",  "text/x-python"),
         std::make_pair(".js",   "application/javascript"),
         std::make_pair(".php",   "application/x-httpd-php"),
+
         // Application
         std::make_pair(".json", "application/json"),
         std::make_pair(".xml",  "application/xml"),
@@ -292,6 +293,22 @@ bool Response::isSupportedContentType(
         if (it->second == contentType)
             return true;
     }
+    return false;
+}
+
+bool Response::isDirectory(const std::string& path) 
+{
+    if (!path.empty() && path[path.size() - 1] == '/')
+        return true;
+
+    size_t lastSlash = path.rfind('/');
+    size_t lastDot   = path.rfind('.');
+    
+    if (lastDot == std::string::npos)
+        return true;
+    if (lastSlash != std::string::npos && lastDot < lastSlash)
+        return true;
+
     return false;
 }
 

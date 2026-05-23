@@ -117,23 +117,6 @@ void Response::serveErrorPage(int status)
     }
 }
 
-bool isDirectory(const std::string& path) {
-    // Explicit trailing slash → directory
-    if (!path.empty() && path[path.size() - 1] == '/')
-        return true;
-
-    // No dot after last slash → treat as directory
-    size_t lastSlash = path.rfind('/');
-    size_t lastDot   = path.rfind('.');
-    
-    if (lastDot == std::string::npos)
-        return true;                    // no extension → directory
-    if (lastSlash != std::string::npos && lastDot < lastSlash)
-        return true;                    // dot is in a dir component, not filename
-
-    return false;
-}
-
 void Response::Get()
 {
     if (!isMethodAllowed("GET"))
