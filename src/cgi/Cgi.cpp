@@ -184,9 +184,10 @@ void CGIClient::ftExec()
       const_cast<char*>(scriptPath.c_str()),
       NULL
     };
-    execve(argv[0], argv, buildEnv());
-    // TODO: free
-    exit(126);
+    char **env = buildEnv();
+    execve(argv[0], argv, env);
+    freeEnv(env);
+    _exit(127);
   }
   // parent
   ft_closefd(_pipe_in[0]);
