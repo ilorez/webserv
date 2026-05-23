@@ -1,6 +1,6 @@
 #include "../../includes/container.hpp"
 
-Request::Request() : _content_size(0), _tmpFd(-1), _tmpFileName(""), _bytesCounter(0), _isRequestLarge(false), _isCgi(false), _matchLoc(NULL), _filePath(""), _cgiPath(""), _session(NULL), _isNewSession(true)
+Request::Request() : _content_size(0), _path(""), _tmpFd(-1), _tmpFileName(""), _bytesCounter(0), _isRequestLarge(false), _isCgi(false), _matchLoc(NULL), _filePath(""), _cgiPath(""), _session(NULL), _isNewSession(true)
 {
 }
 
