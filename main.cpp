@@ -1,5 +1,5 @@
 #include "./includes/container.hpp"
-#include "includes/debug.hpp"
+#include "includes/Debug.hpp"
 
 void signalHandeler(int sig)
 {

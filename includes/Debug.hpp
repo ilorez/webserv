@@ -2,7 +2,7 @@
 #define DEBUG_HPP
 
 #include <iostream>
-#include "./colors.hpp"
+#include "./Colors.hpp"
 
 /*
 ** Enable debug by compiling with:

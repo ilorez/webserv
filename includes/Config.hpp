@@ -15,7 +15,7 @@
 #include <vector>
 #include <cctype>
 #include "Lexer.hpp"
-#include "serverConfig.hpp"
+#include "ServerConfig.hpp"
 
 class LocationConfig;
 
@@ -31,8 +31,8 @@ public:
 	// constructors
 	Config(std::vector<Token> Tokens);
 	~Config();
-  Config(const Config& other);
-  Config& operator=(const Config& other);
+	Config(const Config &other);
+	Config &operator=(const Config &other);
 
 	// parsing
 	void Parser();
@@ -51,7 +51,7 @@ public:
 
 	// getters and setters
 	int getStatus() const;
-  std::vector<ServerConfig> &getServers();
+	std::vector<ServerConfig> &getServers();
 };
 
 #endif

@@ -1,5 +1,21 @@
 #include "../../includes/container.hpp"
 
+// tokens
+
+TokenType Token::getType() const { return this->_type; }
+std::string Token::getLexeme() const { return this->_lexeme; }
+size_t Token::getLine() const { return this->_line; }
+
+Token::Token(const TokenType &type, const std::string &lexeme, size_t line)
+{
+	this->_type = type;
+	this->_lexeme = lexeme;
+	this->_line = line;
+};
+
+Token::~Token() {
+};
+
 // Constructor
 Scanner::Scanner(const std::string &raw)
 {
@@ -33,10 +49,6 @@ int Scanner::getHadError()
 {
 	return (this->_hadError);
 }
-
-TokenType Token::getType() const { return this->_type; }
-std::string Token::getLexeme() const { return this->_lexeme; }
-size_t Token::getLine() const { return this->_line; }
 
 std::vector<Token> Scanner::getTokens()
 {
