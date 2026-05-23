@@ -1,6 +1,6 @@
 #include "../../includes/container.hpp"
 
-Request::Request() : _content_size(0), _tmp_fd(-1), _tmp_file_name(""), _bytes_counter(0), _is_request_large(false), _is_cgi(false), _match_loc(NULL), _file_path(""), _cgi_path(""), _session(NULL), _is_new_session(true)
+Request::Request() : _content_size(0), _tmpFd(-1), _tmpFileName(""), _bytesCounter(0), _isRequestLarge(false), _isCgi(false), _matchLoc(NULL), _filePath(""), _cgiPath(""), _session(NULL), _isNewSession(true)
 {
 }
 
@@ -19,25 +19,25 @@ Request &Request::operator=(const Request &other)
     this->_method = other._method;
     this->_body = other._body;
     this->_headers = other._headers;
-    this->_tmp_fd = other._tmp_fd;
-    this->_tmp_file_name = other._tmp_file_name;
-    this->_bytes_counter = other._bytes_counter;
-    this->_is_request_large = other._is_request_large;
+    this->_tmpFd = other._tmpFd;
+    this->_tmpFileName = other._tmpFileName;
+    this->_bytesCounter = other._bytesCounter;
+    this->_isRequestLarge = other._isRequestLarge;
     this->_serverConf = other._serverConf;
-    this->_is_cgi = other._is_cgi;
+    this->_isCgi = other._isCgi;
     this->_session = other._session;
-    this->_match_loc = other._match_loc;
-    this->_file_path = other._file_path;
-    this->_cgi_path = other._cgi_path;
-    this->_is_new_session = other._is_new_session;
+    this->_matchLoc = other._matchLoc;
+    this->_filePath = other._filePath;
+    this->_cgiPath = other._cgiPath;
+    this->_isNewSession = other._isNewSession;
   }
   return *this;
 }
 
 Request::~Request()
 {
-  if (_tmp_fd >= 0)
-    close(_tmp_fd);
+  if (_tmpFd >= 0)
+    close(_tmpFd);
 };
 
 // ?getters
@@ -80,21 +80,21 @@ std::string Request::getHeaderValue(std::string key)
 
 const std::string &Request::getTmpFileName() const
 {
-  return (_tmp_file_name);
+  return (_tmpFileName);
 }
 int Request::getTmpFd() const
 {
-  return (_tmp_fd);
+  return (_tmpFd);
 }
 
 bool Request::isRequsetLarge() const
 {
-  return (_is_request_large);
+  return (_isRequestLarge);
 }
 
 size_t Request::getBytesCounter() const
 {
-  return (_bytes_counter);
+  return (_bytesCounter);
 }
 
 std::string Request::getBody() const
@@ -109,12 +109,12 @@ const ServerConfig &Request::getServerConf() const
 
 std::string Request::getFilePath() const
 {
-  return (_file_path);
+  return (_filePath);
 }
 
 const LocationConfig *Request::getMatchLoc() const
 {
-  return (_match_loc);
+  return (_matchLoc);
 }
 
 // ? setters
@@ -125,26 +125,26 @@ void Request::setPath(const std::string &path)
 
 void Request::setTmpFd(int fd)
 {
-  _tmp_fd = fd;
+  _tmpFd = fd;
 }
 void Request::setTmpFileName(std::string name)
 {
-  _tmp_file_name = name;
+  _tmpFileName = name;
 }
 
 void Request::setIsRequestLarge(bool value)
 {
-  _is_request_large = value;
+  _isRequestLarge = value;
 }
 
 void Request::setBytesCounter(size_t bytes)
 {
-  _bytes_counter = bytes;
+  _bytesCounter = bytes;
 }
 
 void Request::incrementBytesCounter(size_t bytes)
 {
-  _bytes_counter += bytes;
+  _bytesCounter += bytes;
 }
 
 void Request::setBody(const std::string &value)
@@ -157,27 +157,27 @@ void Request::setServerConfig(ServerConfig &sc)
   _serverConf = sc;
 }
 
-Session *Request::get_session()
+Session *Request::getSession()
 {
   return _session;
 };
 
-bool Request::get_is_new_session()
+bool Request::getIsNewSession()
 {
-  return _is_new_session;
+  return _isNewSession;
 }
 
-std::string Request::get_cgi_path() const
+std::string Request::getCgiPath() const
 {
-  return _cgi_path;
+  return _cgiPath;
 };
 
-bool Request::is_new_session()
+bool Request::isNewSession()
 {
-  return _is_new_session;
+  return _isNewSession;
 }
 
-void Request::set_cgi_path(const std::string &path)
+void Request::set_cgiPath(const std::string &path)
 {
-  this->_cgi_path = path;
+  this->_cgiPath = path;
 };
