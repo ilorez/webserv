@@ -83,7 +83,7 @@ void Server::_handelClient()
   {
     if (eh->fd == _servers[i].getFd())
     {
-      this->newconnection(_servers[i]);
+      this->newConnection(_servers[i]);
       is_new_conx = true;
       break;
     }
@@ -96,7 +96,7 @@ void Server::_handelClient()
     else if (eh->is_cgi)
       eh->cgi->handel(eh->fd, _events[i].events);
     else if (eh->cl->getState() == READING_HEADERS)
-      this->readheaders(eh->cl);
+      this->readHeaders(eh->cl);
     else
       eh->cl->handel(0, _events[i].events);
     if (eh->cl->getState() ==  DONE)

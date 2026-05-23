@@ -32,13 +32,13 @@ class Server {
     void parseConfig(); // parse info from config file
 
     // read headers
-    void readheaders(Client *cl);
+    void readHeaders(Client *cl);
 
     // new connection
-    void newconnection(ServerConfig &sc);
+    void newConnection(ServerConfig &sc);
 
     // i/o
-    void sendresponse(Client *cl);
+    void sendResponse(Client *cl);
     void sendFromFile(Client *cl, int file_fd);
     
     //create socket 
