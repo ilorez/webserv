@@ -68,6 +68,7 @@ public:
 	bool isMethodAllowed(const std::string &method) const;
 	bool hasCgi() const;
 	bool hasReturn() const;
+	void validate(size_t line);
 };
 
 #endif
