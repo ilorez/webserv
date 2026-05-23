@@ -63,7 +63,7 @@ class Client
         std::string readHeaders();
         virtual void preSetup();
 
-        void  readbody();
+        void  readBody();
         void  readFromSocket();
         void  readFromSocket(int);
 

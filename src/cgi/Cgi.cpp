@@ -174,31 +174,15 @@ void CGIClient::ftExec()
     close (_pipe_out[0]);
     ft_change_fd(_pipe_in[0], STDIN_FILENO);
     ft_change_fd(_pipe_out[1], STDOUT_FILENO);
-    //TODO use getMatchLoc instead
-    const LocationConfig* loc = _req.getMatchedLocation();
-    if (!loc)
-    {
-      DEBUG_ERROR("Could not get match loc");
-      exit(3);
-    }
 
-    //DEBUG_ERROR("I'm here");
     std::string cgiPath = _req.get_cgi_path();
-    //DEBUG_ERROR("I'm not");
     std::string scriptPath = _req.getFilePath();
-    //DEBUG_ERROR(cgiPath);
-    //DEBUG_ERROR(scriptPath);
-    /*char *argv[] = { (char*)"/usr/bin/python3", (char*)"./cgi-bin/hello_get.py", NULL };
-    */
-    //char *env[]  = { (char*)"REQUEST_METHOD=GET", (char*)"QUERY_STRING=name=John", NULL };
     char *argv[] = {
       const_cast<char*>(cgiPath.c_str()),
       const_cast<char*>(scriptPath.c_str()),
       NULL
     };
-   //execve(argv[0], argv, env);
     execve(argv[0], argv, buildEnv());
-    //execve("/usr/bin/python3", argv, buildEnv());
     exit(126);
   }
   // parent
@@ -213,11 +197,6 @@ void CGIClient::ftExec()
 void CGIClient::handel(int fd, uint32_t evs)
 {
   try {
-  // work on switch algorithm
-  // if you think its not required for everything to work
-  // correctly don't use it
-  // but i think you need for things like adding or removing fds from the epoll
-  // so i mean you need it to switch betwen reading/writing from/to socket/pipe
   if (evs & EPOLLIN)
   {
     // socket
@@ -254,47 +233,3 @@ void CGIClient::handel(int fd, uint32_t evs)
     this->setState(DONE);
   }
 }
-
-
-// ============================================================
-// SETUP (when request is identified as CGI)
-// ============================================================
-//
-//   CHILD (pid == 0):
-//     - set environment variables (REQUEST_METHOD, CONTENT_LENGTH, etc.)
-//     - execve(script_path, args, env)
-//
-// ============================================================
-// EPOLL EVENT LOOP
-// ============================================================
-//
-//
-// EPOLLIN on pipe_out[0]  (CGI stdout → parent)
-//   - if read() == 0 (CGI done writing):
-//       - waitpid(child_pid, ...) to reap zombie
-//       - parse CGI headers from writeBuffer if not yet parsed
-//       - register socket fd with EPOLLOUT to send response to client
-//
-// ============================================================
-// DEFERRED CLEANUP WARNING
-// ============================================================
-//
-// Do NOT close/disconnect mid epoll_wait loop.
-// epoll_wait may have already queued events for fds you just closed.
-// Solution: mark CGIClient as "to be cleaned" with a flag,
-// then do actual cleanup AFTER iterating all ready events.
-//
-// ============================================================
-// ENVIRONMENT VARIABLES (to add later)
-// ============================================================
-//
-// REQUEST_METHOD, CONTENT_LENGTH, CONTENT_TYPE,
-// QUERY_STRING, PATH_INFO, SCRIPT_FILENAME, etc.
-//
-// ============================================================
-// REMINDERS
-// ============================================================
-//
-// - all reads/writes in chunk style
-// - never buffer more than 1MB of CGI output
-// - always check return of read()/write() — handle EAGAIN/EINTR

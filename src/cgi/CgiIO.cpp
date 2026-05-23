@@ -82,16 +82,12 @@ void CGIClient::writeToWriteBuffer()
 {
   DEBUG_INFO("writeToWriteBuffer called");
   char buf[CHUNK_SIZE];
-
-  // TODO: why i add this to here
-  //_writeOffset = 0;
   int bytes = read(_pipe_out[0], buf, CHUNK_SIZE);
   //DEBUG_INFO("bytes read from pipe: " + to_string98(bytes));
   if (bytes == -1)
     throw CGIException("read: readToWriteBuffer: failed");
-  // EPOLLIN will be fired everytime if its found that the pipe has been closed
+  // EPOLLIN will be fired everytime if its found that the pipe has been closed until i close it
   // unregister pipe out 0
-  DEBUG_INFO2("1");
   if (bytes == 0)
   {
     // done
@@ -101,51 +97,8 @@ void CGIClient::writeToWriteBuffer()
   }
   std::string chunk(buf, bytes);
   _writeBuffer +=  chunk;
-  std::cout << _writeBuffer << std::endl;
-  if (!_got_headers_end)
-  {
-      size_t pos = chunk.find("\r\n\r\n");
-      if (pos == std::string::npos)
-      {
-          pos = chunk.find("\n\n");
-          if (pos == std::string::npos)
-            return;
-          replace_all(_writeBuffer, "\r\n", "\n");
-      }
-      _got_headers_end = true;
-      std::string status = "200 OK";
-      size_t status_pos = _writeBuffer.find("Status:");
-      if (status_pos != std::string::npos && status_pos < pos)
-      {
-          size_t end = _writeBuffer.find("\n", status_pos);
-          status = _writeBuffer.substr(status_pos + 7, end - (status_pos + 7));
-  
-          size_t start = status.find_first_not_of(" \t");
-          if (start != std::string::npos)
-              status = status.substr(start);
-      }
-  
-      size_t loc_pos = _writeBuffer.find("Location:");
-      if (loc_pos != std::string::npos && loc_pos < pos)
-      {
-          size_t loc_end = _writeBuffer.find("\n", loc_pos);
-          std::string loc_val = _writeBuffer.substr(loc_pos + 9,
-                                                    loc_end - (loc_pos + 9));
-  
-          size_t start = loc_val.find_first_not_of(" \t");
-          if (start != std::string::npos)
-              loc_val = loc_val.substr(start);
-  
-          if (!loc_val.empty() && status == "200 OK")
-              status = "302 Found";
-      }
-  
-      _writeBuffer =
-          "HTTP/1.0 " + status + "\r\n" +
-          _writeBuffer;
-  }
-
-  DEBUG_INFO2("4");
+  if (!doneCheckCgiOutputHeaders(chunk))
+    return;
   epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_out[0], NULL);
   //DEBUG_INFO2("writeBuffer: ");
   //std::cout << _writeBuffer << std::endl;

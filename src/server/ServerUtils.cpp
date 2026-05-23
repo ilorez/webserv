@@ -99,9 +99,8 @@ void Server::_initSocket(ServerConfig &sc) {
   setsockopt(_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
   memset(&_addr, 0, sizeof(_addr));
   _addr.sin_family = AF_INET;// ipv4 family
+  // bro look to man 
   _addr.sin_port = htons(sc.getPort());
-  // The htons() function converts the unsigned short integer hostshort from
-  // host byte order to network byte order.
   _addr.sin_addr.s_addr = inet_addr(sc.getHost().c_str());
   // convert from string to 32bit format
   if (bind(_socket_fd, (struct sockaddr *)(&_addr), sizeof(_addr)))

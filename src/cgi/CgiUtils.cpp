@@ -58,9 +58,6 @@ void CGIClient::preSetup()
   // register socket again with EPOLLIN
   struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
   epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
-  // i should update the 
-  // if i already ready body or the request is get not post
-  // i should never register the socket EPOLLIN in that case because its will never fired
   this->setupPipes();
   if (_req.getMethod() == "POST")
   {
@@ -75,4 +72,50 @@ void CGIClient::preSetup()
   }
   // run setup cgi
   this->ftExec();
+}
+
+bool CGIClient::doneCheckCgiOutputHeaders(std::string &chunk)
+{
+      if (_got_headers_end)
+        return true;
+      size_t pos = chunk.find("\n\n");
+      if (pos == std::string::npos)
+      {
+          pos = chunk.find("\r\n\r\n");
+          if (pos == std::string::npos)
+            return false;
+          replace_all(_writeBuffer, "\r\n", "\n");
+      }
+      _got_headers_end = true;
+      std::string status = "200 OK";
+      size_t status_pos = _writeBuffer.find("Status:");
+      if (status_pos != std::string::npos && status_pos < pos)
+      {
+          size_t end = _writeBuffer.find("\n", status_pos);
+          status = _writeBuffer.substr(status_pos + 7, end - (status_pos + 7));
+  
+          size_t start = status.find_first_not_of(" \t");
+          if (start != std::string::npos)
+              status = status.substr(start);
+      }
+  
+      size_t loc_pos = _writeBuffer.find("Location:");
+      if (loc_pos != std::string::npos && loc_pos < pos)
+      {
+          size_t loc_end = _writeBuffer.find("\n", loc_pos);
+          std::string loc_val = _writeBuffer.substr(loc_pos + 9,
+                                                    loc_end - (loc_pos + 9));
+  
+          size_t start = loc_val.find_first_not_of(" \t");
+          if (start != std::string::npos)
+              loc_val = loc_val.substr(start);
+  
+          if (!loc_val.empty() && status == "200 OK")
+              status = "302 Found";
+      }
+  
+      _writeBuffer =
+          "HTTP/1.0 " + status + "\r\n" +
+          _writeBuffer;
+      return true;
 }

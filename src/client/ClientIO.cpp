@@ -60,7 +60,7 @@ void Client::preSetup()
   this->switchToEpollOut();
 }
 
-void Client::readbody()
+void Client::readBody()
 {
   if (_req.isRequsetLarge())
     this->readFromSocket();   // write to tmp
@@ -79,8 +79,14 @@ void  Client::readFromSocket()
     return ;
   }
   _req.incrementBytesCounter(bytes);
-  write(_req.getTmpFd(), buf, bytes);
-  if (_req.getBytesCounter() >= _req.getContentLen())
+  if (write(_req.getTmpFd(), buf, bytes) <= 0)
+  {
+    DEBUG_WARN("readFromSocket: failed to write to tmp file");
+    close(_req.getTmpFd());
+    _req.setTmpFd(-1);
+    callError(500);
+  }
+  else if (_req.getBytesCounter() >= _req.getContentLen())
   {
     close(_req.getTmpFd());
     _req.setTmpFd(-1);
@@ -113,17 +119,16 @@ void Client::processing()
   this->_res.setReq(this->_req);
   if (_status_error)
   {
-    DEBUG_INFO("set error page");
+    DEBUG_INFO("Request Have Error");
     this->setWriteBuffer(_res.build(_status_error));
   }
   else
   {
-    DEBUG_INFO("set return");
+    DEBUG_INFO("No error from request");
     this->setWriteBuffer(_res.build());
   }
   _state = SENDING;
 }
-
 
 void Client::sendResponse()
 {

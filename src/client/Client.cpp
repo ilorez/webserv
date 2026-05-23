@@ -36,7 +36,7 @@ Client::Client(const Client& other)
       _status_error(other._status_error),
       _res(other._res)
 {
-    *this = other; // still fine, self-assignment guard handles it
+    *this = other;
 }
 
 Client& Client::operator=(const Client& other)
@@ -52,7 +52,7 @@ Client& Client::operator=(const Client& other)
     _lastActivity = other._lastActivity;
     _state        = other._state;
     _req          = other._req;
-    _clsock_hold  = other._clsock_hold; // covers .fd, .is_cgi, .cl
+    _clsock_hold  = other._clsock_hold;
     _status_error = other._status_error;
     _res          = other._res;
     return *this;
@@ -105,8 +105,6 @@ t_epollhold& Client::getClSockHolder()
 // setters
 void Client::setState(ClientState state)
 {
-  //DEBUG_INFO("status change to");
-  //std::cout << "num: " << state << std::endl;
 	_state = state;
 }
 
@@ -154,7 +152,7 @@ void Client::clearWriteBuffer()
 
 void  Client::forceTimeout()
 {
-  DEBUG_INFO("force timeout called");
+  //DEBUG_INFO("force timeout called");
   time_t epoch = 0;
   _lastActivity = epoch;
 }
@@ -206,7 +204,7 @@ void Client::handel(int, uint32_t evs)
       this->setState(DONE);
       return;
     }
-    this->readbody();
+    this->readBody();
     this->switchToEpollOut();
   }
   else
