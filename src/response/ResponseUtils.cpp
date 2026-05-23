@@ -1,31 +1,44 @@
 #include "../../includes/container.hpp"
 
-// Canonical Form
 Response::Response()
-    : _file_fd(-1)
-{}
+    : _loc(NULL),
+      _status(200),
+      _file_fd(-1)
+{
+    _headers.clear();
+    _body.clear();
+    _contentTypeStr.clear();
+}
+
+Response::~Response()
+{
+    DEBUG_INFO2("Response Destructor called");
+    if (_file_fd > -1)
+        close(_file_fd);
+}
 
 Response::Response(const Response &other)
-    : _req(other._req), 
-      _file_fd(other._file_fd)
-{}
+{
+    *this = other;
+}
 
 Response &Response::operator=(const Response &other)
 {
-  if (this != &other)
-  {
-    this->_req = other._req;
-    this->_file_fd = -1;
-  }
-  return (*this);
+    if (this != &other)
+    {
+        _mapMediaTypes = other._mapMediaTypes;
+        _mapStatusCodes = other._mapStatusCodes;
+        _headers = other._headers;
+        _loc = other._loc;
+        _body = other._body;
+        _req = other._req;
+        _status = other._status;
+        _file_fd = other._file_fd;
+        _contentTypeStr = other._contentTypeStr;
+    }
+    return *this;
 }
 
-Response::~Response() 
-{
-  DEBUG_INFO2("Response Destructor called");
-  if(_file_fd > -1)
-    close(_file_fd);
-}
 
 // Helper function
 void Response::initStatusCodes(std::map<int, std::string> &m)
