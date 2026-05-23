@@ -25,6 +25,7 @@ int main(int argc, char **argv)
   }
 
   std::string content = ft_readFile(argv[1]);
+  file.close();
   try
   {
     Scanner tokenizer(content);
@@ -56,6 +57,7 @@ int main(int argc, char **argv)
   catch (const CGIException &e)
   {
     std::cerr << ERROR_MSG << "cgi: " << e.what() << std::endl;
+    return e.status();
   }
   catch (const std::exception &e)
   {

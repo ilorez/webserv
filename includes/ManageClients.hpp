@@ -20,6 +20,7 @@ class ManageClients
         void    setEpfd(int fd);
         void    checkTimeout();
         void    disconnect(int fd);
+        void    disconnectAll();
         CGIClient*    updateToCGI(int fd);
     private:
         ManageClients(const ManageClients& other);

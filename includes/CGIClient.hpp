@@ -5,6 +5,8 @@
 #include "Client.hpp"
 #include "EpollHold.hpp"
 
+class Server;
+
 class CGIClient: public Client
 {
   private:

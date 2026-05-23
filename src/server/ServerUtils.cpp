@@ -66,10 +66,19 @@ bool Server::readHeaders(t_epollhold *eh)
       CGIClient* cgi = _clients.updateToCGI(eh->cl->getFd());
       epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, cgi->getFd(), NULL);
       cgi->preSetup();
+      // run setup cgi
+      cgi->ftExec();
       return true;
     }
   } 
   catch (const RequestException &e){
+    std::cerr << ERROR_MSG << "parsing headers: "<< e.what() << std::endl;
+    // send bad request
+    eh->cl->callError(e.status());
+  }
+  catch (const CGIException &e){
+    if (e.status() == 127)
+      throw e;
     std::cerr << ERROR_MSG << "parsing headers: "<< e.what() << std::endl;
     // send bad request
     eh->cl->callError(e.status());
@@ -124,14 +133,3 @@ void Server::_initSocket(ServerConfig &sc) {
             << std::endl;
 }
 
-
-void Server::serverFree()
-{
-  if (_epoll_fd > -1)
-    close(_epoll_fd);
-  for (unsigned long i = 0; i < _servers.size(); i++)
-  {
-    if (_servers[i].getFd() > -1)
-      close (_servers[i].getFd());
-  }
-}
