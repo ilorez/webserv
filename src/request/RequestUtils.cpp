@@ -100,8 +100,8 @@ void Request::_parseFirstLine(const std::vector<std::string> &lines)
 	method = fields[0];
 	path = fields[1]; // ? i could check for the length of the uri, if its too long, throw 414 URI Too Long
 	version = fields[2];
-  if (path.empty() || !(version == "HTTP/1.1" || version == "HTTP/1.0"))
-		  throw RequestException("400 Bad Request", 400);
+	if (path.empty() || !(version == "HTTP/1.1" || version == "HTTP/1.0"))
+		throw RequestException("400 Bad Request", 400);
 	if ((method == "GET" || method == "POST" || method == "DELETE") && isMethodAllowed(method)) // todo : i will add the rest of the methods later
 	{
 		_path = path;
@@ -109,7 +109,7 @@ void Request::_parseFirstLine(const std::vector<std::string> &lines)
 		_version = version;
 	}
 	else
-			throw RequestException("405 Method Not Allowed", 405);
+		throw RequestException("405 Method Not Allowed", 405);
 }
 static std::string getCookieValue(const std::string &cookieHeader, const std::string &name)
 {
@@ -167,7 +167,7 @@ void Request::parseCookies()
 		if (key != "session_id" && key != "Expires" && key != "Path" && key != "HttpOnly")
 			this->_session->setData(key, value);
 	}
-	this->_is_new_session = false;
+	this->_isNewSession = false;
 }
 
 void Request::requestParser(const std::string &raw)
@@ -192,8 +192,8 @@ void Request::requestParser(const std::string &raw)
 	}
 	if (getHeaderValue("transfer-encoding") != "" && getHeaderValue("transfer-encoding") != "identity")
 		throw RequestException("400 Bad Request", 400);
-	_match_loc = getMatchedLocation();
-	if (!_match_loc)
+	_matchLoc = getMatchedLocation();
+	if (!_matchLoc)
 		throw RequestException("400 Bad Request", 400);
 	parseCookies();
 }
@@ -204,12 +204,12 @@ bool Request::isCGI()
 {
 	const std::string uri = getPath();
 	const std::string ext = getFileExtension(uri);
-	bool hasExtAtEnd = !ext.empty() && _match_loc->hasCgiForExt(ext);
+	bool hasExtAtEnd = !ext.empty() && _matchLoc->hasCgiForExt(ext);
 	// is not cgi at all because the match location doesn't have cgiExt and cgiPath (use matchLog->hasCGI for that)
 	// return false
-	if (!_match_loc->hasCgi())
+	if (!_matchLoc->hasCgi())
 		return false;
-	_is_cgi = true;
+	_isCgi = true;
 	// its cgi and its post method and its have no .[ext] at end of path so its for upload cgi script and this is response part
 	// set is_cgi true and return false
 	if (_method == "POST" && !hasExtAtEnd)
@@ -225,14 +225,14 @@ bool Request::isCGI()
 	// set is_cgi true and return true and here my cgi work should be run
 	else if (!(_method == "POST" || _method == "GET"))
 		return false;
-	std::string uploadStore = (!_match_loc->getUploadStore().empty())
-								  ? _match_loc->getUploadStore()
+	std::string uploadStore = (!_matchLoc->getUploadStore().empty())
+								  ? _matchLoc->getUploadStore()
 								  : DEF_CGI_STORE;
 	// NOTE: also i should store info like the path and everything so i don't need to use look for it next time
-	_file_path = uploadStore + getFileName(uri);
-	_cgi_path = _match_loc->getCgiPathForExt(ext); // storing the interpreter path
+	_filePath = uploadStore + getFileName(uri);
+	_cgiPath = _matchLoc->getCgiPathForExt(ext); // storing the interpreter path
 
-	if (access(_file_path.c_str(), X_OK) == -1)
+	if (access(_filePath.c_str(), X_OK) == -1)
 		throw RequestException("400 Bad Request", 400);
 	DEBUG_INFO2("This requist is a CGI");
 	return (true);

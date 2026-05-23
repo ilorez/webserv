@@ -11,28 +11,28 @@
 #include "Session.hpp"
 #include "SessionManager.hpp"
 
-
 class Request
 {
 private:
   size_t _content_size;
-  std::string _path;                           // /, /index.html
-  std::string _version;                        // HTTP/1.1
-  std::string _method;                         // get, post, delete
+  std::string _path;    // /, /index.html
+  std::string _version; // HTTP/1.1
+  std::string _method;  // get, post, delete
   std::string _body;
   std::map<std::string, std::string> _headers; // http headers
-  int          _tmp_fd;
-  std::string  _tmp_file_name;
-  size_t       _bytes_counter;
-  bool         _is_request_large;
+  int _tmpFd;
+  std::string _tmpFileName;
+  size_t _bytesCounter;
+  bool _isRequestLarge;
   ServerConfig _serverConf;
-  bool _is_cgi;
-  const LocationConfig* _match_loc;           // request match location, TODO: Alaoui should use this
-  std::string _file_path;                     // this is the file path of cgi, you can use it for request too, i use it only in case of CGI run request 
-  std::string _cgi_path;
+  bool _isCgi;
+  const LocationConfig *_matchLoc; // request match location, TODO: Alaoui should use this
+  std::string _filePath;           // this is the file path of cgi, you can use it for request too, i use it only in case of CGI run request
+  std::string _cgiPath;
 
   Session *_session; // cookies
-  bool _is_new_session;
+  bool _isNewSession;
+
 public:
   Request();
   Request(const Request &other);
@@ -45,41 +45,40 @@ public:
   size_t getContentLen() const;
   std::string getPath() const;
   std::string getHeaderValue(std::string key);
-  const std::string&  getTmpFileName()  const;
-  int  getTmpFd() const;
-  bool                isRequsetLarge() const;
+  const std::string &getTmpFileName() const;
+  int getTmpFd() const;
+  bool isRequsetLarge() const;
   size_t getBytesCounter() const;
   std::string getFilePath() const;
-  const LocationConfig* getMatchLoc() const;
-  std::map<std::string, std::string>& getHeaders();
-  Session* get_session();
-  bool is_new_session();
-  std::string get_cgi_path() const;
-
+  const LocationConfig *getMatchLoc() const;
+  std::map<std::string, std::string> &getHeaders();
+  Session *getSession();
+  bool isNewSession();
+  std::string getCgiPath() const;
 
   // TODO
   std::string getBody() const;
-  const ServerConfig& getServerConf() const ;
+  const ServerConfig &getServerConf() const;
 
   // setters
-  void  setTmpFileName(std::string name);
-  void  setTmpFd(int fd);
-  void  setIsRequestLarge(bool value);
-  void  setBytesCounter(size_t bytes);
-  void  incrementBytesCounter(size_t bytes);
+  void setTmpFileName(std::string name);
+  void setTmpFd(int fd);
+  void setIsRequestLarge(bool value);
+  void setBytesCounter(size_t bytes);
+  void incrementBytesCounter(size_t bytes);
   void setPath(const std::string &path);
   void requestParser(const std::string &headers);
-  void set_cgi_path(const std::string &path);
-  //TODO
+  void set_cgiPath(const std::string &path);
+  // TODO
   void setBody(const std::string &value);
-  const LocationConfig* getMatchedLocation() const;
+  const LocationConfig *getMatchedLocation() const;
   bool isMethodAllowed(const std::string &method);
-  bool get_is_new_session();
+  bool getIsNewSession();
 
   // methods
   bool isCGI();
   void setServerConfig(ServerConfig &sc);
-  
+
 private:
   // parse request
   void _parseFirstLine(const std::vector<std::string> &lines);
@@ -89,8 +88,6 @@ private:
 
   // parse cookies
   void parseCookies();
-
- 
 };
 
 #endif
