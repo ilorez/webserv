@@ -65,7 +65,8 @@ public:
 	const std::map<int, std::string> &getErrorPages() const;
 	const std::vector<LocationConfig> &getLocations() const;
   t_epollhold& getServHold();
-
+  
+	void validate(size_t line);
 	// helpers
 };
 

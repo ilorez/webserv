@@ -226,3 +226,11 @@ void ServerConfig::setLocation(const LocationConfig &locationBlock)
 {
 	this->_locations.push_back(locationBlock);
 }
+void ServerConfig::validate(size_t line)
+{
+    struct stat st;
+
+    // check root exists
+    if (stat(_root.c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+        errorMsg("root directory does not exist: " + _root, line);
+}

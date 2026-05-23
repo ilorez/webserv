@@ -107,6 +107,7 @@ void Config::parseServer()
 	{
 		errorMsg("\'}\' Expected", peek().getLine() - 1);
 	}
+	serverBlock.validate(peek().getLine());
 	this->_servers.push_back(serverBlock);
 }
 
@@ -158,6 +159,7 @@ void Config::parseLocation(ServerConfig &serverBlock)
 	if (!expect(RIGHT_BRACE))
 		errorMsg("\'}\' Expected", peek().getLine() - 1);
 
+	locationBlock.validate(peek().getLine());
 	serverBlock.setLocation(locationBlock);
 };
 void Config::parseLocationDirective(LocationConfig &locationBlock)
