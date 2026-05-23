@@ -1,4 +1,5 @@
 #include "../../includes/container.hpp"
+#include <unistd.h>
 
 // Constructor
 CGIClient::CGIClient(int fd, int epfd)
@@ -55,8 +56,9 @@ CGIClient::~CGIClient()
   int status;
 
   // unregistred pipes
-  epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_in[1], NULL);
-  epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_out[0], NULL);
+  // idon't need to remove theme because closing the fd will do the work
+  //epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_in[1], NULL);
+  //epoll_ctl(_epfd, EPOLL_CTL_DEL, _pipe_out[0], NULL);
 
   // kill
   if (_pid != -1)
@@ -123,7 +125,7 @@ void CGIClient::setupPipes()
   {
     DEBUG_ERROR("pipe failed");
     this->setState(DONE);
-    throw CGIException("pipe error");
+    throw CGIException("pipe error", 1);
   }
   _pipe_in_hold.fd = _pipe_in[1];
   _pipe_out_hold.fd = _pipe_out[0];
@@ -162,7 +164,7 @@ void ft_change_fd(int fd, int to)
   if (fd == to)
     return;
   if (dup2(fd, to) == -1)
-    throw CGIException("dup2 failed");
+    throw CGIException("dup2 failed", 1);
   close(fd);
 }
 
@@ -170,7 +172,7 @@ void CGIClient::ftExec()
 {
   _pid = fork();
   if (_pid == -1)
-    throw CGIException("fork failed");
+    throw CGIException("fork failed", 1);
   if (_pid == 0)
   {
     // child
@@ -187,9 +189,13 @@ void CGIClient::ftExec()
       NULL
     };
     char **env = buildEnv();
-    execve("lksajflksaf", argv, env);
+    execve(argv[0], argv, env);
+    write(STDOUT_FILENO, "Status: 502 Bad Gateway\n\n", 25);
     freeEnv(env);
-    _exit(127);
+    _pid = -1;
+    _pipe_in[0] = -1;
+    _pipe_out[0] = -1;
+    throw CGIException("NOTHING", 127);
   }
   // parent
   ft_closefd(_pipe_in[0]);

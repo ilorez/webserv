@@ -43,7 +43,6 @@ class Server {
     //create socket 
     void run(); // create socket and start listning
 
-    void serverFree();
   private:
     Server(const Server& copy);
     Server& operator=(const Server& copy);

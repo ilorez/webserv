@@ -11,7 +11,7 @@ void CGIClient::writeToReadBuffer()
   int bytes = recv(this->_fd, buf, CHUNK_SIZE, 0);
   std::cout << bytes << std::endl;
   if (bytes <= 0)
-    throw CGIException("recv: reading from socket failed!");
+    throw CGIException("recv: reading from socket failed!", 1);
   // put in the readbuffer
   _read_counter += bytes;
   this->appendToReadBuffer(buf, bytes);
@@ -54,7 +54,7 @@ void CGIClient::writeToPipe()
   //std::cout << _readBuffer << std::endl;
   ssize_t bytes = write(_pipe_in[1], _readBuffer.c_str(), _readBuffer.size());
   if (bytes == -1)
-    throw CGIException("write: writeToPipe: failed");
+    throw CGIException("write: writeToPipe: failed", 1);
   if (static_cast<size_t>(bytes) < _readBuffer.size())
   {
     // keep pipe registred
@@ -85,7 +85,7 @@ void CGIClient::writeToWriteBuffer()
   int bytes = read(_pipe_out[0], buf, CHUNK_SIZE);
   //DEBUG_INFO("bytes read from pipe: " + to_string98(bytes));
   if (bytes == -1)
-    throw CGIException("read: readToWriteBuffer: failed");
+    throw CGIException("read: readToWriteBuffer: failed", 1);
   // EPOLLIN will be fired everytime if its found that the pipe has been closed until i close it
   // unregister pipe out 0
   if (bytes == 0)
@@ -116,7 +116,7 @@ void CGIClient::writeToSocket()
     _writeBuffer.c_str() + _writeOffset,
     _writeBuffer.size() - _writeOffset, 0);
     if (bytes_sended <= 0)
-        throw CGIException("send: writeToSocket: cgi: failed, client disconnected");
+        throw CGIException("send: writeToSocket: cgi: failed, client disconnected", 1);
     advanceWriteOffset(bytes_sended);
     if (_writeOffset >= _writeBuffer.size())
     {

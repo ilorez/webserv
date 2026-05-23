@@ -78,9 +78,7 @@ void CGIClient::preSetup()
   {
     this->removeEpollinEventFromSocket();
     _socket_done = true;
-  }
-  // run setup cgi
-  this->ftExec();
+  } 
 }
 
 bool CGIClient::doneCheckCgiOutputHeaders(std::string &chunk)

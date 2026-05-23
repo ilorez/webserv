@@ -40,10 +40,12 @@ class CGIException : public std::exception
 {
 private:
     std::string _msg;
+    int _status;
 public:
-    CGIException(const std::string& msg);
+    CGIException(const std::string& msg, int status);
     ~CGIException() throw();
     const char* what() const throw();
+    int status() const throw();
 };
 
 

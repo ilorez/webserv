@@ -9,6 +9,11 @@ ManageClients::ManageClients() {}
 ManageClients::~ManageClients()
 {
     DEBUG_INFO("ManageClients destructor called");
+    this->disconnectAll();
+}
+
+void    ManageClients::disconnectAll()
+{
     std::map<int, Client*>::iterator it = _clients.begin();
     while (it != _clients.end())
     {

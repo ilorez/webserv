@@ -18,9 +18,10 @@ ResponseException::~ResponseException() throw() {}
 const char* ResponseException::what() const throw() { return _msg.c_str(); }
 
 // cgi
-CGIException::CGIException(const std::string& msg) : _msg(msg) {}
+CGIException::CGIException(const std::string& msg, int status) : _msg(msg), _status(status) {}
 CGIException::~CGIException() throw() {}
 const char* CGIException::what() const throw() { return _msg.c_str(); }
+int CGIException::status() const throw() { return _status; }
 
 
 
