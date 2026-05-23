@@ -6,7 +6,7 @@
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/19 22:04:59 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/23 11:10:56 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/23 17:52:13 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,10 @@ void Server::_handelClient()
       else if (eh->is_cgi)
         eh->cgi->handel(eh->fd, _events[i].events);
       else if (eh->cl->getState() == READING_HEADERS)
-        this->readHeaders(eh->cl);
+      {
+        if (this->readHeaders(eh))
+          continue;
+      }
       else
         eh->cl->handel(0, _events[i].events);
       if (eh->cl->getState() ==  DONE)
