@@ -19,7 +19,7 @@ F_CLIENT = Client.cpp ClientIO.cpp ManageClients.cpp
 F_CONFIG = Config.cpp Lexer.cpp LocationConfig.cpp ServerConfig.cpp
 F_COOKIES = Session.cpp SessionManager.cpp
 F_REQUEST = Request.cpp RequestUtils.cpp
-F_RESPONSE = response.cpp response_utils.cpp
+F_RESPONSE = Response.cpp ResponseUtils.cpp
 
 SRCS = main.cpp $(F_SRCS) $(F_SERVER) $(F_CGI) $(F_CLIENT) $(F_CONFIG) $(F_COOKIES) $(F_REQUEST) $(F_RESPONSE)
 

@@ -3,9 +3,6 @@
 
 #include "./Request.hpp"
 
-
-
-
 class Response
 {
 private:
@@ -35,25 +32,24 @@ public:
     std::string generateAutoIndex(const std::string& fullPath);
     std::string returnMediaType(const std::string& path);
     std::string mergeResponseToString();
+    std::string cookieHeaderBuilder();
     std::string build(int status);
     std::string build();
     std::string returnFileExtension(const std::string& path);
     std::string generateUploadFileName(std::string contentTypeStr);
     std::string getHttpDate(time_t t);
-    bool        isMethodAllowed(const std::string& method);
-    bool        transferToNewFile(int destFd, int srcFd);
-    bool        tryApplyLocationReturn();
     std::string getExtensionFromContentType(const std::string &contentType,
-        const std::map<std::string, std::string> &mediaTypes);
-    bool  isSupportedContentType(const std::string &contentType, 
-        const std::map<std::string, std::string> &mediaTypes);
-    std::string cookieHeaderBuilder();
-    bool isDirectory(const std::string& path);
-
+                                            const std::map<std::string, std::string> &mediaTypes);
     std::string getHeaders();
     std::string getBody();
     int         getBodyFd();
 
+    bool        isMethodAllowed(const std::string& method);
+    bool        transferToNewFile(int destFd, int srcFd);
+    bool        isDirectory(const std::string& path);
+    bool        tryApplyLocationReturn();
+    bool        isSupportedContentType(const std::string &contentType,
+                                       const std::map<std::string, std::string> &mediaTypes);
     void        serveErrorPage(int status);
     void        Delete();
     void        Post();
