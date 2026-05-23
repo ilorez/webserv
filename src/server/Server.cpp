@@ -1,21 +1,19 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server.cpp                                         :+:      :+:    :+:   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: znajdaou <znajdaou@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/19 22:04:59 by znajdaou          #+#    #+#             */
-/*   Updated: 2026/05/20 14:52:20 by znajdaou         ###   ########.fr       */
+/*   Updated: 2026/05/23 11:10:56 by znajdaou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../includes/container.hpp"
-#include <algorithm>
-#include <sys/epoll.h>
 
 // #constructors
-Server::Server(std::vector<ServerConfig> &servers):_epoll_fd(-1), _servers(servers), _is_running(true)
+Server::Server(std::vector<ServerConfig> &servers):_epoll_fd(-1), _is_running(true), _addr(), _clients(), _servers(servers), _events(), _epoll_event()
 {
   _epoll_event.events = EPOLLIN;
   _epoll_event.data.ptr = NULL;
@@ -57,14 +55,15 @@ void Server::run()
 
 void Server::_handelClient()
 {
+  bool is_new_conx = false;
   DEBUG_INFO("------------------");
   int n = epoll_wait(_epoll_fd, _events, MAX_EVENTS, EPOLL_WAIT_TIMEOUT);
   if (n == -1)
   {
     if (errno == EINTR)
     {
-        _is_running = false;
-        return;
+      _is_running = false;
+      return;
     }
     throw ServerException("epoll_wait: failed");
   }
@@ -76,48 +75,36 @@ void Server::_handelClient()
         DEBUG_ERROR("epoll data ptr is invalid");
         continue;
     }
-    
-  //DEBUG_INFO2("event fired on fd: " + to_string98(eh->fd));
-  bool is_new_conx = false;
-  for (unsigned long i = 0; i < _servers.size(); i++)
-  {
-    if (eh->fd == _servers[i].getFd())
+    is_new_conx = false;
+    for (unsigned long i = 0; i < _servers.size(); i++)
     {
-      this->newConnection(_servers[i]);
-      is_new_conx = true;
-      break;
+      if (eh->fd == _servers[i].getFd())
+      {
+        this->newConnection(_servers[i]);
+        is_new_conx = true;
+        break;
+      }
     }
-  }
-  if (is_new_conx){continue;}
-  else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
-  {
-    if (eh->cl->isTimedOut(TIMEOUT_SECONDS))
-      continue;
-    else if (eh->is_cgi)
-      eh->cgi->handel(eh->fd, _events[i].events);
-    else if (eh->cl->getState() == READING_HEADERS)
-      this->readHeaders(eh->cl);
-    else
-      eh->cl->handel(0, _events[i].events);
-    if (eh->cl->getState() ==  DONE)
+    if (is_new_conx){continue;}
+    else if (_events[i].events & EPOLLIN || _events[i].events & EPOLLOUT)
+    {
+      if (eh->cl->isTimedOut(TIMEOUT_SECONDS))
+        continue;
+      else if (eh->is_cgi)
+        eh->cgi->handel(eh->fd, _events[i].events);
+      else if (eh->cl->getState() == READING_HEADERS)
+        this->readHeaders(eh->cl);
+      else
+        eh->cl->handel(0, _events[i].events);
+      if (eh->cl->getState() ==  DONE)
+        eh->cl->forceTimeout();
+      else
+        eh->cl->updateLastActivity();
+    }
+    else if (_events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP))
       eh->cl->forceTimeout();
-    else
-      eh->cl->updateLastActivity();
-  }
-  else if (_events[i].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP))
-  {
-    /*
-    if (_events[i].events & EPOLLHUP)
-      DEBUG_INFO2("EPOLLHUP");
-    else if (_events[i].events & EPOLLERR)
-      DEBUG_INFO2("EPOLLERR");
-    else if (_events[i].events & EPOLLRDHUP)
-      DEBUG_INFO2("EPOLLRDHUP");
-      */
-    eh->cl->forceTimeout();
-  }
-  else 
-    DEBUG_ERROR("Unknown event fired in");
+    else 
+      DEBUG_ERROR("Unknown event fired in");
   }
   _clients.checkTimeout();
 }

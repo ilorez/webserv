@@ -2,8 +2,7 @@
 #ifndef SETTINGS_HPP
 #define SETTINGS_HPP
 
-//
-
+// required to be int
 #define MAX_CONX_QUEUE 60
 #define BUF_SIZE 8192
 #define BODY_SIZE_LIMIT 104857600 // 100 megabyte
@@ -16,6 +15,7 @@
 #define SESSION_TTL 3600
 #define BUFFER_SIZE_LIMIT 65536
 
+// required to be string
 #define DEF_UPLOAD_STORE  "./uploads"
 #define DEF_CGI_STORE     "./cgi-bin/"
 #define DEF_ROOT          "./www/"
@@ -24,6 +24,8 @@
 #define DEF_CODE_TAG      "{{CODE}}"
 #define DEF_MESSAGE_TAG   "{{MESSAGE}}"
 #define DEF_HOST   "127.0.0.1"
+
+// required to be int
 #define DEF_PORT  8080 
 
 #endif
