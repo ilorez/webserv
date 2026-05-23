@@ -52,33 +52,35 @@ void Server::newConnection(ServerConfig &sc)
   this->_addClient(client_fd, sc);
 }
 
-void Server::readHeaders(Client *cl)
+bool Server::readHeaders(t_epollhold *eh)
 {
-  std::string headers = cl->readHeaders();
+  std::string headers = eh->cl->readHeaders();
   if (headers.empty())
-    return;
+    return false;
   try {
     DEBUG_INFO("Request");
-    cl->getReq().requestParser(headers);
-    if (cl->getReq().isCGI())
+    eh->cl->getReq().requestParser(headers);
+    if (eh->cl->getReq().isCGI())
     {
       // in case of CGI i'm upgrading the Client class to CGI by using copy constructor
-      CGIClient* cgi = _clients.updateToCGI(cl->getFd());
+      CGIClient* cgi = _clients.updateToCGI(eh->cl->getFd());
+      epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, cgi->getFd(), NULL);
       cgi->preSetup();
-      return;
+      return true;
     }
   } 
   catch (const RequestException &e){
     std::cerr << ERROR_MSG << "parsing headers: "<< e.what() << std::endl;
     // send bad request
-    cl->callError(e.status());
+    eh->cl->callError(e.status());
   }
   catch (const std::exception &e){
     std::cerr << ERROR_MSG << "parsing headers: "<< e.what() << std::endl;
     // send bad request
-    cl->callError(400);
+    eh->cl->callError(400);
   }
-  cl->preSetup();
+  eh->cl->preSetup();
+  return false;
 }
 
 void Server::_initSocket(ServerConfig &sc) {
@@ -120,4 +122,16 @@ void Server::_initSocket(ServerConfig &sc) {
             << ":" 
             << to_string98(ntohs(_addr.sin_port)) 
             << std::endl;
+}
+
+
+void Server::serverFree()
+{
+  if (_epoll_fd > -1)
+    close(_epoll_fd);
+  for (unsigned long i = 0; i < _servers.size(); i++)
+  {
+    if (_servers[i].getFd() > -1)
+      close (_servers[i].getFd());
+  }
 }

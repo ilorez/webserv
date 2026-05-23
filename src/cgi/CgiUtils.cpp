@@ -66,7 +66,7 @@ void CGIClient::preSetup()
 {
   // register socket again with EPOLLIN
   struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
-  epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
+  epoll_ctl(_epfd, EPOLL_CTL_ADD, _fd, &ev);
   this->setupPipes();
   if (_req.getMethod() == "POST")
   {

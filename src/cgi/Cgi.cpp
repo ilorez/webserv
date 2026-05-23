@@ -60,11 +60,13 @@ CGIClient::~CGIClient()
 
   // kill
   if (_pid != -1)
+  {
     kill(_pid, SIGKILL);
-  // waitpid
-  waitpid(_pid, &status, 0);
-  // DEBUG_INFO2("status exit: " + to_string98(status));
-  check_process_status(status);
+    // waitpid
+    waitpid(_pid, &status, 0);
+    // DEBUG_INFO2("status exit: " + to_string98(status));
+    check_process_status(status);
+  }
 
   // close pipes
   ft_closefd(_pipe_in[1]);
@@ -185,7 +187,7 @@ void CGIClient::ftExec()
       NULL
     };
     char **env = buildEnv();
-    execve(argv[0], argv, env);
+    execve("lksajflksaf", argv, env);
     freeEnv(env);
     _exit(127);
   }

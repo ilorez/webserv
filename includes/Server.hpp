@@ -31,7 +31,7 @@ class Server {
     void parseConfig(); // parse info from config file
 
     // read headers
-    void readHeaders(Client *cl);
+    bool readHeaders(t_epollhold *eh);
 
     // new connection
     void newConnection(ServerConfig &sc);
@@ -43,6 +43,7 @@ class Server {
     //create socket 
     void run(); // create socket and start listning
 
+    void serverFree();
   private:
     Server(const Server& copy);
     Server& operator=(const Server& copy);
