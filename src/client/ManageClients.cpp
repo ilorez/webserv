@@ -76,9 +76,8 @@ void ManageClients::checkTimeout()
   {
     if (it->second->isTimedOut(TIMEOUT_SECONDS))
     {
-      //DEBUG_INFO("Client timedout with fd: ");
-      //std::cout << it->first << std::endl;
       // delete from epoll
+      // closing fd removes the fd from epoll
       delete it->second;
       _clients.erase(it++);
     }
