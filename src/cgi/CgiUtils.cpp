@@ -13,7 +13,7 @@ char **CGIClient::buildEnv()
     envVars.push_back("GATEWAY_INTERFACE=CGI/1.1");
 
     // Map HTTP headers → CGI vars
-    std::map<std::string, std::string>& headers = _req.getHeaders();
+    std::map<std::string, std::string> &headers = _req.getHeaders();
     for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
     {
         std::string key = it->first;
@@ -32,18 +32,18 @@ char **CGIClient::buildEnv()
             envVars.push_back(cgiKey + "=" + it->second);
         }
     }
-    
-    std::map<std::string, std::string>& cookies = _req.get_session()->getData();
+
+    std::map<std::string, std::string> &cookies = _req.getSession()->getData();
     for (std::map<std::string, std::string>::iterator it = cookies.begin(); it != cookies.end(); ++it)
-    {   
+    {
         std::string key = "COOKIE_";
         for (size_t i = 0; i < it->first.size(); i++)
             key += (it->first[i] == '-') ? '_' : std::toupper(it->first[i]);
         envVars.push_back(key + "=" + it->second);
     }
-    envVars.push_back("COOKIE_SESSION_ID=" + _req.get_session()->getId());
+    envVars.push_back("COOKIE_SESSION_ID=" + _req.getSession()->getId());
 
-    char **env = new char*[envVars.size() + 1];
+    char **env = new char *[envVars.size() + 1];
     for (size_t i = 0; i < envVars.size(); i++)
     {
         env[i] = new char[envVars[i].size() + 1];
@@ -55,24 +55,24 @@ char **CGIClient::buildEnv()
 
 void CGIClient::preSetup()
 {
-  // register socket again with EPOLLIN
-  struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
-  epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
-  // i should update the 
-  // if i already ready body or the request is get not post
-  // i should never register the socket EPOLLIN in that case because its will never fired
-  this->setupPipes();
-  if (_req.getMethod() == "POST")
-  {
-    _read_counter = _readBuffer.size();
-    if (_readBuffer.size() >= _req.getContentLen())
-        this->turnToPipe();
-  }
-  else
-  {
-    this->removeEpollinEventFromSocket();
-    _socket_done = true;
-  }
-  // run setup cgi
-  this->ftExec();
+    // register socket again with EPOLLIN
+    struct epoll_event ev = create_ev(&_clsock_hold, _epoll_events);
+    epoll_ctl(_epfd, EPOLL_CTL_MOD, _fd, &ev);
+    // i should update the
+    // if i already ready body or the request is get not post
+    // i should never register the socket EPOLLIN in that case because its will never fired
+    this->setupPipes();
+    if (_req.getMethod() == "POST")
+    {
+        _read_counter = _readBuffer.size();
+        if (_readBuffer.size() >= _req.getContentLen())
+            this->turnToPipe();
+    }
+    else
+    {
+        this->removeEpollinEventFromSocket();
+        _socket_done = true;
+    }
+    // run setup cgi
+    this->ftExec();
 }
