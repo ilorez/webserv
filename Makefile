@@ -10,17 +10,18 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -I./includes  -DDEBUG # -g
 RM = rm -rf
 BUILD_DR = ./build/
 
-HEADERS = colors.hpp container.hpp debug.hpp Request.hpp settings.hpp utils.hpp Templates.hpp \
-					Client.hpp ManageClients.hpp Response.hpp Server.hpp utils.hpp WebServExceptions.hpp \
-					Lexer.hpp Config.hpp serverConfig.hpp locationConfig.hpp sessionManager.hpp Session.hpp
+HEADERS = CGIClient.hpp Client.hpp colors.hpp Config.hpp container.hpp debug.hpp EpollHold.hpp Lexer.hpp locationConfig.hpp ManageClients.hpp Request.hpp Response.hpp serverConfig.hpp Server.hpp Session.hpp sessionManager.hpp settings.hpp Templates.hpp utils.hpp WebServExceptions.hpp
 
+F_SRCS = exceptions.cpp utils.cpp
+F_SERVER = Server.cpp ServerUtils.cpp 
+F_CGI = Cgi.cpp CgiIO.cpp CgiUtils.cpp
+F_CLIENT = Client.cpp ClientIO.cpp ManageClients.cpp 
+F_CONFIG = Config.cpp Lexer.cpp locationConfig.cpp serverConfig.cpp
+F_COOKIES = Session.cpp sessionManager.cpp
+F_REQUEST = request.cpp request_utils.cpp
+F_RESPONSE = response.cpp response_utils.cpp
 
-F_SRCS = request.cpp request_utils.cpp sessionManager.cpp Session.cpp utils.cpp response.cpp response_utils.cpp exceptions.cpp Lexer.cpp Config.cpp locationConfig.cpp serverConfig.cpp
-F_SERVER = server.cpp server_utils.cpp
-F_CGI = cgi.cpp cgi_oi.cpp cgi_utils.cpp
-F_CLIENT = manageClients.cpp client.cpp client_io.cpp 
-
-SRCS = main.cpp $(F_SERVER) $(F_SRCS) $(F_CGI) $(F_CLIENT)
+SRCS = main.cpp $(F_SRCS) $(F_SERVER) $(F_CGI) $(F_CLIENT) $(F_CONFIG) $(F_COOKIES) $(F_REQUEST) $(F_RESPONSE)
 
 OBJS = $(addprefix $(BUILD_DR),$(SRCS:%.cpp=%.o))
 

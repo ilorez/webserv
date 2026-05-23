@@ -74,5 +74,5 @@ void CGIClient::preSetup()
     _socket_done = true;
   }
   // run setup cgi
-  this->ft_exec();
+  this->ftExec();
 }

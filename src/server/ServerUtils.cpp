@@ -37,7 +37,7 @@ void Server::_switchEpollRegisration(t_epollhold *eh, uint32_t ev)
   _epoll_event.events = ev;
 }
 
-void Server::newconnection(ServerConfig &sc)
+void Server::newConnection(ServerConfig &sc)
 {
   //std::cout << "new connection on socket: " << sc.getFd() << std::endl;
   int client_fd = accept(sc.getFd(), NULL, NULL);
@@ -52,7 +52,7 @@ void Server::newconnection(ServerConfig &sc)
   this->_addClient(client_fd, sc);
 }
 
-void Server::readheaders(Client *cl)
+void Server::readHeaders(Client *cl)
 {
   std::string headers = cl->readHeaders();
   if (headers.empty())

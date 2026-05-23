@@ -162,7 +162,7 @@ void	ft_change_fd(int fd, int to)
 	close(fd);
 }
 
-void CGIClient::ft_exec()
+void CGIClient::ftExec()
 {
   _pid = fork();
   if (_pid == -1)
