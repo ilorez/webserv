@@ -177,7 +177,7 @@ void CGIClient::ftExec()
     ft_change_fd(_pipe_in[0], STDIN_FILENO);
     ft_change_fd(_pipe_out[1], STDOUT_FILENO);
 
-    std::string cgiPath = _req.get_cgi_path();
+    std::string cgiPath = _req.getCgiPath();
     std::string scriptPath = _req.getFilePath();
     char *argv[] = {
       const_cast<char*>(cgiPath.c_str()),
@@ -185,6 +185,7 @@ void CGIClient::ftExec()
       NULL
     };
     execve(argv[0], argv, buildEnv());
+    // TODO: free
     exit(126);
   }
   // parent
