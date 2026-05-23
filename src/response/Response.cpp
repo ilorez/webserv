@@ -121,21 +121,11 @@ void Response::Get()
 {
     if (!isMethodAllowed("GET"))
         return;
-    std::string root = _loc->getRoot().empty() ? _req.getServerConf().getRoot() : _loc->getRoot();
+    std::string root = _loc->getRoot().empty() 
+                        ? _req.getServerConf().getRoot() 
+                        : _loc->getRoot();
+
     std::string filepath = root + _req.getPath().substr(_loc->getPath().size());
-    // std::cout << "server root: " << _req.getServerConf().getRoot() << std::endl;
-    // std::cout << "location root: " << _loc->getRoot() << std::endl;
-    // std::cout << "location root: " << _loc->getPath() << std::endl;
-    // std::cout << "path: " << _req.getPath() << std::endl;
-    // std::cout << "file path: " << filepath  << std::endl;
-    // if (!isDirectory(_req.getPath()))
-    // filepath += getFileName(_req.getPath());
-    /*
-    if (access(filepath.c_str(), F_OK) != 0)
-    {
-        serveErrorPage(404);
-        return;
-    }*/
 
     struct stat info;
     if (stat(filepath.c_str(), &info) != 0)
@@ -249,10 +239,6 @@ void Response::Post()
         size_t bytes = write(fd, _req.getBody().c_str(), _req.getBody().size());
         if (bytes != _req.getBody().size())
             serveErrorPage(500);
-        // you can't use ostream for make file executable thats why we should use open 0755
-        // std::ofstream file(filepath.c_str());
-        // file << _req.getBody();
-        // file.close();
     }
     close(fd);
     if (_status != 500)
@@ -304,12 +290,10 @@ std::string Response::build()
     if (!tryApplyLocationReturn())
     {
         const std::string method = _req.getMethod();
-        if (method == "GET")
-            Get();
-        else if (method == "POST")
-            Post();
-        else if (method == "DELETE")
-            Delete();
+
+        if      (method == "GET")       Get();
+        else if (method == "POST")      Post();
+        else if (method == "DELETE")    Delete();
         else
             serveErrorPage(405);
     }

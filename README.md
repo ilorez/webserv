@@ -69,14 +69,30 @@ The server listens on the ports defined in the configuration file. Stop it at an
 
 ### Testing
 
-Testing
+```
 The server ships with three built-in web UIs to test its features interactively in the browser.
-Media Tester — http://localhost:8080/
-Tests file upload (POST), retrieval (GET), and deletion (DELETE) against the /upload/ route. After uploading a file, the GET panel fetches it back and renders a live preview directly in the browser — images, videos, audio, and text files are all previewed inline.
-CGI Tester — http://127.0.0.1:4444/cgi/
-Tests the full CGI lifecycle. You can upload a .py script to the server, run it via GET (no body) or POST (with a custom text body or a file), and inspect the raw output. You can also delete scripts from the same page.
-Cookie Tester — http://127.0.0.1:4444/cookies/
-Tests cookie-based session persistence. The page lets you save a theme cookie (dark/light) and a language cookie, view all currently stored cookies, and delete them. The theme is applied immediately to the page — on reload, the server reads the cookie and restores your preferences automatically.
+
+## Media Tester — `http://localhost:8080/`
+
+Tests file upload (`POST`), retrieval (`GET`), and deletion (`DELETE`) against the `/upload/` route.
+After uploading a file, the `GET` panel fetches it back and renders a live preview directly in the browser — images, videos, audio, and text files are all previewed inline.
+
+---
+
+## CGI Tester — `http://127.0.0.1:4444/cgi/`
+
+Tests the full CGI lifecycle.
+You can upload a `.py` script to the server, run it via `GET` (no body) or `POST` (with a custom text body or a file), and inspect the raw output.
+You can also delete scripts from the same page.
+
+---
+
+## Cookie Tester — `http://127.0.0.1:4444/cookies/`
+
+Tests cookie-based session persistence.
+The page lets you save a theme cookie (`dark/light`) and a language cookie, view all currently stored cookies, and delete them.
+The theme is applied immediately to the page — on reload, the server reads the cookie and restores your preferences automatically.
+```
 
 ### Configuration
 
