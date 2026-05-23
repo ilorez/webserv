@@ -48,6 +48,7 @@ public:
     bool  isSupportedContentType(const std::string &contentType, 
         const std::map<std::string, std::string> &mediaTypes);
     std::string cookieHeaderBuilder();
+    bool isDirectory(const std::string& path);
 
     std::string getHeaders();
     std::string getBody();

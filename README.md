@@ -1,148 +1,160 @@
-# Simple HTTP Server in C++
+*This project has been created as part of the 42 curriculum by znajdaou, aezghari, mohalaou.*
 
-A minimal HTTP server written in C++98 that listens on a port and returns a Hello World HTML page.
-
-edit
-edit2
 ---
 
-## Requirements
+# Webserv — HTTP/1.1 Web Server in C++98
 
-- `g++` or `clang++`
+## Description
+
+Webserv is a fully functional HTTP/1.1 web server written entirely in C++98, built from the ground up without any external networking libraries or frameworks. The goal of this project is to gain a deep, hands-on understanding of how web servers work at every layer — from raw TCP socket management to HTTP protocol semantics and CGI script execution.
+
+Every time a client sends a request, the server:
+1. Receives raw bytes over a TCP socket
+2. Parses the HTTP request line, headers, and body from scratch
+3. Applies routing rules from an Nginx-style configuration file
+4. Executes external CGI scripts asynchronously if needed
+5. Constructs and delivers a fully compliant HTTP/1.1 response
+
+### Key Features
+
+- **Non-blocking I/O multiplexing** with `poll()` — a single thread manages up to 900 simultaneous connections
+- **Virtual hosting** — multiple named servers sharing a single port, selected by the `Host:` header
+- **HTTP methods**: GET, POST, DELETE
+- **Asynchronous CGI execution** via `fork()` + `execve()` + dual non-blocking pipes
+- **Cookie-based session management** stored in-memory
+- **Custom error pages** with a template substitution system
+
+## Instructions
+
+### Prerequisites
+
+- A C++ compiler with C++98 support (`c++`)
+- A POSIX-compatible OS (Linux or macOS)
 - `make`
-- Linux or macOS
 
----
-
-## Build
+### Compilation
 
 ```bash
+git clone <intra_git_repository-url> webserv
+cd webserv
 make
 ```
 
-To rebuild from scratch:
+This produces the `webserv` executable, compiled with strict flags:
+
+```
+-Wall -Wextra -Werror -std=c++98
+```
+
+Additional Makefile targets:
 
 ```bash
-make re
+make clean    # Remove compiled object files
+make fclean   # Remove object files and the binary
+make re       # Full clean rebuild
 ```
 
-To clean build files:
+### Running the Server
 
 ```bash
-make clean
+
+# Run with a specific configuration file
+./webserv conf/default[Number].conf
+
+# Run with a custom configuration
+./webserv path/to_your_custom_config_file.conf
 ```
+
+The server listens on the ports defined in the configuration file. Stop it at any time with `Ctrl+C` — the server performs a clean shutdown, closing all open file descriptors.
+
+### Testing
+
+Testing
+The server ships with three built-in web UIs to test its features interactively in the browser.
+Media Tester — http://localhost:8080/
+Tests file upload (POST), retrieval (GET), and deletion (DELETE) against the /upload/ route. After uploading a file, the GET panel fetches it back and renders a live preview directly in the browser — images, videos, audio, and text files are all previewed inline.
+CGI Tester — http://127.0.0.1:4444/cgi/
+Tests the full CGI lifecycle. You can upload a .py script to the server, run it via GET (no body) or POST (with a custom text body or a file), and inspect the raw output. You can also delete scripts from the same page.
+Cookie Tester — http://127.0.0.1:4444/cookies/
+Tests cookie-based session persistence. The page lets you save a theme cookie (dark/light) and a language cookie, view all currently stored cookies, and delete them. The theme is applied immediately to the page — on reload, the server reads the cookie and restores your preferences automatically.
+
+### Configuration
+
+The configuration file uses an Nginx-inspired syntax. Example:
+
+```nginx
+server {
+    listen       8080;
+    server_name  localhost;
+    client_max_body_size  1048576;
+
+    error_page  404  /errors/404.html;
+
+    location / {
+        root            www;
+        index           home/index.html;
+        allowed_methods GET;
+    }
+
+    location /uploads/ {
+        root            www/uploads;
+        allowed_methods GET POST DELETE;
+        upload_enable   true;
+        upload_store    www/uploads;
+        autoindex       on;
+    }
+
+    location /cgi-bin/ {
+        root            www/cgi;
+        allowed_methods GET POST;
+        cgi_extension   .py;
+        cgi_path        /usr/bin/python3;
+    }
+}
+```
+
+Key directives: `listen`, `server_name`, `client_max_body_size`, `error_page`, `root`, `index`, `autoindex`, `allowed_methods`, `cgi_extension`, `cgi_path`, `upload_enable`, `upload_store`, `return` (redirect).
 
 ---
 
-## Run
+## Resources
 
-```bash
-./webserv
-```
+### Official Specifications
 
-The server will start and print:
+| Resource | URL |
+|----------|-----|
+| RFC 7230 — HTTP/1.1 Message Syntax | https://tools.ietf.org/html/rfc7230 |
+| RFC 7231 — HTTP/1.1 Semantics | https://tools.ietf.org/html/rfc7231 |
+| RFC 3875 — CGI/1.1 | https://tools.ietf.org/html/rfc3875 |
 
-```
-Listening on: http://127.0.0.1:8080
-```
+### Books
 
----
+| Resource | URL |
+|----------|-----|
+| HTTP: The Definitive Guide — David Gourley & Brian Totty (O'Reilly) | https://tools.ietf.org/html/rfc7230 |
 
-## Test
+### Network Programming
 
-**In your browser:**
+| Resource | URL |
+|----------|-----|
+| Beej's Guide to Network Programming | https://github.com/oxidation99/MyBooks-1/blob/master/HTTP%20The%20%20Definitive%20Guide.pdf |
 
-```
-http://localhost:8080
-```
+### Linux Man Pages
 
-**With telnet (raw TCP):**
+| Syscall | URL |
+|---------|-----|
+| `poll(2)` | https://man7.org/linux/man-pages/man2/poll.2.html |
+| `socket(2)` | https://man7.org/linux/man-pages/man2/socket.2.html |
+| `fcntl(2)` | https://man7.org/linux/man-pages/man2/fcntl.2.html |
+| `fork(2)` | https://man7.org/linux/man-pages/man2/fork.2.html |
+| `execve(2)` | https://man7.org/linux/man-pages/man2/execve.2.html |
+| `pipe(2)` | https://man7.org/linux/man-pages/man2/pipe.2.html |
 
-```bash
-telnet localhost 8080
-```
+### AI Usage Disclosure
 
-Then type:
+Artificial Intelligence was used during the development of this project as a conceptual guide and pair-programming assistant. Specifically, AI assisted with:
 
-```
-GET / HTTP/1.1
-Host: localhost
-```
-
-Press `Enter` twice. You will see the raw HTTP response.
-
-**With curl:**
-
-```bash
-curl http://localhost:8080
-```
-
----
-
-## Project Structure
-
-```
-.
-├── Makefile
-├── README.md
-├── main.cpp
-├── includes/
-│   ├── container.hpp
-│   ├── Server.hpp
-│   ├── Request.hpp
-│   ├── Response.hpp
-│   └── WebServExceptions.hpp
-└── src/
-    ├── server.cpp
-    ├── request.cpp
-    ├── response.cpp
-    └── utils.cpp
-```
-
----
-
-## How it works
-
-```
-socket()       create a TCP socket
-setsockopt()   allow port reuse (SO_REUSEADDR)
-bind()         attach socket to 127.0.0.1:8080
-listen()       wait for incoming connections
-accept()       accept a client connection
-read()         read the HTTP request
-Request        parse method, path, headers
-Response       build a valid HTTP response
-write()        send the response back
-close()        close the client connection
-```
-
----
-
-## HTTP Response Example
-
-Every request receives:
-
-```
-HTTP/1.1 200 OK
-Content-Type: text/html
-Content-Length: 20
-
-<h1>Hello World</h1>
-```
-
----
-
-## Stop the server
-
-```bash
-Ctrl + C
-```
-
----
-
-## Notes
-
-- Compiled with `-std=c++98`
-- No external libraries used
-- Single threaded — handles one client at a time
-- Only listens on `127.0.0.1` (localhost), not exposed to the network
+- **Frontend development** — Guiding the design and implementation of the HTML/CSS web interface, login pages, and test sites hosted by the server.
+- **Providing information** — Answering technical questions about HTTP protocol behavior, socket programming, and CGI specification details during development.
+- **Code readability & structure** — Reviewing and improving the organization, naming conventions, and structure of specific parts of the codebase to make them cleaner and easier to navigate.
+- **Documentation** — Structuring this README.
