@@ -31,15 +31,14 @@
 #include <sys/stat.h>
 
 //
-#include "./settings.hpp"
-#include "./colors.hpp"
-#include "./debug.hpp"
-#include "./settings.hpp"
+#include "./Settings.hpp"
+#include "./Colors.hpp"
+#include "./Debug.hpp"
 #include "./WebServExceptions.hpp"
 
 //
 #include "./Templates.hpp"
-#include "./utils.hpp"
+#include "./Utils.hpp"
 
 //
 #include "./Request.hpp"
@@ -54,10 +53,10 @@
 //
 #include "./Config.hpp"
 #include "./Lexer.hpp"
-#include "./serverConfig.hpp"
-#include "./locationConfig.hpp"
+#include "./ServerConfig.hpp"
+#include "./LocationConfig.hpp"
 #include "./Session.hpp"
-#include "./sessionManager.hpp"
+#include "./SessionManager.hpp"
 
 //
 #include "./EpollHold.hpp"

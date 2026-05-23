@@ -6,7 +6,7 @@
 #include "EpollHold.hpp"
 #include "ManageClients.hpp"
 #include "Request.hpp"
-#include "settings.hpp"
+#include "Settings.hpp"
 #include <arpa/inet.h>    // inet_addr() — optional for now
 #include <sys/epoll.h>
 #include <sys/socket.h>   // socket(), bind(), listen(), accept() #include <netinet/in.h>   // struct sockaddr_in, htons(), INADDR_ANY

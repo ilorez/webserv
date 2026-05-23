@@ -59,16 +59,8 @@ public:
 	std::string getLexeme() const;
 	size_t getLine() const;
 
-	Token(const TokenType &type, const std::string &lexeme, size_t line)
-	{
-		this->_type = type;
-		this->_lexeme = lexeme;
-		this->_line = line;
-	}
-
-	~Token()
-	{
-	}
+	Token(const TokenType &type, const std::string &lexeme, size_t line);
+	~Token();
 };
 
 class Scanner

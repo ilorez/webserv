@@ -6,10 +6,10 @@
 #include <string>
 #include <vector>
 
-#include "serverConfig.hpp"
-#include "locationConfig.hpp"
+#include "ServerConfig.hpp"
+#include "LocationConfig.hpp"
 #include "Session.hpp"
-#include "sessionManager.hpp"
+#include "SessionManager.hpp"
 
 
 class Request
