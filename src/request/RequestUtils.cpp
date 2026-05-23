@@ -207,6 +207,9 @@ bool Request::isCGI()
 	// return false
 	if (!_matchLoc->hasCgi())
 		return false;
+  // if get request with not extension is just like noraml request
+	if (_method == "GET" && !hasExtAtEnd)
+		throw RequestException("Forbidden to use Get on cgi directory itself", 403);
 	_isCgi = true;
 	// its cgi and its post method and its have no .[ext] at end of path so its for upload cgi script and this is response part
 	// set is_cgi true and return false

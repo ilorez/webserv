@@ -1,6 +1,15 @@
 
 #include "../../includes/container.hpp"
 
+void CGIClient::freeEnv(char **env)
+{
+    if (!env)
+        return;
+    for (int i = 0; env[i] != NULL; i++)
+        delete[] env[i];
+    delete[] env;
+}
+
 char **CGIClient::buildEnv()
 {
     std::vector<std::string> envVars;

@@ -25,6 +25,8 @@ class CGIClient: public Client
     // methods
     void setupPipes();
     char **buildEnv();
+
+    void freeEnv(char **env);
     void ftExec();
 
     virtual void preSetup();
