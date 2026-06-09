@@ -115,19 +115,21 @@ server {
     }
 
     location /upload {
-        allow_methods GET POST;
+        allow_methods GET POST DELETE;
         upload_store ./uploads;
+        root ./uploads;
         autoindex on;
     }
 
     location /cgi-bin {
-        allow_methods GET POST;
+        allow_methods GET POST DELETE;
+        upload_store ./cgi-bin;
         cgi_handler .py /usr/bin/python3;
     }
 }
 ```
 
-Key directives: `listen`, `server_name`, `client_max_body_size`, `error_page`, `root`, `index`, `autoindex`, `allowed_methods`, `cgi_extension`, `cgi_path`, `upload_enable`, `upload_store`, `return` (redirect).
+Key directives: `listen`, `server_name`, `client_max_body_size`, `error_page`, `root`, `index`, `autoindex`, `allow_methods`, `cgi_extension`, `cgi_path`, `upload_store`, `return` (redirect).
 
 ---
 
