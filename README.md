@@ -115,7 +115,6 @@ server {
     location /uploads/ {
         root            www/uploads;
         allowed_methods GET POST DELETE;
-        upload_enable   true;
         upload_store    www/uploads;
         autoindex       on;
     }
