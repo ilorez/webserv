@@ -100,30 +100,29 @@ The configuration file uses an Nginx-inspired syntax. Example:
 
 ```nginx
 server {
-    listen       8080;
-    server_name  localhost;
-    client_max_body_size  1048576;
+    listen 8080;
+    host 127.0.0.1;
+    server_name my_server;
 
-    error_page  404  /errors/404.html;
+    root ./www;
+    index index.html;
+
+    client_max_body_size 10M;
+    error_page 404 /error.html;
 
     location / {
-        root            www;
-        index           home/index.html;
-        allowed_methods GET;
+        allow_methods GET;
     }
 
-    location /uploads/ {
-        root            www/uploads;
-        allowed_methods GET POST DELETE;
-        upload_store    www/uploads;
-        autoindex       on;
+    location /upload {
+        allow_methods GET POST;
+        upload_store ./uploads;
+        autoindex on;
     }
 
-    location /cgi-bin/ {
-        root            www/cgi;
-        allowed_methods GET POST;
-        cgi_extension   .py;
-        cgi_path        /usr/bin/python3;
+    location /cgi-bin {
+        allow_methods GET POST;
+        cgi_handler .py /usr/bin/python3;
     }
 }
 ```
